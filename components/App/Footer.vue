@@ -1,7 +1,7 @@
 <script lang="ts" setup></script>
 
 <template>
-  <footer class="footer footer-center p-10 bg-base-200 text-base-content rounded">
+  <footer class="footer footer-center p-10  text-base-content rounded">
   <nav class="grid grid-flow-col gap-4">
   </nav> 
   <nav>

@@ -1,7 +1,9 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+  useHead({ title: 'กิจกรรมวิทยาลัยเทคนิคชัยภูมิ' })
+</script>
 
 <template>
-  <div class="hero min-h-screen bg-base-200">
+  <div class="hero min-h-screen">
     <div class="hero-content flex-col lg:flex-row-reverse">
       <img
         src="~/assets/images/logo.png"
@@ -24,13 +26,13 @@
   </div>
 
   <div >
-    <h1 class="text-3xl font-bold bg-base-200 text-center">
+    <h1 class="text-3xl font-bold  text-center">
       กิจกรรมที่กำลังเปิด!
     </h1>
-    <div class="grid grid-cols-3 gap-4 bg-base-200 py-10 justify-items-center">
+    <div class="grid grid-cols-3 gap-4  py-10 justify-items-center">
 
       <NuxtLink to="/activity">
-        <div class="card w-96 bg-base-200 shadow-xl hover:shadow-slate-500">
+        <div class="card w-96  shadow-xl hover:shadow-slate-500">
           <figure>
             <img
               src="@/assets/images/1.jpg"
@@ -53,7 +55,7 @@
       
 
       <NuxtLink to="/activity">
-      <div class="card w-96 bg-base-200 shadow-xl hover:shadow-slate-500">
+      <div class="card w-96  shadow-xl hover:shadow-slate-500">
         <figure>
           <img
             src="@/assets/images/1.jpg"
@@ -77,7 +79,7 @@
     </NuxtLink>
       
       <NuxtLink to="/activity">
-      <div class="card w-96 bg-base-200 shadow-xl hover:shadow-slate-500">
+      <div class="card w-96  shadow-xl hover:shadow-slate-500">
         <figure>
           <img
             src="@/assets/images/1.jpg"

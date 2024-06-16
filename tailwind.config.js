@@ -13,6 +13,9 @@ export default {
         theme: [
           "light",
         ]
+      },
+      container: {
+        center: true,
       }
   },
   plugins: [
