@@ -32,7 +32,7 @@
     <div class="grid grid-cols-3 gap-4  py-10 justify-items-center">
 
       <NuxtLink to="/activity">
-        <div class="card w-96  shadow-xl hover:shadow-slate-500">
+        <div class="card w-96  shadow-xl hover:shadow-slate-500 ">
           <figure>
             <img
               src="@/assets/images/1.jpg"

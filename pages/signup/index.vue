@@ -5,11 +5,7 @@ definePageMeta({
 useHead({ title: "สมัครสมาชิก" });
 
 const router = useRouter()
-interface CustomError {
-  data?: {
-    message?: string;
-  };
-}
+
 
 const input = reactive({
   email: '',

@@ -3,11 +3,35 @@ definePageMeta({
   layout: false,
 });
 useHead({ title: "เข้าสู่ระบบ" });
+
+const router = useRouter()
+
+const input = reactive({
+  email: '',
+  password: '',
+})
+
+const loading = ref(false)
+
+async function onLogin() {
+  loading.value = true
+  try {
+    const res = await $fetch<{ message: string }>('/api/login', {
+      method: 'POST',
+      body: input
+    })
+    alert(res.message)
+    router.push('/')
+  } catch (error: any) {
+    alert(error.data.message)
+  }
+  loading.value = false
+
+}
 </script>
 
 <template>
   <div class="bg-gray-100 flex justify-center items-center h-screen">
-    <!-- Left: Image -->
     <div class="w-1/2 h-screen hidden lg:block">
       <img
         src="@/assets/images/login1.png"
@@ -15,26 +39,24 @@ useHead({ title: "เข้าสู่ระบบ" });
         class="object-cover w-full h-full"
       />
     </div>
-    <!-- Right: Login Form -->
     <div class="lg:p-36 md:p-52 sm:20 p-8 w-full lg:w-1/2">
       <h1 class="text-3xl font-semibold mb-4 text-center">เข้าสู่ระบบ</h1>
-      <form action="#" method="POST">
-        <!-- Username Input -->
+      <form @submit.prevent="onLogin()">
         <div class="mb-4">
           <label
-            for="username"
+            for="email"
             class="block text-base font-medium text-gray-700 my-2"
             >รหัสนักศึกษา</label
           >
           <input
+            v-model="input.email"
             type="text"
-            id="username"
-            name="username"
+            id="email"
+            name="email"
             class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"
             autocomplete="off"
           />
         </div>
-        <!-- Password Input -->
         <div class="mb-4">
           <label
             for="password"
@@ -42,6 +64,7 @@ useHead({ title: "เข้าสู่ระบบ" });
             >รหัสผ่าน</label
           >
           <input
+            v-model="input.password"
             type="password"
             id="password"
             name="password"
@@ -49,7 +72,6 @@ useHead({ title: "เข้าสู่ระบบ" });
             autocomplete="off"
           />
         </div>
-        <!-- Remember Me Checkbox -->
         <div class="mb-4 flex items-center">
           <input
             type="checkbox"
@@ -59,11 +81,9 @@ useHead({ title: "เข้าสู่ระบบ" });
           />
           <label for="remember" class="text-gray-700 ml-2">จำรหัสผ่าน</label>
         </div>
-        <!-- Forgot Password Link -->
         <div class="mb-6 text-blue-500">
           <nuxt-link to="/FGpassword"href="#" class="hover:underline">ลืมรหัสผ่าน</nuxt-link> 
         </div>
-        <!-- Login Button -->
         <button
           type="submit"
           class="bg-info hover:bg-sky-600 text-white font-semibold rounded-md py-2 px-4 w-full"
@@ -71,7 +91,6 @@ useHead({ title: "เข้าสู่ระบบ" });
           เข้าสู่ระบบ
         </button>
       </form>
-      <!-- Sign up  Link -->
       <div class="mt-6 text-blue-500 text-center">
         <nuxt-link to="signup" href="#" class="hover:underline"
           >สมัครสมาชิก</nuxt-link
