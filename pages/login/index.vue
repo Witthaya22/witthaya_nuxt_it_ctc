@@ -4,6 +4,7 @@ definePageMeta({
 });
 useHead({ title: "เข้าสู่ระบบ" });
 
+const { checkAuth } = useAuth();
 const router = useRouter()
 
 const input = reactive({
@@ -21,6 +22,7 @@ async function onLogin() {
       body: input
     })
     alert(res.message)
+    await checkAuth()
     router.push('/')
   } catch (error: any) {
     alert(error.data.message)
