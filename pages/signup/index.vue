@@ -71,8 +71,8 @@ async function onSignup() {
         <form class="space-y-4" @submit.prevent="onSignup">
           <!-- Your form elements go here -->
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700" >อีเมลนักศึกษา</label>
-            <input v-model="input.email" required type="email" id="email" name="email" class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"/>
+            <label for="email" class="block text-sm font-medium text-gray-700" >เลขประจำตัวนักศึกษา</label>
+            <input v-model="input.email" required type="text" id="email" name="email" class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"/>
           </div>
           <div>
             <label for="name" class="block text-sm font-medium text-gray-700" >ชื่อนักศึกษา</label
