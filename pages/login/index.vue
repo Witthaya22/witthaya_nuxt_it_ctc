@@ -14,6 +14,8 @@ const input = reactive({
 
 const loading = ref(false)
 
+const { $swal } = useNuxtApp()
+
 async function onLogin() {
   loading.value = true
   try {
@@ -21,11 +23,38 @@ async function onLogin() {
       method: 'POST',
       body: input
     })
-    alert(res.message)
+
+    const Toast = $swal.mixin({
+    toast: true,
+    position: "top-start",
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.onmouseenter = Swal.stopTimer;
+      toast.onmouseleave = Swal.resumeTimer;
+    }
+  });
+  Toast.fire({
+    icon: "success",
+    title: res.message
+  });
+
+
+    // $swal.fire({
+    // title: "เข้าสู้ระบบสำเร็จ!",
+    // text: res.message,
+    // icon: "success"
+  // });
+    // alert(res.message)
     await checkAuth()
     router.push('/')
   } catch (error: any) {
-    alert(error.data.message)
+    $swal.fire({
+    icon: "error",
+    title: error.data.message,
+  });
+    // alert(error.data.message)
   }
   loading.value = false
 
@@ -48,7 +77,7 @@ async function onLogin() {
           <label
             for="email"
             class="block text-base font-medium text-gray-700 my-2"
-            >รหัสนักศึกษา</label
+            >เลขประจำตัวนักศึกษา</label
           >
           <input
             v-model="input.email"
@@ -74,15 +103,7 @@ async function onLogin() {
             autocomplete="off"
           />
         </div>
-        <div class="mb-4 flex items-center">
-          <input
-            type="checkbox"
-            id="remember"
-            name="remember"
-            class="text-blue-500"
-          />
-          <label for="remember" class="text-gray-700 ml-2">จำรหัสผ่าน</label>
-        </div>
+        
         <div class="mb-6 text-blue-500">
           <nuxt-link to="/FGpassword"href="#" class="hover:underline">ลืมรหัสผ่าน</nuxt-link> 
         </div>

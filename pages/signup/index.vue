@@ -6,6 +6,8 @@ useHead({ title: "สมัครสมาชิก" });
 
 const router = useRouter()
 
+const { $swal } = useNuxtApp()
+
 
 const input = reactive({
   email: '',
@@ -14,25 +16,37 @@ const input = reactive({
 })
 
 const confirmPassword = ref('')
-const loading = ref(false)
 
 async function onSignup() {
-  loading.value = true
   try {
     if (input.password !== confirmPassword.value) {
-      alert('รหัสผ่านไม่ตรงกัน')
+      $swal.fire({
+      icon: "error",
+      title: 'รหัสผ่านไม่ตรงกัน'
+    })
+      
+      // alert('รหัสผ่านไม่ตรงกัน')
       return
     }
     const res = await $fetch<{ message: string }>('/api/signup', {
       method: 'POST',
       body: input
     })
-    alert(res.message)
+    $swal.fire({
+            icon: "success",
+            title: res.message,
+            showConfirmButton: false,
+            timer: 1700
+          });
+    // alert(res.message)
     router.push('/login')
   } catch (error: any) {
-    alert(error.data.message)
+    $swal.fire({
+      icon: "error",
+      title: error.data.message
+    })
+    // alert(error.data.message)
   }
-  loading.value = false
 
 }
 
@@ -75,7 +89,7 @@ async function onSignup() {
             <input v-model="input.email" required type="text" id="email" name="email" class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"/>
           </div>
           <div>
-            <label for="name" class="block text-sm font-medium text-gray-700" >ชื่อนักศึกษา</label
+            <label for="name" class="block text-sm font-medium text-gray-700" >ชื่อ-นามสกุล นักศึกษา</label
             >
             <input v-model="input.name" required type="text" id="name" name="name" class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"
             />
@@ -106,7 +120,7 @@ async function onSignup() {
             <input v-model="confirmPassword" required type="password" id="confirmPassword" name="password" class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"/>
           </div>
           <div>
-            <button :disabled="loading" type="submit" class="w-full bg-info text-white p-2 rounded-md hover:hover:bg-sky-600 focus:outline-none focus:bg-cyan-800 focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300">
+            <button  type="submit" class="w-full bg-info text-white p-2 rounded-md hover:hover:bg-sky-600 focus:outline-none focus:bg-cyan-800 focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300">
               สมัครสมาชิก
             </button>
           </div>

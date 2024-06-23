@@ -11,7 +11,9 @@ interface Admin {
     createdAt: string
 }
 
+
 export default () => {
+    const { $swal } = useNuxtApp()
     const router = useRouter()
 
     const auth = useState<User | undefined>('auth', () => undefined)
@@ -35,7 +37,13 @@ export default () => {
 
     async function logout () {
         const res = await $fetch< { message: string } >('/api/logout')
-        alert(res.message)
+        $swal.fire({
+            icon: "success",
+            title: res.message,
+            showConfirmButton: false,
+            timer: 1800
+          });
+        // alert(res.message)
         auth.value = undefined
         router.push('/')
     }

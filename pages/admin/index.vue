@@ -13,6 +13,7 @@ definePageMeta({
   }
 })
 
+const { $swal } = useNuxtApp()
 const { checkAdmin } = useAuth();
 const router = useRouter();
 
@@ -31,10 +32,20 @@ async function onLoginAdmin() {
       body: input,
     });
     await checkAdmin();
-    alert(res.message);
+    $swal.fire({
+            icon: "success",
+            title: res.message,
+            showConfirmButton: false,
+            timer: 1700
+          });
+    // alert(res.message);
     router.push("/admin/dashboard");
   } catch (error) {
-    alert(error.data.message);
+    $swal.fire({
+      icon: "error",
+      title: error.data.message
+    })
+    // alert(error.data.message);
 
   }
  
