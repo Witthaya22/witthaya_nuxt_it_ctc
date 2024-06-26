@@ -1,5 +1,4 @@
-// activity.ts
-// export interface Activity {
+// export default interface Activity {
 //   id: number;
 //   title: string;
 //   description: string;

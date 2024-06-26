@@ -22,7 +22,7 @@ const axios = useAxios()
 
 async function fetchActivities() {
     const res = await axios.get<{ activities: Activity[] }>(
-      'http://localhost:3000/api/admin/activity',
+      '/api/activity',
       {
         params: {
           page: page.value,

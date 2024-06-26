@@ -42,7 +42,7 @@ if (!isCreate) {
   const { data, refresh } = await useAsyncData <{ activity: Activity }>(
     `admin-activity-${route.params.id}`,
     async () => {
-      const res = await axios.get(`/api/admin/activity/${route.params.id}`)
+      const res = await axios.get(`/api/activity/${route.params.id}`)
       return res.data
     }
    )
@@ -64,7 +64,7 @@ async function onUpsertActivity() {
   loading.value = true;
   try {
     const res = await axios.post<{ message: string }>(
-      '/api/admin/activity',
+      '/api/activity',
       {
         title: input.title,
         description: input.description,

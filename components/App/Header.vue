@@ -16,6 +16,7 @@ const { auth, logout } = useAuth();
     <div class="flex-none">
       <ul class="menu menu-horizontal px-1">
         <li><NuxtLink to="/" class="text-lg font-bold btn mx-1 btn-ghost">หน้าหลัก</NuxtLink></li>
+        <li><NuxtLink to="/activity" class="text-lg font-bold btn mx-1 btn-ghost">กิจกรรม</NuxtLink></li>
         <li>
           <NuxtLink to="about" class="text-lg font-bold btn mx-1 btn-ghost">เกี่ยวกับเรา</NuxtLink>
         </li>

@@ -22,12 +22,12 @@ export default () => {
     const admin = useState<Admin | undefined>('admin', () => undefined)
 
     async function checkAuth () {
-        const res = await axios.get<{ auth: User | undefined }>('http://localhost:3000/api/auth')
+        const res = await axios.get<{ auth: User | undefined }>('/api/auth')
         auth.value = res.data.auth
     }
 
     async function checkAdmin () {
-        const res = await axios.get<{ admin: Admin | undefined }>('http://localhost:3000/api/admin')
+        const res = await axios.get<{ admin: Admin | undefined }>('/api/admin')
         admin.value = res.data.admin
     }
 
