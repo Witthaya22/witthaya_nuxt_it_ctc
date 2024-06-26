@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tinymce/tinymce-vue": "^6.0.1",
+    "axios": "^1.7.2",
     "nuxt": "^3.11.2",
     "nuxt-sweetalert2": "^1.0.0",
     "sweetalert2": "^11.12.0",

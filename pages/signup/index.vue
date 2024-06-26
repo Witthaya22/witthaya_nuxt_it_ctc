@@ -5,7 +5,7 @@ definePageMeta({
 useHead({ title: "สมัครสมาชิก" });
 
 const router = useRouter()
-
+const axios = useAxios()
 const { $swal } = useNuxtApp()
 
 
@@ -24,17 +24,14 @@ async function onSignup() {
       icon: "error",
       title: 'รหัสผ่านไม่ตรงกัน'
     })
-      
+
       // alert('รหัสผ่านไม่ตรงกัน')
       return
     }
-    const res = await $fetch<{ message: string }>('/api/signup', {
-      method: 'POST',
-      body: input
-    })
+    const res = await axios.post<{ message: string }>('/api/signup', input)
     $swal.fire({
             icon: "success",
-            title: res.message,
+            title: res.data.message,
             showConfirmButton: false,
             timer: 1700
           });

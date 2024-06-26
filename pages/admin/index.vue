@@ -14,73 +14,75 @@ definePageMeta({
 })
 
 const { $swal } = useNuxtApp()
-const { checkAdmin } = useAuth();
-const router = useRouter();
+const { checkAdmin } = useAuth()
+const router = useRouter()
+const axios = useAxios()
 
 const input = reactive({
   username: "",
   password: "",
 });
 
-const loading = ref(false);
+const loading = ref(false)
 
 async function onLoginAdmin() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await $fetch<{ message: string }>("/api/admin/login", {
-      method: "POST",
-      body: input,
-    });
-    await checkAdmin();
+    const res = await axios.post<{ message: string }>("/api/admin/login", input);
+    await checkAdmin()
     $swal.fire({
             icon: "success",
-            title: res.message,
+            title: res.data.message,
             showConfirmButton: false,
             timer: 1700
-          });
+          })
     // alert(res.message);
-    router.push("/admin/dashboard");
+    router.push("/admin/dashboard")
   } catch (error) {
     $swal.fire({
       icon: "error",
-      title: error.data.message
+      title: error.response.data.message
     })
     // alert(error.data.message);
 
   }
- 
+
   loading.value = false;
 }
 </script>
 
 <template>
-  <div>
-    <div class="flex min-h-screen justify-center items-center">
-      <form
-        @submit.prevent="onLoginAdmin"
-        class="w-64 shadow-2xl p-4 space-y-3"
+  <div class="flex min-h-screen justify-center items-center bg-gray-100">
+    <form
+      @submit.prevent="onLoginAdmin"
+      class="w-full max-w-sm bg-white rounded-lg shadow-lg p-6 space-y-6"
+    >
+      <h1 class="text-2xl text-center font-bold text-gray-700">เข้าสู่ระบบ Admin</h1>
+      <label class="block">
+        <span class="block text-gray-700 font-semibold mb-2">ชื่อผู้ใช้งาน</span>
+        <input
+          v-model="input.username"
+          class="input input-bordered w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          type="text"
+          placeholder="กรอกชื่อผู้ใช้งาน"
+        />
+      </label>
+      <label class="block">
+        <span class="block text-gray-700 font-semibold mb-2">รหัสผ่าน</span>
+        <input
+          v-model="input.password"
+          class="input input-bordered w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          type="password"
+          placeholder="กรอกรหัสผ่าน"
+        />
+      </label>
+      <button
+        :disabled="loading"
+        class="btn w-full py-2 mt-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:opacity-50"
       >
-        <h1 class="text-xl text-center md-4 font-bold">เข้าสู่ระบบ Admin</h1>
-        <label class="block my-2">
-          <div>ชื่อผู้ใช้งาน</div>
-          <input
-            v-model="input.username"
-            class="input input-bordered w-full"
-            type="text"
-          />
-        </label>
-        <label class="block my-2">
-          <div>รหัสผ่าน</div>
-          <input
-            v-model="input.password"
-            class="input input-bordered w-full"
-            type="password"
-          />
-        </label>
-        <button :disabled="loading" class="btn w-full mt-2 btn-primary text-white">เข้าสู่ระบบ</button>
-      </form>
-    </div>
+        เข้าสู่ระบบ
+      </button>
+    </form>
   </div>
 </template>
-
 <style scoped></style>

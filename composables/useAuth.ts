@@ -1,4 +1,5 @@
 import { User } from './useAuth';
+
 interface User {
     id: number
     email: string
@@ -13,33 +14,28 @@ interface Admin {
 
 
 export default () => {
-    const { $swal } = useNuxtApp()
+    const axios  = useAxios()
     const router = useRouter()
+    const { $swal } = useNuxtApp()
 
     const auth = useState<User | undefined>('auth', () => undefined)
     const admin = useState<Admin | undefined>('admin', () => undefined)
 
     async function checkAuth () {
-        const headers = useRequestHeaders(['cookie'])
-        const res = await $fetch<{ auth: User | undefined }>('http://localhost:3000/api/auth', {
-            headers
-        })
-        auth.value = res.auth
+        const res = await axios.get<{ auth: User | undefined }>('http://localhost:3000/api/auth')
+        auth.value = res.data.auth
     }
 
     async function checkAdmin () {
-        const headers = useRequestHeaders(['cookie'])
-        const res = await $fetch<{ admin: Admin | undefined }>('http://localhost:3000/api/admin', {
-            headers
-        })
-        admin.value = res.admin
+        const res = await axios.get<{ admin: Admin | undefined }>('http://localhost:3000/api/admin')
+        admin.value = res.data.admin
     }
 
     async function logout () {
-        const res = await $fetch< { message: string } >('/api/logout')
+        const res = await axios.get< { message: string } >('/api/logout')
         $swal.fire({
             icon: "success",
-            title: res.message,
+            title: res.data.message,
             showConfirmButton: false,
             timer: 1800
           });
@@ -47,7 +43,7 @@ export default () => {
         auth.value = undefined
         router.push('/')
     }
-    return { 
+    return {
         auth,
         admin,
         logout,

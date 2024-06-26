@@ -6,6 +6,7 @@ useHead({ title: "เข้าสู่ระบบ" });
 
 const { checkAuth } = useAuth();
 const router = useRouter()
+const axios = useAxios()
 
 const input = reactive({
   email: '',
@@ -19,10 +20,7 @@ const { $swal } = useNuxtApp()
 async function onLogin() {
   loading.value = true
   try {
-    const res = await $fetch<{ message: string }>('/api/login', {
-      method: 'POST',
-      body: input
-    })
+    const res = await axios.post<{ message: string }>('/api/login', input)
 
     const Toast = $swal.mixin({
     toast: true,
@@ -37,7 +35,7 @@ async function onLogin() {
   });
   Toast.fire({
     icon: "success",
-    title: res.message
+    title: res.data.message
   });
 
 
@@ -103,9 +101,9 @@ async function onLogin() {
             autocomplete="off"
           />
         </div>
-        
+
         <div class="mb-6 text-blue-500">
-          <nuxt-link to="/FGpassword"href="#" class="hover:underline">ลืมรหัสผ่าน</nuxt-link> 
+          <nuxt-link to="/FGpassword"href="#" class="hover:underline">ลืมรหัสผ่าน</nuxt-link>
         </div>
         <button
           type="submit"

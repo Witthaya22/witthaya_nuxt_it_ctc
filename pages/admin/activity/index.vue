@@ -18,18 +18,18 @@ interface Activity {
 
 const page = ref(1);
 const activities = ref<Activity[]>([])
+const axios = useAxios()
 
 async function fetchActivities() {
-    const res = await $fetch<{ activities: Activity[] }>(
+    const res = await axios.get<{ activities: Activity[] }>(
       'http://localhost:3000/api/admin/activity',
       {
-        headers: useRequestHeaders(['cookie']),
         params: {
           page: page.value,
         },
       }
     );
-    activities.value = res.activities;
+    activities.value = res.data.activities;
 
 }
 
