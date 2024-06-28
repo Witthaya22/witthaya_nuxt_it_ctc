@@ -1,33 +1,43 @@
 <script setup lang="ts">
-  // import { Activity } from '@/interface/Activity';
-  interface Activity {
+interface Activity {
   id: number;
   title: string;
   description: string;
   images: string[];
   score: number;
   createdAt: string;
-  up
 }
 
-  const axios = useAxios()
+const axios = useAxios()
+
+const page = ref(1)
+const activityRes = ref<{ activities: Activity[] }>({ activities: [] })
+
+async function fetchActivities() {
+    const response = await axios.get<{ activities: Activity[] }>('/api/activity', {
+      params: {
+        page: page.value
+      }
+    })
+
+      activityRes.value = response.data
 
 
-  const page = ref(1)
-  const { data } = await axios.get<{ activities: Activity[]}>('/api/activity',{
-    params: {
-      page: page.value
-    }
-  })
+}
+
+await fetchActivities()
+
+watch(page, () => {
+  fetchActivities()
+})
 </script>
-
 <template>
   <div class="container mx-auto py-3">
-    <div >
-      <h1 class="text-3xl font-bold mb-4 text-center">กิจกรรม</h1>
+    <div>
+      <h1 class="text-3xl font-bold my-10 text-center">กิจกรรม</h1>
       <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-        <div
-          v-for="activity in data.activities"
+        <NuxtLink :to="`/activity/${activity.id}`"
+          v-for="activity in activityRes.activities"
           :key="activity.id"
           class="card w-full md:w-96 shadow-xl hover:shadow-slate-500 mx-auto"
         >
@@ -43,7 +53,12 @@
           <div class="badge text-green-700 badge-outline">15/6/2567</div>
           </div>
           </div>
-        </div>
+        </NuxtLink>
+      </div>
+
+      <div class="space-x-5 text-center container mt-5 mx-auto">
+        <span v-if="page > 1" class="text-xl btn text-blue-600 cursor-pointer" @click="page--">ย้อนกลับ</span>
+        <span class="text-xl btn text-blue-600 cursor-pointer" @click="page++">ถัดไป</span>
       </div>
     </div>
   </div>
@@ -51,7 +66,7 @@
 
 <style>
 .container {
-  max-width: 1300px; /* Adjust this value as needed */
+  max-width: 1300px;
 }
 </style>
 
