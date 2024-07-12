@@ -24,14 +24,21 @@ const { auth, logout } = useAuth();
           <NuxtLink to="contact" class="text-lg font-bold btn mx-1 btn-ghost">ติดต่อเรา</NuxtLink>
         </li>
         <template v-if="auth">
-          <details class="dropdown dropdown-end ">
-            <summary class="text-lg  font-bold   btn mx-1 btn-ghost  hover:bg-slate-700 hover:text-white focus:bg-slate-700 focus:text-white">{{ auth.email }}</summary>
-            <ul
-              class="menu dropdown-content">
-              <li>  <nuxt-link class="text-lg font-bold shadow-2xl my-1"  to="/aboutMe">ดูรายระเอียด</nuxt-link></li>
-              <li><a @click="logout" class="text-lg font-bold shadow-2xl my-1" >ออกจากระบบ</a></li>
+          <div class="dropdown dropdown-end">
+            <summary  tabindex="0" role="button"  class="text-lg  font-bold   btn mx-1 btn-ghost  hover:bg-slate-700 hover:text-white focus:bg-slate-700 focus:text-white">{{ auth.email }}</summary>
+          <ul tabindex="0" class="dropdown-content ">
+            <li>  <nuxt-link class="text-lg font-bold shadow-2xl my-1 bg-green-700 text-white"  to="/profile">ดูรายระเอียด</nuxt-link></li>
+              <li><a @click="logout" class="text-lg font-bold shadow-2xl my-1 bg-red-700 text-white" >ออกจากระบบ</a></li>
+          </ul>
+        </div>
+
+          <!-- <details class="dropdown dropdown-end ">
+            <summary  tabindex="0" role="button"  class="text-lg  font-bold   btn mx-1 btn-ghost  hover:bg-slate-700 hover:text-white focus:bg-slate-700 focus:text-white">{{ auth.email }}</summary>
+            <ul tabindex="0" class="dropdown-content">
+              <li>  <nuxt-link class="text-lg font-bold shadow-2xl my-1 bg-green-700 text-white"  to="/profile">ดูรายระเอียด</nuxt-link></li>
+              <li><a @click="logout" class="text-lg font-bold shadow-2xl my-1 bg-red-700 text-white" >ออกจากระบบ</a></li>
             </ul>
-          </details>
+          </details> -->
         </template>
         <template v-else>
           <div>

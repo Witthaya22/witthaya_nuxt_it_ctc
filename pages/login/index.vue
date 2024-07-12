@@ -50,7 +50,7 @@ async function onLogin() {
   } catch (error: any) {
     $swal.fire({
     icon: "error",
-    title: error.data.message,
+    title: error.response?.data?.message || "เกิดความผิดพลาด",
   });
     // alert(error.data.message)
   }

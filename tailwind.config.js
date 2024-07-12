@@ -8,6 +8,14 @@ export default {
     "./app.vue",
     "./error.vue",
   ],
+  plugins: [
+    require('daisyui'),
+  ],
+  daisyui: {
+    themes: [
+      "light",
+    ],
+  },
   theme: {
       daisyui: {
         theme: [
@@ -17,14 +25,6 @@ export default {
       container: {
         center: true,
       }
-  },
-  plugins: [
-    require('daisyui'),
-  ],
-  daisyui: {
-    themes: [
-      "light",
-    ],
   },
 }
 

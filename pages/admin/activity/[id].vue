@@ -64,7 +64,7 @@ async function onUpsertActivity() {
   loading.value = true;
   try {
     const res = await axios.post<{ message: string }>(
-      '/api/activity',
+      '/api/admin/activity',
       {
         title: input.title,
         description: input.description,
@@ -101,7 +101,7 @@ async function onUpsertActivity() {
 
 <template>
   <div>
-    <h2 class="font-bold text-2xl">{{ isCreate ? 'เพิ่มกิจกรรม' : `แก้ไขกิจกรรม ID: ${id.value}` }}</h2>
+    <h2 class="font-bold text-2xl">{{ isCreate ? 'เพิ่มกิจกรรม' : `แก้ไขกิจกรรม ID: ${id}` }}</h2>
     <hr class="my-3">
     <form @submit.prevent="onUpsertActivity" class="space-y-3">
       <label class="block">

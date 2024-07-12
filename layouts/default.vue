@@ -1,15 +1,19 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+// ไม่ต้องเปลี่ยนแปลงส่วน script
+</script>
 
 <template>
-  <div>
+  <div class="flex flex-col min-h-screen">
     <AppHeader />
 
-    <div class="container px-4 sm:px-0">
+    <main class="flex-grow container px-4 sm:px-0">
       <slot />
-    </div>
-    
+    </main>
+
     <AppFooter />
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* ไม่จำเป็นต้องใช้ style เพิ่มเติม เนื่องจากใช้ Tailwind classes แล้ว */
+</style>
