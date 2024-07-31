@@ -15,14 +15,17 @@ const input = reactive({
 
 const loading = ref(false)
 
-const { $swal } = useNuxtApp()
+// const { $swal } = useNuxtApp()
+import Swal from 'sweetalert2'
+
+
 
 async function onLogin() {
   loading.value = true
   try {
     const res = await axios.post<{ message: string }>('/api/login', input)
 
-    const Toast = $swal.mixin({
+    const Toast = Swal.mixin({
     toast: true,
     position: "top-start",
     showConfirmButton: false,
@@ -48,7 +51,7 @@ async function onLogin() {
     await checkAuth()
     router.push('/')
   } catch (error: any) {
-    $swal.fire({
+    Swal.fire({
     icon: "error",
     title: error.response?.data?.message || "เกิดความผิดพลาด",
   });

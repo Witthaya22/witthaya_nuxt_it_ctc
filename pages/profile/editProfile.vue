@@ -27,14 +27,14 @@ const handleImageUpload = (event: Event) => {
 
 onMounted(() => {
   // สมมติว่าเราโหลดข้อมูลผู้ใช้จาก API
-  username.value = 'ชื่อผู้ใช้';
-  email.value = 'email@example.com';
-  bio.value = 'เกี่ยวกับฉัน';
-  profileImage.value = 'https://example.com/default-profile-image.jpg';
+  username.value = 'ชวัลวิชญ์';
+  email.value = '66309010020';
+  bio.value = 'ฉันชอบการผจญภัยและการเรียนรู้สิ่งใหม่ๆ';
+  profileImage.value = 'https://scontent.fbkk7-2.fna.fbcdn.net/v/t1.6435-9/125985976_697934107811643_3815542183752697058_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=c7cdda&_nc_ohc=QHb9oMx_LAUQ7kNvgEwhEr3&_nc_ht=scontent.fbkk7-2.fna&gid=A7ZQbHAUSQqOXqLizSt8BLm&oh=00_AYCTu0A5o4Zv7plYt7TfoAjH4O6B1NzrIUtBjD2_Sr4kOw&oe=66D01F69';
 });
 </script>
 
-<template>
+<template >
   <div class="profile-edit">
     <h1>แก้ไขโปรไฟล์</h1>
     <div class="profile-image">
@@ -46,7 +46,7 @@ onMounted(() => {
         ref="fileInput"
         style="display: none;"
       />
-      <button @click="fileInput?.click()" class="change-image-btn">เปลี่ยนรูปโปรไฟล์</button>
+      <button @click="fileInput?.click()" class="btn">เปลี่ยนรูปโปรไฟล์</button>
     </div>
     <form @submit.prevent="updateProfile">
       <div class="form-group">
@@ -54,7 +54,7 @@ onMounted(() => {
         <input id="username" v-model="username" type="text" required />
       </div>
       <div class="form-group">
-        <label for="email">อีเมล:</label>
+        <label for="email">รหัสประจำตัวนักศึกษา:</label>
         <input id="email" v-model="email" type="email" required />
       </div>
       <div class="form-group">
@@ -70,7 +70,7 @@ onMounted(() => {
 .profile-edit {
   max-width: 100%;
   height: 100vh;
-  margin: 0;
+  margin: 80px;
   padding: 40px;
   background-color: #ffffff;
   display: flex;

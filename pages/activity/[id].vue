@@ -21,13 +21,17 @@ const { data } = await axios.get<{ activity: Activity }>(`/api/activity/${route.
       <div class="md:flex">
         <div class="md:flex-shrink-0">
           <img :src="data.activity.images[0]" class="h-48 w-full object-cover md:w-48" alt="รูปภาพกิจกรรม"/>
+          <button class="btn btn-success px-14 mt-4 text-white hover:bg-green-600 transition  ease-in-out transform hover:scale-105">
+         จองกิจกรรม
+           </button>
         </div>
+
         <div class="p-8">
           <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">กิจกรรม</div>
           <h1 class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
             {{ data.activity.title }}
           </h1>
-          <p class="mt-4 max-w-2xl text-xl text-gray-500">
+          <p class="mt-4 max-w-4xl text-xl text-gray-500">
             {{ data.activity.description }}
           </p>
           <div class="mt-6">
@@ -40,18 +44,14 @@ const { data } = await axios.get<{ activity: Activity }>(`/api/activity/${route.
               </div>
               <span class="mx-4 text-gray-300">|</span>
               <div class="text-gray-600">
-                สร้างเมื่อ {{ new Date(data.activity.createdAt).toLocaleDateString() }}
+                กิจกรรมเริ่มวันที่ : 15/6/2567
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="mt-8 flex justify-center">
-      <button class="btn btn-success text-white hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105">
-        จองกิจกรรม
-      </button>
-    </div>
+
   </div>
 </template>
 

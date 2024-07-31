@@ -59,7 +59,7 @@ watch(page, () => {
               <span class="ml-1 text-gray-600">{{ activity.score }}</span>
             </div>
             <div class="flex space-x-2">
-              <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">0/2000</span>
+              <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">0/1000</span>
               <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">15/6/2567</span>
             </div>
           </div>

@@ -6,7 +6,7 @@ useHead({ title: "สมัครสมาชิก" });
 
 const router = useRouter()
 const axios = useAxios()
-const { $swal } = useNuxtApp()
+import  $swal  from 'sweetalert2'
 
 
 const input = reactive({
@@ -40,7 +40,7 @@ async function onSignup() {
   } catch (error: any) {
     $swal.fire({
       icon: "error",
-      title: error.data.message
+      title: error.response?.data?.message || "เกิดความผิดพลาด",
     })
     // alert(error.data.message)
   }
