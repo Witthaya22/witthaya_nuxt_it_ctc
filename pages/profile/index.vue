@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-const username = ref('ชวัลวิชญ์')
+const username = ref('ชวัลวิชญ์ คงสำพันธ์')
 const email = ref('66309010020')
-const bio = ref('ฉันชอบการผจญภัยและการเรียนรู้สิ่งใหม่ๆ')
+const bio = ref('ฉันชอบเตะขาเด็กช่างไฟแรง🫰🏻')
 const profileImage = ref('https://scontent.fbkk7-2.fna.fbcdn.net/v/t1.6435-9/125985976_697934107811643_3815542183752697058_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=c7cdda&_nc_ohc=QHb9oMx_LAUQ7kNvgEwhEr3&_nc_ht=scontent.fbkk7-2.fna&gid=A7ZQbHAUSQqOXqLizSt8BLm&oh=00_AYCTu0A5o4Zv7plYt7TfoAjH4O6B1NzrIUtBjD2_Sr4kOw&oe=66D01F69')
 const location = ref('ช่างยนต์ไฟฟ้า')
 const joinDate = ref('1 มกราคม 2023')
@@ -9,6 +9,7 @@ const joinDate = ref('1 มกราคม 2023')
 const upcomingActivities = ref([
   { id: 1, name: 'ไหว้เจ้า', date: '15 สิงหาคม 2024' },
   { id: 2, name: 'คอนเสิร์ตดนตรีคลาสสิคเทคนิคชัยภูมิ', date: '22 สิงหาคม 2024' },
+  { id: 2, name: 'วันพ่อ', date: '5 ธันวาคม 2024' },
 ]);
 
 
@@ -48,10 +49,10 @@ const upcomingActivities = ref([
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-5 h-5 mr-2 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
             แก้ไขโปรไฟล์
           </nuxt-link>
-          <button @click="viewActivities" class="btn btn-secondary btn-outline">
+          <nuxt-link to="profile/editActivity" class="btn btn-secondary btn-outline">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-5 h-5 mr-2 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
             กิจกรรมที่จองไว้
-          </button>
+          </nuxt-link>
         </div>
 
         <div class="bg-base-200/50 rounded-box p-6 backdrop-blur-sm">
