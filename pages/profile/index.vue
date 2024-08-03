@@ -21,7 +21,7 @@ const upcomingActivities = ref([
       <div class="card-body">
         <div class="text-center mb-8">
           <div class="avatar mb-4">
-            <div class="w-32 h-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+            <div class="w-32 h-32 rounded-full ring ring-rose-700 ring-offset-base-100 ring-offset-2">
               <img :src="profileImage" alt="รูปโปรไฟล์" />
             </div>
           </div>
@@ -34,8 +34,8 @@ const upcomingActivities = ref([
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-4 h-4 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
             <span>{{ email }}</span>
           </div>
-          <div class="badge badge-lg badge-ghost gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-4 h-4 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <div class="badge badge-lg badge-ghost gap-2 bg-rose-700 text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-4 h-4 stroke-current "><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             <span>{{ location }}</span>
           </div>
           <div class="badge badge-lg badge-ghost gap-2">

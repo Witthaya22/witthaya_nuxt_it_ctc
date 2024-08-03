@@ -60,7 +60,7 @@ const isAllActivitiesCompleted = computed(() =>
         <div v-if="bookedActivities.length > 0">
           <ul class="space-y-4">
             <li v-for="activity in bookedActivities" :key="activity.id" class="bg-base-200 rounded-lg p-4 shadow-md hover:rotate-3 transition-transform duration-300">
-              <nuxt-link to="#" class="flex justify-between items-center ">
+              <nuxt-link to="http://localhost:3000/profile/Activirty[id]" class="flex justify-between items-center ">
                 <div>
                   <h2 class="text-xl font-semibold text-primary">{{ activity.name }}</h2>
                   <p class="text-base-content/70">วันที่: {{ activity.date }}</p>
