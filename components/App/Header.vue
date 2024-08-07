@@ -1,6 +1,12 @@
 <script lang="ts" setup>
 const { auth, logout } = useAuth();
 
+const checkSmallAdmin = () => {
+  if (auth.value?.email === '66309010031') {
+    return true
+  }
+}
+
 </script>
 
 <template>
@@ -15,6 +21,7 @@ const { auth, logout } = useAuth();
     </div>
     <div class="flex-none">
       <ul class="menu menu-horizontal px-1">
+        <li v-if="checkSmallAdmin()"><NuxtLink to="/forSmallAdmin" class="text-lg font-bold text-yellow-500 btn mx-1 btn-ghost">จัดการกิจกรรม</NuxtLink></li>
         <li><NuxtLink to="/" class="text-lg font-bold btn mx-1 btn-ghost">หน้าหลัก</NuxtLink></li>
         <li><NuxtLink to="/activity" class="text-lg font-bold btn mx-1 btn-ghost">กิจกรรม</NuxtLink></li>
         <li>

@@ -47,6 +47,8 @@ const getStatusText = (status: Activity['status']): string => {
   }
 };
 
+const IN = ref(false)
+
 const checkInQRValue = computed(() => `http://localhost:3000/admin/edit/user/activity/[id]/checkIn/acpass=yes?no`)
 const checkOutQRValue = computed(() => `http://localhost:3000/admin/edit/user/activity/[id]/checkOut/acpass=yes?no`)
 </script>
@@ -103,17 +105,17 @@ const checkOutQRValue = computed(() => `http://localhost:3000/admin/edit/user/ac
         <div class="p-8 bg-base-200">
           <h3 class="text-2xl font-semibold mb-6 text-center">QR Codes สำหรับเช็คอิน/เช็คเอาท์</h3>
           <div class="flex justify-around">
-            <div class="text-center">
+            <div v-if="IN == false" class="text-center">
               <div class="bg-white p-4 rounded-box shadow-lg">
                 <QRCodeVue3 :value="checkInQRValue" :size="200" level="H" />
               </div>
-              <p class="mt-4 font-medium text-lg">เช็คอิน</p>
+              <p class="mt-4 font-bold text-lg">เช็คอิน</p>
             </div>
-            <div class="text-center">
+            <div v-if="IN == true" class="text-center">
               <div class="bg-white p-4 rounded-box shadow-lg">
                 <QRCodeVue3 :value="checkOutQRValue" :size="200" level="H" />
               </div>
-              <p class="mt-4 font-medium text-lg">เช็คเอาท์</p>
+              <p class="mt-4 font-bold text-lg">เช็คเอาท์</p>
             </div>
           </div>
         </div>
