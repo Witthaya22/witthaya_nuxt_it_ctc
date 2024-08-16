@@ -14,7 +14,7 @@ const route = useRoute()
 import Swal from 'sweetalert2'
 
 
-async function seccess() {
+function seccess() {
   Swal.fire({
             icon: "success",
             title: "จองกิจกรรมสำเร็จ",

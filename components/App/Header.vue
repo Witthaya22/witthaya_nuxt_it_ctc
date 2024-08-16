@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 const { auth, logout } = useAuth();
 
-import swal from 'SweetAlert2'
+import swal from 'sweetalert2'
 
 const checkSmallAdmin = () => {
   if (auth.value?.email === '66309010020' ) {
