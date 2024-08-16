@@ -14,7 +14,7 @@
         </div>
       </nav>
       <aside>
-        <p>Copyright © 2024 - All right reserved by ACME Industries Ltd</p>
+        <p>Copyright © 2024 - All right reserved by Witthaya 66309010031</p>
       </aside>
     </footer>
   </div>

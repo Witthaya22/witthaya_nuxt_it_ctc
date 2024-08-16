@@ -106,7 +106,7 @@ async function onLogin() {
         </div>
 
         <div class="mb-6 text-blue-500">
-          <nuxt-link to="/FGpassword"href="#" class="hover:underline">ลืมรหัสผ่าน</nuxt-link>
+          <nuxt-link to="/FGpassword"class="hover:underline">ลืมรหัสผ่าน</nuxt-link>
         </div>
         <button
           type="submit"
@@ -116,7 +116,7 @@ async function onLogin() {
         </button>
       </form>
       <div class="mt-6 text-blue-500 text-center">
-        <nuxt-link to="signup" href="#" class="hover:underline"
+        <nuxt-link to="signup" class="hover:underline"
           >สมัครสมาชิก</nuxt-link
         >
       </div>
