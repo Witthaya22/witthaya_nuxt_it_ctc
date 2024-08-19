@@ -57,7 +57,9 @@ if (!isCreate) {
   input.score = activity.score;
 }
 
-const { $swal } = useNuxtApp();
+// const { $swal } = useNuxtApp();
+import Swal from 'sweetalert2';
+
 const loading = ref(false);
 
 async function onUpsertActivity() {
@@ -81,7 +83,7 @@ async function onUpsertActivity() {
      refreshCacge()
     }
 
-    $swal.fire({
+    Swal.fire({
       icon: "success",
       title: res.data.message,
       showConfirmButton: false,
@@ -89,7 +91,7 @@ async function onUpsertActivity() {
     });
     router.push('/admin/activity');
   } catch (error: any) {
-    $swal.fire({
+    Swal.fire({
       icon: "error",
       title: error.response?.data?.message || "An error occurred",
     });

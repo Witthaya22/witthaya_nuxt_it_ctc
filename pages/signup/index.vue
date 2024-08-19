@@ -91,8 +91,8 @@ async function onSignup() {
             <input v-model="input.name" required type="text" id="name" name="name" class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"
             />
           </div>
-          <!-- <div>
-            <select class="select mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300">
+          <div>
+            <select class="select mt-1 p-2 w-full border border-gray-300  rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300">
               <option disabled selected>แผนกของคุณ</option>
               <option>ช่างยนตร์</option>
               <option>ช่างไฟฟ้า</option>
@@ -107,13 +107,13 @@ async function onSignup() {
               <option>อิเล็กทรอนิก</option>
               <option>ช่างเชื่อม</option>
             </select>
-          </div> -->
+          </div>
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700" >รหัสผ่าน</label>
+            <label for="password" class="block text-sm font-medium text-gray-700" >รหัสผ่าน <span class="text-slate-500 italic">(เลขบัตรประชาชน)</span></label>
             <input v-model="input.password" required type="password" id="password" name="password" class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"/>
           </div>
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700" >ยืนยันรหัสผ่าน</label>
+            <label for="password" class="block text-sm font-medium text-gray-700" >ยืนยันรหัสผ่าน <span class="text-slate-500 italic">(เลขบัตรประชาชน)</span></label>
             <input v-model="confirmPassword" required type="password" id="confirmPassword" name="password" class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"/>
           </div>
           <div>

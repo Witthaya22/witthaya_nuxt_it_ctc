@@ -93,7 +93,7 @@ async function onLogin() {
           <label
             for="password"
             class="block text-base font-medium text-gray-700 my-2"
-            >รหัสผ่าน</label
+            >รหัสผ่าน <span class="text-slate-500 italic">(เลขบัตรประชาชน)</span></label
           >
           <input
             v-model="input.password"
