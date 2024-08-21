@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import TinyMCE from '@tinymce/tinymce-vue'
 </script>
 
@@ -16,4 +16,4 @@ import TinyMCE from '@tinymce/tinymce-vue'
     />
   </div>
 </template>
-
+ -->

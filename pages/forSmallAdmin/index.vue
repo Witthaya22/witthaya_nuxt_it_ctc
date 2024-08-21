@@ -32,7 +32,7 @@ const activities = ref<Activity[]>([
 ])
 
 const users = ref<User[]>([
-  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'user', lastLogin: '2024-08-13 14:30', completedActivities: 2 },
+  { id: 1, name: 'ชวัลวิชญ์ คงสำพันธ์', email: '66309010020', role: 'user', lastLogin: '2024-08-13 14:30', completedActivities: 1 },
   { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'admin', lastLogin: '2024-08-14 09:15', completedActivities: 3 },
   { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'user', lastLogin: '2024-08-12 18:45', completedActivities: 1 },
 ])
@@ -164,7 +164,7 @@ const exportActivityToPDF = (activity: Activity) => {
                   <td>{{ activity.score }}</td>
                   <td>
                     <div class="flex space-x-2">
-                      <nuxt-link :to="`/forSmallAdmin/editActivity/${activity.id}`" class="btn btn-sm btn-primary">ดูรายละเอียด</nuxt-link>
+                      <nuxt-link to="/forSmallAdmin/editActivity/" class="btn btn-sm btn-primary">ดูรายละเอียด</nuxt-link>
                       <button @click="exportActivityToPDF(activity)" class="btn btn-sm btn-secondary">ส่งออก PDF</button>
                     </div>
                   </td>
@@ -191,7 +191,7 @@ const exportActivityToPDF = (activity: Activity) => {
       </div>
 
       <div class="bg-base-100 rounded-box shadow-xl p-6">
-        <div class="flex justify-between items-center mb-4 cursor-pointer" @click="showUsers = !showUsers">
+        <div class="flex justify-between items-center mb-4 cursor-pointer " @click="showUsers = !showUsers">
           <h2 class="text-2xl font-semibold">จัดการผู้ใช้</h2>
           <span class="text-2xl">{{ showUsers ? '▼' : '▶' }}</span>
         </div>
@@ -219,13 +219,14 @@ const exportActivityToPDF = (activity: Activity) => {
                   <td>{{ user.email }}</td>
                   <td>
                     <span :class="user.role === 'admin' ? 'badge badge-primary' : 'badge'">
-                      {{ user.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้' }}
+                      {{ user.role === 'admin' ? 'ผู้ดูแลระบบ' : 'นักศึกษา' }}
                     </span>
                   </td>
                   <td>{{ user.lastLogin }}</td>
                   <td>{{ user.completedActivities }}</td>
                   <td>
-                    <button @click="editUser(user)" class="btn btn-sm btn-warning">แก้ไข</button>
+                    <nuxt-link class="btn btn-sm btn-warning" to="forSmallAdmin/profileaUser">ดูรายละเอียด</nuxt-link>
+                    <!-- <button @click="editUser(user)" class="btn btn-sm btn-warning">ดูรายละเอียด</button> -->
                   </td>
                 </tr>
               </tbody>

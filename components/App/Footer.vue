@@ -1,9 +1,8 @@
 <template>
   <div class="page-container">
     <main class="content">
-      <!-- เนื้อหาหลักของเว็บไซต์จะอยู่ตรงนี้ -->
     </main>
-    <footer class="footer footer-center p-10 text-base-content rounded">
+    <footer class="footer footer-center p-10 text-base-content rounded text-gray-100">
       <nav class="grid grid-flow-col gap-4">
       </nav>
       <nav>
@@ -18,6 +17,7 @@
       </aside>
     </footer>
   </div>
+
 </template>
 
 <style>

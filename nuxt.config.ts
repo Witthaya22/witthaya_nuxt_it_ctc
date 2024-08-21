@@ -4,7 +4,7 @@ export default defineNuxtConfig({
 
   css: ['@/assets/css/main.css',
        '@/assets/css/font.css',
-       '~/assets/css/styles.css'
+       '~/assets/css/styles.css',
 
        ],
 
@@ -28,4 +28,5 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2024-08-16',
+  modules: ["@nuxt/icon"]
 })

@@ -44,8 +44,8 @@ const isAllActivitiesCompleted = computed(() =>
 </script>
 
 <template>
-  <div class="min-h-screen flex justify-center items-center p-4">
-    <div class="card w-full max-w-4xl bg-base-100 shadow-xl relative">
+  <div class="min-h-screen flex justify-center items-center p-4 ">
+    <div class="card w-full max-w-4xl   relative backdrop-blur-lg shadow-sm shadow-white">
       <div class="absolute top-4 right-4 text-right">
         <div class="text-3xl font-bold text-primary">
           คะแนน {{ completedActivities }}/{{ totalRequiredActivities }}
@@ -54,17 +54,17 @@ const isAllActivitiesCompleted = computed(() =>
            {{  isAllActivitiesCompleted ? 'ผ่านกิจกรรม' : 'ยังไม่ผ่านกิจกรรม' }}
         </div>
       </div>
-      <div class="card-body pt-16">
+      <div class="card-body pt-16  ">
         <h1 class="card-title text-3xl font-bold text-center mb-8">กิจกรรมที่จองไว้</h1>
 
         <div v-if="bookedActivities.length > 0">
-          <ul class="space-y-4">
-            <li v-for="activity in bookedActivities" :key="activity.id" class="bg-base-200 rounded-lg p-4 shadow-md hover:rotate-3 transition-transform duration-300">
+          <ul class="space-y-4 ">
+            <li v-for="activity in bookedActivities" :key="activity.id" class=" rounded-lg p-4 transition-all shadow-sm shadow-white duration-300 hover:border-2 hover:border-white  hover:scale-105">
               <nuxt-link to="http://localhost:3000/profile/Activirty[id]" class="flex justify-between items-center ">
                 <div>
                   <h2 class="text-xl font-semibold text-primary">{{ activity.name }}</h2>
-                  <p class="text-base-content/70">วันที่: {{ activity.date }}</p>
-                  <p class="text-base-content/70">สถานที่: {{ activity.location }}</p>
+                  <p class="text-base-content/70 text-white">วันที่: {{ activity.date }}</p>
+                  <p class="text-base-content/70 text-white">สถานที่: {{ activity.location }}</p>
                   <div class="mt-2">
                     <span :class="['badge', getStatusClass(activity.status)]">
                       {{ getStatusText(activity.status) }}

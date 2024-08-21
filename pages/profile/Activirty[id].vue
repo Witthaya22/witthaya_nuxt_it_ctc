@@ -58,13 +58,13 @@ const checkOutQRValue = computed(() => `http://localhost:3000/admin/edit/user/ac
     <div class="max-w-4xl mx-auto">
       <div class="bg-base-100 shadow-2xl rounded-box overflow-hidden">
         <!-- Activity Header -->
-        <div class="relative h-64 bg-gradient-to-r from-primary to-secondary">
+        <!-- <div class="relative h-64 bg-gradient-to-r from-primary to-secondary">
           <div class="absolute inset-0 flex items-center justify-center bg-opacity-75 bg-base-100">
             <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
               {{ activity.name }}
             </h1>
           </div>
-        </div>
+        </div> -->
 
         <!-- User Info -->
         <div class="flex items-center space-x-4 p-8 bg-base-200">
@@ -73,15 +73,20 @@ const checkOutQRValue = computed(() => `http://localhost:3000/admin/edit/user/ac
               <img :src="user.profileImage" alt="User profile" />
             </div>
           </div>
-          <div>
-            <h2 class="text-3xl font-semibold">{{ user.name }}</h2>
-            <div class="mt-2">
-              <span :class="['badge', 'badge-lg', getStatusClass(activity.status)]">
+          <div class="flex-1">
+            <div class="flex justify-between">
+              <span class="text-3xl font-semibold">{{ user.name }}</span>
+              <span class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">กิจกรรม  {{ activity.name }}</span>
+            </div>
+            <div class="mt-2 ">
+              <span :class="['badge', 'badge-lg', getStatusClass(activity.status), 'text-lg font-semibold animate-pulse ']">
                 {{ getStatusText(activity.status) }}
+
               </span>
             </div>
           </div>
         </div>
+
 
         <!-- Activity Details -->
         <div class="p-8 space-y-6">

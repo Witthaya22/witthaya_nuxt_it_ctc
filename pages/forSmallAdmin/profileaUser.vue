@@ -1,18 +1,19 @@
 <script lang="ts" setup>
 const username = ref('ชวัลวิชญ์ คงสำพันธ์')
 const email = ref('66309010020')
-const bio = ref('ฉันชอบเตะขาเด็กช่างไฟแรง🫰🏻')
+const bio = ref('ฉันรักในกลิ่นน้ำมันเครื่อง👽')
 const profileImage = ref('https://scontent.fbkk7-2.fna.fbcdn.net/v/t1.6435-9/125985976_697934107811643_3815542183752697058_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=c7cdda&_nc_ohc=QHb9oMx_LAUQ7kNvgEwhEr3&_nc_ht=scontent.fbkk7-2.fna&gid=A7ZQbHAUSQqOXqLizSt8BLm&oh=00_AYCTu0A5o4Zv7plYt7TfoAjH4O6B1NzrIUtBjD2_Sr4kOw&oe=66D01F69')
-const location = ref('ช่างยนต์ไฟฟ้า')
+const location = ref('ช่างยนต์')
 const joinDate = ref('1 มกราคม 2023')
 
 const upcomingActivities = ref([
   { id: 1, name: 'ไหว้เจ้า', date: '15 สิงหาคม 2024' },
   { id: 2, name: 'คอนเสิร์ตดนตรีคลาสสิคเทคนิคชัยภูมิ', date: '22 สิงหาคม 2024' },
   { id: 2, name: 'วันพ่อ', date: '5 ธันวาคม 2024' },
+
+
+
 ]);
-
-
 
 interface Activity {
   id: number;
@@ -57,6 +58,40 @@ const isAllActivitiesCompleted = computed(() =>
   completedActivities.value >= totalRequiredActivities
 );
 
+import swal from 'sweetalert2';
+const confirmActivity = () => {
+  swal.fire({
+    title: "อนุมัติผ่านกิจกรรม",
+    text: "คุณต้องการอนุมัติผ่านกิจกรรมไหว้เจ้า ใช่หรือไม่ ",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ยืนยัน" ,
+    cancelButtonText: "ยกเลิก",
+  })
+
+}
+const confirmActivity1 = () => {
+  swal.fire({
+    title: "ไม่ผ่านกิจกรรม",
+    text: "คุณต้องการไม่อนุมัติผ่านกิจกรรมไหว้เจ้า ใช่หรือไม่ ",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "ยืนยัน" ,
+    cancelButtonText: "ยกเลิก",
+  })
+
+}
+
+
+
+
+
+
+
 
 </script>
 
@@ -64,7 +99,7 @@ const isAllActivitiesCompleted = computed(() =>
   <div class="min-h-screen flex justify-center items-center p-4">
     <div class="card w-full max-w-4xl bg-base-100/50 shadow-xl backdrop-blur-sm">
       <div class="card-body">
-        <div class="text-center mb-8">
+        <div class="text-center mb-6">
           <div class="avatar mb-4">
             <div class="w-32 h-32 rounded-full ring ring-rose-700 ring-offset-base-100 ring-offset-2">
               <img :src="profileImage" alt="รูปโปรไฟล์" />
@@ -73,7 +108,6 @@ const isAllActivitiesCompleted = computed(() =>
           <h1 class="text-3xl font-bold text-base-content">{{ username }}</h1>
           <p class="text-lg italic text-base-content/70">{{ bio }}</p>
         </div>
-
         <div class="absolute top-4 right-4 text-right">
         <div class="text-3xl font-bold text-primary">
           คะแนน {{ completedActivities }}/{{ totalRequiredActivities }}
@@ -98,23 +132,24 @@ const isAllActivitiesCompleted = computed(() =>
           </div>
         </div>
 
-        <div class="flex justify-center gap-4 mb-8">
-          <nuxt-link to="profile/editProfile" class="btn btn-primary btn-outline">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-5 h-5 mr-2 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-            แก้ไขโปรไฟล์
-          </nuxt-link>
-          <nuxt-link to="profile/editActivity" class="btn btn-secondary btn-outline">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-5 h-5 mr-2 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-            กิจกรรมที่จองไว้
-          </nuxt-link>
-        </div>
+
 
         <div class="bg-base-200/50 rounded-box p-6 backdrop-blur-sm">
           <h2 class="text-2xl font-semibold mb-4 text-base-content">กิจกรรมที่เข้าร่วม</h2>
           <ul class="divide-y divide-base-content/10">
-            <li v-for="activity in upcomingActivities" :key="activity.id" class="py-3 flex justify-between items-center">
-              <span class="font-medium text-base-content">{{ activity.name }}</span>
-              <span class="text-base-content/70">{{ activity.date }}</span>
+            <li v-for="activity in bookedActivities" :key="activity.id"  class="py-3 flex justify-between items-center">
+              <span  class="font-medium text-lg text-base-content ">{{ activity.name }}
+                <span :class="['badge', getStatusClass(activity.status)]">
+                      {{ getStatusText(activity.status) }}
+                    </span>
+                    <span v-if="activity.score !== null" class="badge badge-info ml-2">
+                      {{ activity.score }} คะแนน
+                    </span>
+                  </span>
+                  <div>
+              <button @click="confirmActivity" class="btn btn-info mr-2 w-24 text-white" >อนุมัติ</button>
+              <button @click="confirmActivity1" class="btn btn-error w-24 text-white" >ไม่อนุมัติ</button>
+            </div>
             </li>
           </ul>
         </div>
@@ -122,4 +157,3 @@ const isAllActivitiesCompleted = computed(() =>
     </div>
   </div>
 </template>
-

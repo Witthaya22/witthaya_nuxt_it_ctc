@@ -44,48 +44,104 @@ const logoutConfirm = () => {
       >
     </div>
     <div class="flex-none">
-      <ul class="menu menu-horizontal px-1">
-        <li v-if="checkSmallAdmin()"><NuxtLink to="/forSmallAdmin" class="text-lg font-bold text-yellow-500 btn mx-1 btn-ghost">จัดการกิจกรรม</NuxtLink></li>
-        <li><NuxtLink to="/" class="text-lg font-bold btn mx-1 btn-ghost">หน้าหลัก</NuxtLink></li>
-        <!-- <li><NuxtLink to="/activity" class="text-lg font-bold btn mx-1 btn-ghost">กิจกรรม</NuxtLink></li> -->
+      <ul class="menu menu-horizontal px-1 ">
+        <li v-if="checkSmallAdmin()">
+          <NuxtLink
+            to="/forSmallAdmin"
+            class="text-lg font-bold text-yellow-500 btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-yellow-500"
+          >
+            จัดการกิจกรรม
+          </NuxtLink>
+        </li>
+        <li>
+          <NuxtLink
+            to="/"
+            class="text-lg font-bold btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-blue-500"
+          >
+            หน้าหลัก
+          </NuxtLink>
+        </li>
         <div class="dropdown dropdown-end z-10">
-            <summary  tabindex="0" role="button"  class="text-lg  font-bold   btn mx-1 btn-ghost  hover:bg-slate-700 hover:text-white focus:bg-slate-700 focus:text-white">กิจกรรมทั้งหมด</summary>
+          <summary
+            tabindex="0"
+            role="button"
+            class="text-lg font-bold btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-blue-500"
+          >
+            กิจกรรมทั้งหมด
+          </summary>
           <ul tabindex="0" class="dropdown-content ">
-            <li><nuxt-link class="text-base font-bold shadow-2xl my-1 bg-lime-700 hover:bg-lime-500 text-white"  to="/activity">กิจกรรมที่เปิด</nuxt-link></li>
-            <li><nuxt-link class="text-base font-bold shadow-2xl my-1 bg-pink-700 hover:bg-pink-500 text-white"  to="/profile/editActivity">กิจกรรมที่จอง</nuxt-link></li>
+            <li>
+              <nuxt-link
+                class="text-base font-bold focus:text-white focus:border-blue-500 shadow-2xl my-1 bg-lime-700 hover:bg-lime-500 text-white"
+                to="/activity"
+              >
+                กิจกรรมที่เปิด
+              </nuxt-link>
+            </li>
+            <li>
+              <nuxt-link
+                class="text-base font-bold focus:text-white focus:border-blue-500 shadow-2xl my-1 bg-pink-700 hover:bg-pink-500 text-white"
+                to="/profile/editActivity"
+              >
+                กิจกรรมที่จอง
+              </nuxt-link>
+            </li>
           </ul>
         </div>
         <li>
-          <NuxtLink to="about" class="text-lg font-bold btn mx-1 btn-ghost">เกี่ยวกับเรา</NuxtLink>
+          <NuxtLink
+            to="/about"
+            class="text-lg font-bold btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-blue-500"
+          >
+            เกี่ยวกับเรา
+          </NuxtLink>
         </li>
         <li>
-          <NuxtLink to="contact" class="text-lg font-bold btn mx-1 btn-ghost">ติดต่อเรา</NuxtLink>
+          <NuxtLink
+            to="/contact"
+            class="text-lg font-bold btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-blue-500"
+          >
+            ติดต่อเรา
+          </NuxtLink>
         </li>
         <template v-if="auth">
           <div class="dropdown dropdown-end">
-            <summary  tabindex="0" role="button"  class="text-lg  font-bold   btn mx-1 btn-ghost  hover:bg-slate-700 hover:text-white focus:bg-slate-700 focus:text-white">{{ auth.email }}</summary>
-          <ul tabindex="0" class="dropdown-content ">
-            <li>  <nuxt-link class="text-lg font-bold shadow-2xl my-1 bg-teal-700 hover:bg-teal-500 text-white"  to="/profile">ดูรายระเอียด</nuxt-link></li>
-              <li><a @click="logoutConfirm" class="text-lg font-bold shadow-2xl my-1 bg-red-700 hover:bg-red-500 text-white" >ออกจากระบบ</a></li>
-          </ul>
-        </div>
-
-          <!-- <details class="dropdown dropdown-end ">
-            <summary  tabindex="0" role="button"  class="text-lg  font-bold   btn mx-1 btn-ghost  hover:bg-slate-700 hover:text-white focus:bg-slate-700 focus:text-white">{{ auth.email }}</summary>
-            <ul tabindex="0" class="dropdown-content">
-              <li>  <nuxt-link class="text-lg font-bold shadow-2xl my-1 bg-green-700 text-white"  to="/profile">ดูรายระเอียด</nuxt-link></li>
-              <li><a @click="logout" class="text-lg font-bold shadow-2xl my-1 bg-red-700 text-white" >ออกจากระบบ</a></li>
+            <summary
+              tabindex="0"
+              role="button"
+              class="text-lg font-bold btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-blue-500"
+            >
+              {{ auth.email }}
+            </summary>
+            <ul tabindex="0" class="dropdown-content ">
+              <li>
+                <nuxt-link
+                  class="text-lg font-bold shadow-2xl my-1 bg-teal-700 hover:bg-teal-500 text-white"
+                  to="/profile"
+                >
+                  ดูรายระเอียด
+                </nuxt-link>
+              </li>
+              <li>
+                <a
+                  @click="logoutConfirm"
+                  class="text-lg font-bold shadow-2xl my-1 bg-red-700 hover:bg-red-500 text-white"
+                >
+                  ออกจากระบบ
+                </a>
+              </li>
             </ul>
-          </details> -->
+          </div>
         </template>
         <template v-else>
           <div>
             <li>
               <NuxtLink
                 to="login"
-                class="text-lg font-bold text-slate-100 btn btn-info"
-                >เข้าสู่ระบบ</NuxtLink
+                class="text-lg font-bold text-slate-100 btn btn-info focus:outline-none focus:border-b-2 focus:border-info"
               >
+                เข้าสู่ระบบ
+              </NuxtLink>
             </li>
           </div>
         </template>
@@ -94,4 +150,8 @@ const logoutConfirm = () => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* Additional styles to ensure the underline looks clean */
+
+</style>
+

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // import Typewriter from 'typewriter-effect'
-import Typewriter from 'typewriter-effect/dist/core';
+import Typewriter from 'typewriter-effect/dist/core'
 
 import { ref, onMounted } from 'vue'
 
@@ -16,12 +16,12 @@ const phrases = [
 const typewriterElement = ref<HTMLElement | null>(null)
 
 onMounted(() => {
-  console.log(typewriterElement.value); // Check if this logs the correct element
+  console.log(typewriterElement.value);
 
   if (typewriterElement.value) {
     const typewriter = new (Typewriter as any)(typewriterElement.value, {
   loop: true,
-  delay: 80,
+  delay: 130,
   deleteSpeed: 50,
 })
 

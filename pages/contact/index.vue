@@ -9,10 +9,10 @@ const form = reactive({
 })
 
 const submitForm = () => {
-  // ตรงนี้จะเป็นโค้ดสำหรับส่งข้อมูลฟอร์มไปยังเซิร์ฟเวอร์
-  console.log('ส่งฟอร์ม:', form)
-  // รีเซ็ตฟอร์มหลังจากส่ง
-  Object.keys(form).forEach(key => form[key] = '')
+  // // ตรงนี้จะเป็นโค้ดสำหรับส่งข้อมูลฟอร์มไปยังเซิร์ฟเวอร์
+  // console.log('ส่งฟอร์ม:', form)
+  // // รีเซ็ตฟอร์มหลังจากส่ง
+  // Object.keys(form).forEach(key => form[key] = '')
 }
 </script>
 
@@ -24,7 +24,7 @@ const submitForm = () => {
         <p class="text-xl ">เรายินดีรับฟังทุกความคิดเห็นและคำถามของคุณ</p>
       </div>
 
-      <div class="bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl shadow-xl overflow-hidden">
+      <div class="bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl shadow-xl overflow-hidden">
         <div class="md:flex">
           <div class="md:w-1/2 p-8">
             <h2 class="text-3xl font-bold  mb-6">ส่งข้อความถึงเรา</h2>
@@ -51,7 +51,7 @@ const submitForm = () => {
               </div>
               <div>
                 <button type="submit"
-                  class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-xl text-sm font-medium ">
+                  class="w-full flex justify-center py-3 px-4 border-white border-2 border-transparent rounded-md shadow-xl text-sm font-medium ">
                   ส่งข้อความ
                 </button>
               </div>
@@ -94,18 +94,7 @@ const submitForm = () => {
         </div>
       </div>
 
-      <div class="mt-12">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3838.8581883364814!2d102.01324117459502!3d15.811429846288927!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x311f359ab8fa2ff9%3A0xaf87184b5a635915!2z4Lin4Li04LiX4Lii4Liy4Lil4Lix4Lii4LmA4LiX4LiE4LiZ4Li04LiE4LiK4Lix4Lii4Lig4Li54Lih4Li0!5e0!3m2!1sth!2sth!4v1722434951298!5m2!1sth!2sth"
-          width="100%"
-          height="450"
-          style="border:0;"
-          allowfullscreen=""
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          class="rounded-xl shadow-lg"
-        ></iframe>
-      </div>
+
     </div>
   </div>
 </template>
