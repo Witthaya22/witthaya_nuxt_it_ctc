@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: false,
+  layout: 'loglog',
 });
 useHead({ title: "เข้าสู่ระบบ" });
 
@@ -63,21 +63,21 @@ async function onLogin() {
 </script>
 
 <template>
-  <div class="bg-gray-100 flex justify-center items-center h-screen">
-    <div class="w-1/2 h-screen hidden lg:block">
+  <div class="flex justify-center items-center h-screen">
+    <!-- <div class="w-1/2 h-screen hidden lg:block">
       <img
         src="@/assets/images/login1.png"
         alt="Placeholder Image"
         class="object-cover w-full h-full"
       />
-    </div>
-    <div class="lg:p-36 md:p-52 sm:20 p-8 w-full lg:w-1/2">
-      <h1 class="text-3xl font-semibold mb-4 text-center">เข้าสู่ระบบ</h1>
-      <form @submit.prevent="onLogin()">
+    </div> -->
+    <div class="lg:p-24 md:p-36 sm:20 p-8 w-full lg:w-1/2 ">
+      <h1 class="text-4xl font-semibold mb-4 text-center">เข้าสู่ระบบ</h1>
+      <form @submit.prevent="onLogin()" class="backdrop-blur-lg">
         <div class="mb-4">
           <label
             for="email"
-            class="block text-base font-medium text-gray-700 my-2"
+            class="block text-base font-medium text-gray-400 my-2"
             >เลขประจำตัวนักศึกษา</label
           >
           <input
@@ -85,22 +85,22 @@ async function onLogin() {
             type="text"
             id="email"
             name="email"
-            class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"
+            class="text-black mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-colors duration-300"
             autocomplete="off"
           />
         </div>
         <div class="mb-4">
           <label
             for="password"
-            class="block text-base font-medium text-gray-700 my-2"
-            >รหัสผ่าน <span class="text-slate-500 italic">(เลขบัตรประชาชน)</span></label
+            class="block text-base font-medium text-gray-400  my-2"
+            >รหัสผ่าน <span class="text-gray-500  italic">(เลขบัตรประชาชน)</span></label
           >
           <input
             v-model="input.password"
             type="password"
             id="password"
             name="password"
-            class="mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600 transition-colors duration-300"
+            class="text-black mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-colors duration-300"
             autocomplete="off"
           />
         </div>
@@ -124,4 +124,6 @@ async function onLogin() {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>

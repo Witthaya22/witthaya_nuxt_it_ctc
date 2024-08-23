@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 const username = ref('ชวัลวิชญ์ คงสำพันธ์')
 const email = ref('66309010020')
-const bio = ref('ฉันชอบเตะขาเด็กช่างไฟแรง🫰🏻')
+const bio = ref('ฉันรักในกลิ่นน้ำมันเครื่อง👽')
 const profileImage = ref('https://scontent.fbkk7-2.fna.fbcdn.net/v/t1.6435-9/125985976_697934107811643_3815542183752697058_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=c7cdda&_nc_ohc=QHb9oMx_LAUQ7kNvgEwhEr3&_nc_ht=scontent.fbkk7-2.fna&gid=A7ZQbHAUSQqOXqLizSt8BLm&oh=00_AYCTu0A5o4Zv7plYt7TfoAjH4O6B1NzrIUtBjD2_Sr4kOw&oe=66D01F69')
-const location = ref('ช่างยนต์ไฟฟ้า')
+const location = ref('ช่างยนต์')
 const joinDate = ref('1 มกราคม 2023')
 
 const upcomingActivities = ref([
@@ -62,16 +62,16 @@ const isAllActivitiesCompleted = computed(() =>
 
 <template>
   <div class="min-h-screen flex justify-center items-center p-4">
-    <div class="card w-full max-w-4xl bg-base-100/50 shadow-xl backdrop-blur-sm">
-      <div class="card-body">
+    <div class="card w-full max-w-4xl backdrop-blur-lg shadow-xl ">
+      <div class="card-body text-white">
         <div class="text-center mb-8">
           <div class="avatar mb-4">
             <div class="w-32 h-32 rounded-full ring ring-rose-700 ring-offset-base-100 ring-offset-2">
               <img :src="profileImage" alt="รูปโปรไฟล์" />
             </div>
           </div>
-          <h1 class="text-3xl font-bold text-base-content">{{ username }}</h1>
-          <p class="text-lg italic text-base-content/70">{{ bio }}</p>
+          <h1 class="text-3xl font-bold ">{{ username }}</h1>
+          <p class="text-lg italic ">{{ bio }}</p>
         </div>
 
         <div class="absolute top-4 right-4 text-right">
@@ -109,12 +109,12 @@ const isAllActivitiesCompleted = computed(() =>
           </nuxt-link>
         </div>
 
-        <div class="bg-base-200/50 rounded-box p-6 backdrop-blur-sm">
-          <h2 class="text-2xl font-semibold mb-4 text-base-content">กิจกรรมที่เข้าร่วม</h2>
-          <ul class="divide-y divide-base-content/10">
+        <div class=" rounded-box p-6 backdrop-blur-sm">
+          <h2 class="text-2xl font-semibold mb-4 ">กิจกรรมที่เข้าร่วม</h2>
+          <ul class="divide-y divide-base-200">
             <li v-for="activity in upcomingActivities" :key="activity.id" class="py-3 flex justify-between items-center">
-              <span class="font-medium text-base-content">{{ activity.name }}</span>
-              <span class="text-base-content/70">{{ activity.date }}</span>
+              <span class="font-medium ">{{ activity.name }}</span>
+              <span class="/70">{{ activity.date }}</span>
             </li>
           </ul>
         </div>

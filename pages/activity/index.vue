@@ -37,7 +37,7 @@ watch(page, () => {
     <h1 class="text-4xl font-bold mb-12 text-center ">กิจกรรมทั้งหมด</h1>
     <Icon name="MyComponent" />
 
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 text-white">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 text-white backdrop-blur-lg">
       <NuxtLink
         v-for="activity in activityRes.activities"
         :key="activity.id"

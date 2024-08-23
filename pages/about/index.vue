@@ -12,7 +12,7 @@ const directors = [
 
 <template>
   <div class="min-h-screen  ">
-    <div class="container mx-auto px-4 py-16">
+    <div class="container mx-auto px-4 py-16 ">
       <h1 class="text-4xl font-bold text-center mb-16 ">วิทยาลัยเทคนิคชัยภูมิ</h1>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -65,8 +65,8 @@ const directors = [
       </div>
 
 
-      <div class="mt-24">
-        <h2 class="text-4xl font-bold text-center mb-12">คณะผู้บริหาร</h2>
+      <div class="mt-24 backdrop-blur-lg">
+        <h2 class="text-4xl font-bold text-center mb-12 ">คณะผู้บริหาร</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div v-for="director in directors" :key="director.name" class="bg-opacity-20 backdrop-filter rounded-xl p-6 text-center">
             <img :src="director.photo" :alt="director.name" class="w-48 h-48 object-cover rounded-full mx-auto mb-4">
@@ -76,7 +76,7 @@ const directors = [
         </div>
       </div>
 
-      <div class="mt-12">
+      <div class="mt-12 backdrop-blur-lg">
         <iframe
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3838.8581883364814!2d102.01324117459502!3d15.811429846288927!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x311f359ab8fa2ff9%3A0xaf87184b5a635915!2z4Lin4Li04LiX4Lii4Liy4Lil4Lix4Lii4LmA4LiX4LiE4LiZ4Li04LiE4LiK4Lix4Lii4Lig4Li54Lih4Li0!5e0!3m2!1sth!2sth!4v1722434951298!5m2!1sth!2sth"
           width="100%"

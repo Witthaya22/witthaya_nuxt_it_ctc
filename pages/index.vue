@@ -46,12 +46,15 @@ onMounted(() => {
       <img
         src="~/assets/images/logo.png"
         class="max-w-52 mx-20 animate-bounce"
+
       />
-      <div>
-        <h1 class="text-5xl font-bold ">
-          <span ref="typewriterElement">เข้าร่วมกิจกรรม</span><span ref="typewriterElement"></span>
+
+
+      <div class="text-gradient  ">
+        <h1 class="text-5xl font-bold  ">
+          <span >เข้าร่วมกิจกรรม</span><span ref="typewriterElement"></span>
         </h1>
-        <p class="py-6">
+        <p class="py-6 leading-tight text-lg ">
           ร่วมมือร่วมใจ ก้าวไปสู่ความสำเร็จด้วยกัน เรียนรู้พร้อมสนุกสนาน
           สานฝันร่วมกันในทุกกิจกรรม สามัคคีคือพลัง สร้างสรรค์กิจกรรมที่ยอดเยี่ยม
           พัฒนาความคิดและทักษะ เพื่อพิชิตทุกความฝัน

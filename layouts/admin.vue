@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 
+
 const { logout } = useAuth()
 
 interface Link {
@@ -16,8 +17,8 @@ const linkList: Link[] = [
 </script>
 
 <template>
-  <div class="flex min-h-screen">
-    <aside class="bg-slate-600 w-44 flex flex-col sticky top-0 h-screen">
+  <div class="flex min-h-screen bg-slate-600 text-white">
+    <aside class="bg-slate-700 w-44 flex flex-col sticky top-0 h-screen">
       <h1 class="text-lg font-bold text-center text-slate-100 m-2">กิจกรรมวิทยาลัยเทคนิคชัยภูมิ</h1>
       <ul class="list-none flex flex-col flex-grow">
         <li v-for="link in linkList" :key="link.to">

@@ -1,56 +1,46 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { QrcodeStream } from 'vue-qrcode-reader'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 interface Activity {
-  id: number; name: string; date: string; location: string
-  status: 'open' | 'closed'; participantsCount: number
-  score: number; description: string
+  name: string
+  date: string
+  location: string
+  status: 'open' | 'closed'
+  participantsCount: number
+  score: number
+  description: string
 }
 
-const route = useRoute()
 const router = useRouter()
-const activity = ref<Activity | null>(null)
-const showQRScanner = ref(false)
-
-onMounted(async () => {
-  const activityId = Number(route.params.id)
-  activity.value = {
-    id: activityId, name: 'กิจกรรมตัวอย่าง', date: '2024-08-15',
-    location: 'สถานที่ตัวอย่าง', status: 'open', participantsCount: 50,
-    score: 1, description: 'รายละเอียดกิจกรรมตัวอย่าง'
-  }
+const activity = ref<Activity>({
+  name: '',
+  date: '',
+  location: '',
+  status: 'open',
+  participantsCount: 0,
+  score: 0,
+  description: ''
 })
 
 const saveActivity = () => {
-  alert('บันทึกการเปลี่ยนแปลงเรียบร้อย')
-  router.push('/admin')
-}
-
-const onQRCodeScanned = (decodedString: string) => {
-  console.log(`QR Code scanned: ${decodedString}`)
-  showQRScanner.value = false
+  // ในที่นี้คุณจะต้องเพิ่มโลจิกสำหรับการบันทึกกิจกรรมใหม่ลงในฐานข้อมูล
+  console.log('บันทึกกิจกรรมใหม่:', activity.value)
+  alert('บันทึกกิจกรรมใหม่เรียบร้อย')
+  router.push('/admin') // สมมติว่าหลังจากบันทึกแล้วจะกลับไปหน้า admin
 }
 </script>
 
 <template>
-  <div class="min-h-screen p-8 ">
+  <div class="min-h-screen p-8">
     <div class="container mx-auto max-w-4xl">
-      <h1 class="text-4xl font-bold mb-8 text-center text-primary">กิจกรรมวันพ่อแห่งชาติ</h1>
+      <h1 class="text-4xl font-bold mb-8 text-center text-primary">เพิ่มกิจกรรมใหม่</h1>
 
-      <div class="w-1/2 h-1/2 mx-auto  ">
-        <h1 v-if="showQRScanner" class="text-xl font-semibold text-red-600 mb-4 text-center animate-bounce" >โปรดตรวจสอบความถูกต้องของนักศึกษาก่อนสแกน</h1>
-        <QrcodeStream v-if="showQRScanner"  @decode="onQRCodeScanned" />
-        <button v-if="showQRScanner" @click="showQRScanner = false" type="button" class="btn btn-warning w-full text-white">ปิดกล้อง</button>
-        <button v-if="!showQRScanner" type="button" @click="showQRScanner = true" class="btn btn-secondary w-full">สแกน QR Code</button>
-      </div>
-
-      <div class="backdrop-blur-lg rounded-box shadow-xl p-6 ">
-        <form @submit.prevent="saveActivity" v-if="activity">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 ">
-            <div class="form-control ">
-              <label class="label " for="name"><span class="label-text text-white">ชื่อกิจกรรม</span></label>
+      <div class="backdrop-blur-lg rounded-box shadow-xl p-6">
+        <form @submit.prevent="saveActivity">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label" for="name"><span class="label-text text-white">ชื่อกิจกรรม</span></label>
               <input id="name" v-model="activity.name" type="text" class="input input-bordered text-slate-600" required />
             </div>
             <div class="form-control">
@@ -86,7 +76,7 @@ const onQRCodeScanned = (decodedString: string) => {
             <textarea id="description" v-model="activity.description" class="textarea textarea-bordered h-24 text-slate-600" required></textarea>
           </div>
           <div class="mt-6">
-            <button type="submit" class="btn btn-primary w-full">บันทึกการเปลี่ยนแปลง</button>
+            <button type="submit" class="btn btn-primary w-full">บันทึกกิจกรรมใหม่</button>
           </div>
         </form>
       </div>

@@ -14,6 +14,7 @@
     "@tinymce/tinymce-vue": "^6.0.1",
     "animate.css": "^4.1.1",
     "axios": "^1.7.2",
+    "chart.js": "^4.4.4",
     "nuxt": "^3.11.2",
     "nuxt-sweetalert2": "^1.0.0",
     "qrcode-vue3": "^1.6.8",

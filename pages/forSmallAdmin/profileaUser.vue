@@ -97,16 +97,16 @@ const confirmActivity1 = () => {
 
 <template>
   <div class="min-h-screen flex justify-center items-center p-4">
-    <div class="card w-full max-w-4xl bg-base-100/50 shadow-xl backdrop-blur-sm">
-      <div class="card-body">
+    <div class="card w-full max-w-4xl shadow-xl backdrop-blur-lg">
+      <div class="card-body text-white">
         <div class="text-center mb-6">
           <div class="avatar mb-4">
             <div class="w-32 h-32 rounded-full ring ring-rose-700 ring-offset-base-100 ring-offset-2">
               <img :src="profileImage" alt="รูปโปรไฟล์" />
             </div>
           </div>
-          <h1 class="text-3xl font-bold text-base-content">{{ username }}</h1>
-          <p class="text-lg italic text-base-content/70">{{ bio }}</p>
+          <h1 class="text-3xl font-bold ">{{ username }}</h1>
+          <p class="text-lg italic ">{{ bio }}</p>
         </div>
         <div class="absolute top-4 right-4 text-right">
         <div class="text-3xl font-bold text-primary">
@@ -134,11 +134,11 @@ const confirmActivity1 = () => {
 
 
 
-        <div class="bg-base-200/50 rounded-box p-6 backdrop-blur-sm">
-          <h2 class="text-2xl font-semibold mb-4 text-base-content">กิจกรรมที่เข้าร่วม</h2>
+        <div class=" rounded-box p-6 backdrop-blur-lg">
+          <h2 class="text-2xl font-semibold mb-4 ">กิจกรรมที่เข้าร่วม</h2>
           <ul class="divide-y divide-base-content/10">
             <li v-for="activity in bookedActivities" :key="activity.id"  class="py-3 flex justify-between items-center">
-              <span  class="font-medium text-lg text-base-content ">{{ activity.name }}
+              <span  class="font-medium text-lg  ">{{ activity.name }}
                 <span :class="['badge', getStatusClass(activity.status)]">
                       {{ getStatusText(activity.status) }}
                     </span>

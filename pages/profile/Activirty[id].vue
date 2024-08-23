@@ -56,7 +56,7 @@ const checkOutQRValue = computed(() => `http://localhost:3000/admin/edit/user/ac
 <template>
   <div class="min-h-screen  py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
-      <div class="bg-base-100 shadow-2xl rounded-box overflow-hidden">
+      <div class="backdrop-blur-lg shadow-2xl rounded-box overflow-hidden">
         <!-- Activity Header -->
         <!-- <div class="relative h-64 bg-gradient-to-r from-primary to-secondary">
           <div class="absolute inset-0 flex items-center justify-center bg-opacity-75 bg-base-100">
@@ -67,7 +67,7 @@ const checkOutQRValue = computed(() => `http://localhost:3000/admin/edit/user/ac
         </div> -->
 
         <!-- User Info -->
-        <div class="flex items-center space-x-4 p-8 bg-base-200">
+        <div class="flex items-center space-x-4 p-8 ">
           <div class="avatar">
             <div class="w-24 h-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
               <img :src="user.profileImage" alt="User profile" />
@@ -103,11 +103,11 @@ const checkOutQRValue = computed(() => `http://localhost:3000/admin/edit/user/ac
             </svg>
             <span>{{ activity.location }}</span>
           </div>
-          <p class="text-base-content/70 text-lg">{{ activity.description }}</p>
+          <p class="text-lg">{{ activity.description }}</p>
         </div>
 
         <!-- QR Codes -->
-        <div class="p-8 bg-base-200">
+        <div class="p-8 ">
           <h3 class="text-2xl font-semibold mb-6 text-center">QR Codes สำหรับเช็คอิน/เช็คเอาท์</h3>
           <div class="flex justify-around">
             <div v-if="IN == false" class="text-center">

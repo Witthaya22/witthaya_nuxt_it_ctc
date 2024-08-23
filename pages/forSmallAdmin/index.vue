@@ -111,7 +111,7 @@ const exportActivityToPDF = (activity: Activity) => {
 
 <template>
   <div class="min-h-screen p-8">
-    <div class="container mx-auto">
+    <div class="container mx-auto backdrop-blur-lg">
       <h1 class="text-4xl font-bold mb-8 text-center text-primary">แดชบอร์ดผู้ดูแลระบบ</h1>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -125,20 +125,21 @@ const exportActivityToPDF = (activity: Activity) => {
         </div>
       </div>
 
-      <div class="bg-base-100 rounded-box shadow-xl p-6 mb-8">
+      <div class="rounded-box shadow-xl p-6 mb-8 backdrop-blur-lg">
         <div class="flex justify-between items-center mb-4 cursor-pointer" @click="showActivities = !showActivities">
           <h2 class="text-2xl font-semibold">จัดการกิจกรรม</h2>
-          <span class="text-2xl">{{ showActivities ? '▼' : '▶' }}</span>
+          <span class="text-2xl">{{ showActivities ? '⏬' : '⏫' }}</span>
         </div>
         <div v-if="showActivities">
           <div class="flex justify-between items-center mb-4">
             <input v-model="activitySearchQuery" type="text" placeholder="ค้นหากิจกรรม" class="input input-bordered w-full max-w-xs" />
-            <button @click="addActivity" class="btn btn-primary">เพิ่มกิจกรรม</button>
+            <NuxtLink to="/forSmallAdmin/addActivity" class="btn btn-primary">เพิ่มกิจกรรม</NuxtLink>
+
           </div>
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto ">
             <table class="table w-full">
               <thead>
-                <tr>
+                <tr class="text-white">
                   <th>ID</th>
                   <th>ชื่อกิจกรรม</th>
                   <th>วันที่</th>
@@ -190,19 +191,21 @@ const exportActivityToPDF = (activity: Activity) => {
         </div>
       </div>
 
-      <div class="bg-base-100 rounded-box shadow-xl p-6">
+      <div class=" rounded-box shadow-xl p-6 backdrop-blur-lg">
         <div class="flex justify-between items-center mb-4 cursor-pointer " @click="showUsers = !showUsers">
           <h2 class="text-2xl font-semibold">จัดการผู้ใช้</h2>
-          <span class="text-2xl">{{ showUsers ? '▼' : '▶' }}</span>
+          <span class="text-2xl">{{ showUsers ? '⏬' : '⏫' }}</span>
         </div>
         <div v-if="showUsers">
-          <div class="mb-4">
+          <div class="flex justify-between items-center mb-4">
             <input v-model="userSearchQuery" type="text" placeholder="ค้นหาผู้ใช้" class="input input-bordered w-full max-w-xs" />
+            <!-- <NuxtLink to="/forSmallAdmin/addUser" class="btn btn-primary">เพิ่มผู้ใช้</NuxtLink> -->
+
           </div>
           <div class="overflow-x-auto">
             <table class="table w-full">
               <thead>
-                <tr>
+                <tr class="text-white">
                   <th>ID</th>
                   <th>ชื่อ</th>
                   <th>อีเมล</th>
@@ -225,8 +228,11 @@ const exportActivityToPDF = (activity: Activity) => {
                   <td>{{ user.lastLogin }}</td>
                   <td>{{ user.completedActivities }}</td>
                   <td>
-                    <nuxt-link class="btn btn-sm btn-warning" to="forSmallAdmin/profileaUser">ดูรายละเอียด</nuxt-link>
+                    <div class="flex space-x-2">
+                    <nuxt-link class="btn btn-sm btn-primary" to="forSmallAdmin/profileaUser">ดูรายละเอียด</nuxt-link>
+                    <nuxt-link class="btn btn-sm btn-secondary" to="forSmallAdmin/editUser">แก้ไขข้อมูล</nuxt-link>
                     <!-- <button @click="editUser(user)" class="btn btn-sm btn-warning">ดูรายละเอียด</button> -->
+                  </div>
                   </td>
                 </tr>
               </tbody>

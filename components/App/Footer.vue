@@ -1,8 +1,8 @@
 <template>
   <div class="page-container">
-    <main class="content">
-    </main>
-    <footer class="footer footer-center p-10 text-base-content rounded text-gray-100">
+    <!-- <main class="content">
+    </main> -->
+    <footer class="footer footer-center p-10  rounded text-gray-100">
       <nav class="grid grid-flow-col gap-4">
       </nav>
       <nav>
@@ -21,21 +21,5 @@
 </template>
 
 <style>
-body, html {
-  height: 100%;
-  margin: 0;
-}
 
-.page-container {
-  display: flex;
-  flex-direction: column;
-}
-
-.content {
-  flex: 1 0 auto;
-}
-
-.footer {
-  flex-shrink: 0;
-}
 </style>

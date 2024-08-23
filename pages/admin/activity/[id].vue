@@ -102,29 +102,29 @@ async function onUpsertActivity() {
 </script>
 
 <template>
-  <div>
+  <div class="">
     <h2 class="font-bold text-2xl">{{ isCreate ? 'เพิ่มกิจกรรม' : `แก้ไขกิจกรรม ID: ${id}` }}</h2>
     <hr class="my-3">
     <form @submit.prevent="onUpsertActivity" class="space-y-3">
       <label class="block">
         <div class="mb-1 font-bold">ชื่อกิจกรรม:</div>
-        <input v-model="input.title" class="input input-bordered w-full" type="text" placeholder="ชื่อกิจกรรม" />
+        <input v-model="input.title" class="input input-bordered w-full text-black" type="text" placeholder="ชื่อกิจกรรม" />
       </label>
       <label class="block">
         <div class="mb-1 font-bold">คะแนนกิจกรรม:</div>
-        <input v-model="input.score" class="input input-bordered w-full" type="number" placeholder="คะแนนกิจกรรม" />
+        <input v-model="input.score" class="input input-bordered w-full text-black" type="number" placeholder="คะแนนกิจกรรม" />
       </label>
       <div>
         <div class="mb-1 font-bold">รูปภาพกิจกรรม:</div>
         <div v-for="(image, i) in input.images" :key="i" class="flex mb-2">
-          <input v-model="input.images[i]" class="w-full input" type="url" placeholder="รูปภาพ" />
-          <button type="button" class="btn btn-error" @click="input.images.splice(i, 1)">ลบ</button>
+          <input v-model="input.images[i]" class="w-full input text-black" type="url" placeholder="รูปภาพ" />
+          <button type="button" class="btn btn-error text-white" @click="input.images.splice(i, 1)">ลบ</button>
         </div>
         <button class="btn btn-primary" type="button" @click="input.images.push('')">เพิ่มรูปภาพ</button>
       </div>
       <label class="block">
         <div class="mb-1 font-bold">คำอธิบาย:</div>
-        <textarea v-model="input.description" class="input input-bordered w-full h-40" placeholder="คำอธิบาย"></textarea>
+        <textarea v-model="input.description" class="input input-bordered w-full h-40 text-black" placeholder="คำอธิบาย"></textarea>
       </label>
       <div>
         <button class="btn btn-success text-white" type="submit">บันทึก</button>
