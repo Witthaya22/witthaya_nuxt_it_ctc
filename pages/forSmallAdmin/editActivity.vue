@@ -9,6 +9,8 @@ interface Activity {
   score: number; description: string
 }
 
+import Swal from 'sweetalert2';
+
 const route = useRoute()
 const router = useRouter()
 const activity = ref<Activity | null>(null)
@@ -32,19 +34,27 @@ const onQRCodeScanned = (decodedString: string) => {
   console.log(`QR Code scanned: ${decodedString}`)
   showQRScanner.value = false
 }
+
+const confirmat = () => {
+  Swal.fire({
+    icon: 'success',
+    title: 'เข้าร่วมกิจกรรมสำเร็จ',
+    showConfirmButton: false,
+    timer: 1700})
+}
 </script>
 
 <template>
   <div class="min-h-screen p-8 ">
     <div class="container mx-auto max-w-4xl">
-      <h1 class="text-4xl font-bold mb-8 text-center text-primary">กิจกรรมวันพ่อแห่งชาติ</h1>
+      <h1 class="text-4xl font-bold mb-8 text-center text-primary">กิจกรรมไหว้เจ้า<span @click="confirmat"></span></h1>
 
-      <div class="w-1/2 h-1/2 mx-auto  ">
+      <!-- <div class="w-1/2 h-1/2 mx-auto  ">
         <h1 v-if="showQRScanner" class="text-xl font-semibold text-red-600 mb-4 text-center animate-bounce" >โปรดตรวจสอบความถูกต้องของนักศึกษาก่อนสแกน</h1>
         <QrcodeStream v-if="showQRScanner"  @decode="onQRCodeScanned" />
         <button v-if="showQRScanner" @click="showQRScanner = false" type="button" class="btn btn-warning w-full text-white">ปิดกล้อง</button>
         <button v-if="!showQRScanner" type="button" @click="showQRScanner = true" class="btn btn-secondary w-full">สแกน QR Code</button>
-      </div>
+      </div> -->
 
       <div class="backdrop-blur-lg rounded-box shadow-xl p-6 ">
         <form @submit.prevent="saveActivity" v-if="activity">

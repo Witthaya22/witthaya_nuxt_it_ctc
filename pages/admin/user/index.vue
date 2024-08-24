@@ -45,17 +45,25 @@ watch(page, () => fetchUsers());
             <th>ชื่อผู้ใช้</th>
             <th>อีเมล</th>
             <th>บทบาท</th>
-            <th></th>
+            <th>แก้ไข</th>
+            <th>จัดการผู้ใช้</th>
+            <th>ลบผู้ใช้งาน</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="">
           <tr v-for="user in users" :key="user.id">
             <td>{{ user.id }}</td>
             <td>{{ user.name }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.role }}</td>
+            <td >
+              <nuxt-link class="text-warning " :to="`/admin/user/${user.id}`">แก้ไข</nuxt-link>
+            </td>
             <td>
-              <nuxt-link class="text-blue-500" :to="`/admin/edit/${user.id}`">แก้ไข</nuxt-link>
+              <nuxt-link class="text-blue-500" to="/admin/user/editUser">ดูรายละเอียด</nuxt-link>
+            </td>
+            <td>
+              <button class="text-error ">ลบ</button>
             </td>
           </tr>
         </tbody>

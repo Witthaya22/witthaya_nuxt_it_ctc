@@ -10,8 +10,8 @@ interface Link {
 
 const linkList: Link[] = [
     { text: 'หน้าระบบหลัก', to: '/admin/dashboard' },
-    { text: 'แก้ไขรายระเอียดนักศึกษา', to: '/admin/edit' },
-    { text: 'จัดการกิจกรรม', to: '/admin/activity' }
+    { text: 'รายละเอียดนักศึกษา', to: '/admin/user' },
+    { text: 'รายละเอียดกิจกรรม', to: '/admin/activity' }
 ]
 
 </script>

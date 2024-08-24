@@ -32,9 +32,36 @@ async function fetchActivities() {
     activities.value = res.data.activities;
 
 }
+import ms from 'ms';
+import Swal from 'sweetalert2';
+
+let timerInterval: any;
+const showAlert = () => {
+  Swal.fire({
+    title: "กำลังรวบรวมข้อมูล...",
+    html: "กำลังส่งออก PDF ใน <b></b> มิลลิวินาที.",
+    timer: ms('4s'),
+    timerProgressBar: true,
+    didOpen: () => {
+      Swal.showLoading();
+      const timer = Swal.getPopup()?.querySelector("b");
+      if (timer) {
+        timerInterval = setInterval(() => {
+          timer.textContent = `${Swal.getTimerLeft()}`;
+        }, 100);
+      }
+    },
+    willClose: () => {
+      clearInterval(timerInterval);
+    }
+  });
+};
+
 
 await fetchActivities();
 watch(page, () => fetchActivities())
+
+
 </script>
 
 <template>
@@ -49,7 +76,10 @@ watch(page, () => fetchActivities())
             <th>ID</th>
             <th>ชื่อกิจกรรม</th>
             <th>คะแนน</th>
-            <th></th>
+            <th>แก้ไข</th>
+            <th>จัดการกิจกรรม</th>
+            <th>รายงาน</th>
+            <th>ลบกิจกรรม</th>
           </tr>
         </thead>
         <tbody>
@@ -58,7 +88,16 @@ watch(page, () => fetchActivities())
             <td>{{ activity.title }}</td>
             <td>{{ activity.score }}</td>
             <td>
-              <nuxt-link class="text-blue-500" :to="`/admin/activity/${activity.id}`">แก้ไข</nuxt-link>
+              <nuxt-link class="text-warning" :to="`/admin/activity/${activity.id}`">แก้ไข</nuxt-link>
+            </td>
+            <td>
+              <nuxt-link class="text-blue-500" :to="`/admin/activity/editActivity`">จัดการกิจกรรม</nuxt-link>
+            </td>
+            <td>
+              <button class="text-purple-400" @click="showAlert">ส่งออก PDF</button>
+            </td>
+            <td>
+              <button class="text-error ">ลบ</button>
             </td>
           </tr>
         </tbody>

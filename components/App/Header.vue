@@ -48,7 +48,7 @@ const logoutConfirm = () => {
         <li v-if="checkSmallAdmin()">
           <NuxtLink
             to="/forSmallAdmin"
-            class="text-lg font-bold text-yellow-500 btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-yellow-500"
+            class="text-lg font-bold text-yellow-500 btn mx-1 btn-ghost focus:border-b-4 focus:border-b-yellow-500 focus:text-yellow-500"
           >
             จัดการกิจกรรม
           </NuxtLink>
@@ -56,7 +56,7 @@ const logoutConfirm = () => {
         <li>
           <NuxtLink
             to="/"
-            class="text-lg font-bold btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-blue-500"
+            class="text-lg font-bold btn mx-1 btn-ghost  focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
           >
             หน้าหลัก
           </NuxtLink>
@@ -65,7 +65,7 @@ const logoutConfirm = () => {
           <summary
             tabindex="0"
             role="button"
-            class="text-lg font-bold btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-blue-500"
+            class="text-lg font-bold btn mx-1 btn-ghost focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
           >
             กิจกรรมทั้งหมด
           </summary>
@@ -91,7 +91,7 @@ const logoutConfirm = () => {
         <li>
           <NuxtLink
             to="/about"
-            class="text-lg font-bold btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-blue-500"
+            class="text-lg font-bold btn mx-1 btn-ghost focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
           >
             เกี่ยวกับเรา
           </NuxtLink>
@@ -99,7 +99,7 @@ const logoutConfirm = () => {
         <li>
           <NuxtLink
             to="/contact"
-            class="text-lg font-bold btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-blue-500"
+            class="text-lg font-bold btn mx-1 btn-ghost focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
           >
             ติดต่อเรา
           </NuxtLink>
@@ -109,7 +109,7 @@ const logoutConfirm = () => {
             <summary
               tabindex="0"
               role="button"
-              class="text-lg font-bold btn mx-1 btn-ghost focus:outline-none focus:border-b-2 focus:border-blue-500"
+              class="text-lg font-bold btn mx-1 btn-ghost focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
             >
               {{ auth.email }}
             </summary>

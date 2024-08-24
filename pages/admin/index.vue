@@ -41,7 +41,7 @@ async function onLoginAdmin() {
           })
     // alert(res.message);
     router.push("/admin/dashboard")
-  } catch (error) {
+  } catch (error: any) {
     Swal.fire({
       icon: "error",
       title: error.response.data.message

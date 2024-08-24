@@ -15,6 +15,9 @@ interface User {
   completedActivities: number
 }
 
+import Swal from 'sweetalert2';
+import ms from 'ms'
+
 const router = useRouter()
 const activitySearchQuery = ref('')
 const userSearchQuery = ref('')
@@ -25,8 +28,9 @@ const usersPerPage = 15
 const currentActivityPage = ref(1)
 const currentUserPage = ref(1)
 
+
 const activities = ref<Activity[]>([
-  { id: 1, name: 'ไหว้เจ้า', date: '15 สิงหาคม 2024', location: 'วัดพระธาตุดอยสุเทพ', status: 'closed', participantsCount: 500, score: 0.5, description: 'กิจกรรมไหว้เจ้าประจำปี' },
+  { id: 1, name: 'ไหว้เจ้า', date: '15 สิงหาคม 2024', location: 'วัดพระธาตุดอยสุเทพ', status: 'open', participantsCount: 500, score: 1, description: 'กิจกรรมไหว้เจ้าประจำปี' },
   { id: 2, name: 'คอนเสิร์ตดนตรีคลาสสิค', date: '22 สิงหาคม 2024', location: 'หอประชุมวิทยาลัยเทคนิคชัยภูมิ', status: 'closed', participantsCount: 2000, score: 1, description: 'คอนเสิร์ตดนตรีคลาสสิคประจำปี' },
   { id: 3, name: 'วันพ่อ', date: '5 ธันวาคม 2024', location: 'หอประชุมวิทยาลัยเทคนิคชัยภูมิ', status: 'open', participantsCount: 1000, score: 1, description: 'กิจกรรมวันพ่อแห่งชาติ' },
 ])
@@ -107,6 +111,30 @@ const exportActivityToPDF = (activity: Activity) => {
 
 // }
 
+let timerInterval: any;
+const showAlert = () => {
+  Swal.fire({
+    title: "กำลังรวบรวมข้อมูล...",
+    html: "กำลังส่งออก PDF ใน <b></b> มิลลิวินาที.",
+    timer: ms('4s'),
+    timerProgressBar: true,
+    didOpen: () => {
+      Swal.showLoading();
+      const timer = Swal.getPopup()?.querySelector("b");
+      if (timer) {
+        timerInterval = setInterval(() => {
+          timer.textContent = `${Swal.getTimerLeft()}`;
+        }, 100);
+      }
+    },
+    willClose: () => {
+      clearInterval(timerInterval);
+    }
+  });
+};
+
+
+
 </script>
 
 <template>
@@ -165,8 +193,9 @@ const exportActivityToPDF = (activity: Activity) => {
                   <td>{{ activity.score }}</td>
                   <td>
                     <div class="flex space-x-2">
-                      <nuxt-link to="/forSmallAdmin/editActivity/" class="btn btn-sm btn-primary">ดูรายละเอียด</nuxt-link>
-                      <button @click="exportActivityToPDF(activity)" class="btn btn-sm btn-secondary">ส่งออก PDF</button>
+                      <nuxt-link to="/forSmallAdmin/checkActivity/" class="btn btn-sm btn-primary">ดูรายละเอียด</nuxt-link>
+                      <nuxt-link to="/forSmallAdmin/editActivity/" class="btn btn-sm btn-warning">แก้ไข</nuxt-link>
+                      <button @click="showAlert" class="btn btn-sm btn-secondary">ส่งออก PDF</button>
                     </div>
                   </td>
                 </tr>

@@ -15,6 +15,7 @@
     "animate.css": "^4.1.1",
     "axios": "^1.7.2",
     "chart.js": "^4.4.4",
+    "ms": "^2.1.3",
     "nuxt": "^3.11.2",
     "nuxt-sweetalert2": "^1.0.0",
     "qrcode-vue3": "^1.6.8",
@@ -26,6 +27,7 @@
     "vue-typer": "^1.2.0"
   },
   "devDependencies": {
+    "@types/ms": "^0.7.34",
     "autoprefixer": "^10.4.19",
     "daisyui": "^4.11.1",
     "postcss": "^8.4.38",
