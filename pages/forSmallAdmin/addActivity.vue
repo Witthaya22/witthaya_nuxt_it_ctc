@@ -29,9 +29,19 @@ const saveActivity = () => {
   alert('บันทึกกิจกรรมใหม่เรียบร้อย')
   router.push('/admin') // สมมติว่าหลังจากบันทึกแล้วจะกลับไปหน้า admin
 }
+
+function goBack() {
+  router.back()
+}
 </script>
 
 <template>
+  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    ย้อนกลับ
+  </button>
   <div class="min-h-screen p-8">
     <div class="container mx-auto max-w-4xl">
       <h1 class="text-4xl font-bold mb-8 text-center text-primary">เพิ่มกิจกรรมใหม่</h1>

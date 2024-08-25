@@ -41,9 +41,21 @@ const totalRequiredActivities = 3;
 const isAllActivitiesCompleted = computed(() =>
   completedActivities.value >= totalRequiredActivities
 );
+
+const router = useRouter()
+function goBack() {
+  router.back()
+}
+
 </script>
 
 <template>
+  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    ย้อนกลับ
+  </button>
   <div class="min-h-screen flex justify-center items-center p-4 ">
     <div class="card w-full max-w-4xl   relative backdrop-blur-lg shadow-sm shadow-white">
       <div class="absolute top-4 right-4 text-right">

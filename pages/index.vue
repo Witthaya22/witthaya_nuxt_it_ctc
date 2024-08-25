@@ -16,7 +16,7 @@ const phrases = [
 const typewriterElement = ref<HTMLElement | null>(null)
 
 onMounted(() => {
-  console.log(typewriterElement.value);
+  // console.log(typewriterElement.value);
 
   if (typewriterElement.value) {
     const typewriter = new (Typewriter as any)(typewriterElement.value, {
@@ -38,9 +38,11 @@ onMounted(() => {
   }
 });
 
+
 </script>
 
 <template>
+
   <div class="hero min-h-screen">
     <div class="hero-content flex-col lg:flex-row-reverse">
       <img
@@ -67,6 +69,7 @@ onMounted(() => {
       </div>
     </div>
   </div>
+
 </template>
 
 <style scoped>

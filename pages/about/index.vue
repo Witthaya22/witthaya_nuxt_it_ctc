@@ -11,7 +11,7 @@ const directors = [
 </script>
 
 <template>
-  <div class="min-h-screen  ">
+  <div class="min-h-screen   ">
     <div class="container mx-auto px-4 py-16 ">
       <h1 class="text-4xl font-bold text-center mb-16 ">วิทยาลัยเทคนิคชัยภูมิ</h1>
 
@@ -25,7 +25,6 @@ const directors = [
           </div>
 
           <div class="bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl p-6 transform hover:scale-105 transition-transform duration-300">
-            <h2 class="text-3xl font-semibold mb-4">พันธกิจ</h2>
             <ul class="list-disc list-inside space-y-2 text-lg">
               <li>จัดการศึกษาวิชาชีพอย่างมีคุณภาพ</li>
               <li>พัฒนาทักษะและความเชี่ยวชาญแก่ผู้เรียน</li>

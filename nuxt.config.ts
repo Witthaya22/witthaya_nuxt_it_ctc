@@ -1,6 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  modules: [
+    '@nuxt/icon',
+    '@pinia/nuxt',
+  ],
 
   css: ['@/assets/css/main.css',
        '@/assets/css/font.css',
@@ -28,5 +32,5 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2024-08-16',
-  modules: ["@nuxt/icon"]
+
 })

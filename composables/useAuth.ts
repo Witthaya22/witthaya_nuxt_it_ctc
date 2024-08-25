@@ -1,10 +1,11 @@
-import { User } from './useAuth';
+// import { User } from './useAuth';
 
 interface User {
     id: number
     email: string
     name: string
     createdAt: string
+    role: string
 }
 interface Admin {
     id: number
@@ -13,10 +14,11 @@ interface Admin {
 }
 
 
+import Swal from 'sweetalert2'
 export default () => {
     const axios  = useAxios()
     const router = useRouter()
-    const { $swal } = useNuxtApp()
+    // const { $swal } = useNuxtApp()
 
     const auth = useState<User | undefined>('auth', () => undefined)
     const admin = useState<Admin | undefined>('admin', () => undefined)
@@ -33,7 +35,7 @@ export default () => {
 
     async function logout () {
         const res = await axios.get< { message: string } >('/api/logout')
-        $swal.fire({
+        Swal.fire({
             icon: "success",
             title: res.data.message,
             showConfirmButton: false,

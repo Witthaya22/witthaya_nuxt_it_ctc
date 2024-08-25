@@ -51,9 +51,19 @@ const IN = ref(false)
 
 const checkInQRValue = computed(() => `http://localhost:3000/admin/edit/user/activity/[id]/checkIn/acpass=yes?no`)
 const checkOutQRValue = computed(() => `http://localhost:3000/admin/edit/user/activity/[id]/checkOut/acpass=yes?no`)
+const router = useRouter()
+function goBack() {
+  router.back()
+}
 </script>
 
 <template>
+  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    ย้อนกลับ
+  </button>
   <div class="min-h-screen  py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
       <div class="backdrop-blur-lg shadow-2xl rounded-box overflow-hidden">

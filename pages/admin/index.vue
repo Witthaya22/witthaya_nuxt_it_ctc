@@ -7,12 +7,20 @@ definePageMeta({
 
   middleware: (to, from) => {
     const { admin } = useAuth()
-    if (admin.value) {
+    const { auth } = useAuth()
+    if(auth.value?.role !== 'Admin'){
+      return navigateTo('/',{
+        redirectCode: 302
+      })
+    }
+    else if (admin.value) {
       return navigateTo('/admin/dashboard', {
         redirectCode: 302
       })
     }
-  }
+  },
+
+
 })
 
 // const { $swal } = useNuxtApp()

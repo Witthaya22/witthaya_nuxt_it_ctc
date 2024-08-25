@@ -160,7 +160,7 @@ const showAlert = () => {
         </div>
         <div v-if="showActivities">
           <div class="flex justify-between items-center mb-4">
-            <input v-model="activitySearchQuery" type="text" placeholder="ค้นหากิจกรรม" class="input input-bordered w-full max-w-xs" />
+            <input v-model="activitySearchQuery" type="text" placeholder="ค้นหากิจกรรม" class="text-black input input-bordered w-full max-w-xs" />
             <NuxtLink to="/forSmallAdmin/addActivity" class="btn btn-primary">เพิ่มกิจกรรม</NuxtLink>
 
           </div>
@@ -227,7 +227,7 @@ const showAlert = () => {
         </div>
         <div v-if="showUsers">
           <div class="flex justify-between items-center mb-4">
-            <input v-model="userSearchQuery" type="text" placeholder="ค้นหาผู้ใช้" class="input input-bordered w-full max-w-xs" />
+            <input v-model="userSearchQuery" type="text" placeholder="ค้นหาผู้ใช้" class=" text-black input input-bordered w-full max-w-xs" />
             <!-- <NuxtLink to="/forSmallAdmin/addUser" class="btn btn-primary">เพิ่มผู้ใช้</NuxtLink> -->
 
           </div>

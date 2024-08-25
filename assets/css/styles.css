@@ -1,4 +1,4 @@
-/* html, body {
+html, body {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -88,11 +88,11 @@
   z-index: 10;
   padding: 20px;
   color: white;
-} */
+}
 
 
 
-html, body {
+/* html, body {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -100,8 +100,7 @@ html, body {
   background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
   z-index: -2;
   overflow-x: hidden;
- /* Ensure horizontal overflow is hidden */
-}
+} */
 .night {
   position: fixed;
  /* Keep background fixed */
