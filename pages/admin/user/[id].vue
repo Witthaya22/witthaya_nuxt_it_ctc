@@ -104,25 +104,25 @@ async function onUpsertUser() {
     <form @submit.prevent="onUpsertUser" class="space-y-3">
       <label class="block">
         <div class="mb-1 font-bold">ชื่อผู้ใช้:</div>
-        <input v-model="input.name" class="input input-bordered w-full text-black" type="text" placeholder="ชื่อผู้ใช้" />
+        <input v-model="input.name" class="input input-bordered w-full " type="text" placeholder="ชื่อผู้ใช้" />
       </label>
       <label class="block">
         <div class="mb-1 font-bold">อีเมล:</div>
-        <input v-model="input.email" class="input input-bordered w-full text-black" type="email" placeholder="อีเมล" />
+        <input v-model="input.email" class="input input-bordered w-full " type="email" placeholder="อีเมล" />
       </label>
       <label class="block">
         <div class="mb-1 font-bold">รหัสผ่าน:</div>
-        <input v-model="input.password" class="input input-bordered w-full text-black" type="password" placeholder="รหัสผ่าน (ไม่บังคับ)" />
+        <input v-model="input.password" class="input input-bordered w-full " type="password" placeholder="รหัสผ่าน (ไม่บังคับ)" />
       </label>
       <label class="block">
         <div class="mb-1 font-bold">บทบาท:</div>
-        <select v-model="input.role" class="input input-bordered w-full text-black">
+        <select v-model="input.role" class="input input-bordered w-full ">
           <option value="user">User</option>
           <option value="admin">Admin</option>
         </select>
       </label>
       <div>
-        <button class="btn btn-success text-white" type="submit">บันทึก</button>
+        <button class="btn btn-success " type="submit">บันทึก</button>
       </div>
     </form>
   </div>

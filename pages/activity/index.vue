@@ -36,8 +36,8 @@ watch(page, () => {
   <div class="container mx-auto py-8 px-4">
     <h1 class="text-4xl font-bold mb-12 text-center ">กิจกรรมทั้งหมด</h1>
 
-    <input type="text" placeholder="ค้นหากิจกรรม" class="input text-black input-bordered w-full max-w-xs" />
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 text-white backdrop-blur-lg my-3">
+    <input type="text" placeholder="ค้นหากิจกรรม" class="input  input-bordered w-full max-w-xs" />
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8  backdrop-blur-lg my-3">
       <NuxtLink
         v-for="activity in activityRes.activities"
         :key="activity.id"
@@ -76,13 +76,13 @@ watch(page, () => {
       <button
         v-if="page > 1"
         @click="page--"
-        class="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-300"
+        class="px-6 py-2 bg-blue-600  rounded-full hover:bg-blue-700 transition-colors duration-300"
       >
         ย้อนกลับ
       </button>
       <button
         @click="page++"
-        class="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-300"
+        class="px-6 py-2 bg-blue-600  rounded-full hover:bg-blue-700 transition-colors duration-300"
       >
         ถัดไป
       </button>

@@ -13,14 +13,21 @@ export default {
   ],
   daisyui: {
     themes: [
+      {
+        // ธีมที่เราสร้างเอง
+        synthwave: [
+        "light",
+        "dark",
+
+        ],
+      },
       "light",
     ],
   },
   theme: {
       daisyui: {
-        theme: [
-          "light",
-        ]
+        theme:
+          ["light", "dark", "cupcake","../frontend/assets/css/styles.css"],
       },
       container: {
         center: true,

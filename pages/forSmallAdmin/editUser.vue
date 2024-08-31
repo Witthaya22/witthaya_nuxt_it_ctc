@@ -50,7 +50,7 @@ function goBack() {
 
 <template>
 
-<button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+<button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
     </svg>
@@ -64,37 +64,37 @@ function goBack() {
         <form @submit.prevent="saveUser" v-if="user">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="form-control">
-              <label class="label" for="username"><span class="label-text text-white">Username</span></label>
-              <input id="username" v-model="user.username" type="text" class="input input-bordered text-slate-600" required />
+              <label class="label" for="username"><span class="label-text ">Username</span></label>
+              <input id="username" v-model="user.username" type="text" class="input input-bordered -600" required />
             </div>
             <div class="form-control">
-              <label class="label" for="email"><span class="label-text text-white">อีเมล</span></label>
-              <input id="email" v-model="user.email" type="email" class="input input-bordered text-slate-600" required />
+              <label class="label" for="email"><span class="label-text ">อีเมล</span></label>
+              <input id="email" v-model="user.email" type="email" class="input input-bordered -600" required />
             </div>
             <div class="form-control">
-              <label class="label" for="firstName"><span class="label-text text-white">ชื่อ</span></label>
-              <input id="firstName" v-model="user.firstName" type="text" class="input input-bordered text-slate-600" required />
+              <label class="label" for="firstName"><span class="label-text ">ชื่อ</span></label>
+              <input id="firstName" v-model="user.firstName" type="text" class="input input-bordered -600" required />
             </div>
             <div class="form-control">
-              <label class="label" for="lastName"><span class="label-text text-white">นามสกุล</span></label>
-              <input id="lastName" v-model="user.lastName" type="text" class="input input-bordered text-slate-600" required />
+              <label class="label" for="lastName"><span class="label-text ">นามสกุล</span></label>
+              <input id="lastName" v-model="user.lastName" type="text" class="input input-bordered -600" required />
             </div>
             <div class="form-control">
-              <label class="label" for="role"><span class="label-text text-white">บทบาท</span></label>
-              <select id="role" v-model="user.role" class="select select-bordered text-slate-600">
+              <label class="label" for="role"><span class="label-text ">บทบาท</span></label>
+              <select id="role" v-model="user.role" class="select select-bordered -600">
                 <option value="student">นักศึกษา</option>
                 <option value="teacher">อาจารย์</option>
                 <option value="admin">ผู้ดูแลระบบ</option>
               </select>
             </div>
             <div class="form-control" v-if="user.role === 'student'">
-              <label class="label" for="studentId"><span class="label-text text-white">รหัสนักศึกษา</span></label>
-              <input id="studentId" v-model="user.studentId" type="text" class="input input-bordered text-slate-600" />
+              <label class="label" for="studentId"><span class="label-text ">รหัสนักศึกษา</span></label>
+              <input id="studentId" v-model="user.studentId" type="text" class="input input-bordered -600" />
             </div>
             <div class="form-control">
-              <label class="label" for="faculty"><span class="label-text text-white">คณะ</span></label>
-              <!-- <input id="faculty" v-model="user.faculty" type="text" class="input input-bordered text-slate-600" />  -->
-              <select class="select select-bordered text-slate-600">
+              <label class="label" for="faculty"><span class="label-text ">คณะ</span></label>
+              <!-- <input id="faculty" v-model="user.faculty" type="text" class="input input-bordered -600" />  -->
+              <select class="select select-bordered -600">
               <option>แผนกของคุณ</option>
               <option disabled selected>ช่างยนตร์</option>
               <option>ช่างไฟฟ้า</option>
@@ -111,8 +111,8 @@ function goBack() {
             </select>
             </div>
             <div class="form-control">
-              <label class="label" for="department"><span class="label-text text-white">ภาควิชา</span></label>
-              <input id="department" v-model="user.department" type="text" class="input input-bordered text-slate-600" />
+              <label class="label" for="department"><span class="label-text ">ภาควิชา</span></label>
+              <input id="department" v-model="user.department" type="text" class="input input-bordered -600" />
             </div>
           </div>
           <div class="mt-6">

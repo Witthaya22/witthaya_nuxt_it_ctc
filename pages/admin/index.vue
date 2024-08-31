@@ -68,9 +68,9 @@ async function onLoginAdmin() {
       @submit.prevent="onLoginAdmin"
       class="w-full max-w-sm  rounded-lg shadow-lg p-6 space-y-6  shadow-slate-600"
     >
-      <h1 class="text-2xl text-center font-bold text-white">เข้าสู่ระบบ Admin</h1>
+      <h1 class="text-2xl text-center font-bold ">เข้าสู่ระบบ Admin</h1>
       <label class="block">
-        <span class="block text-white font-semibold mb-2">ชื่อผู้ใช้งาน</span>
+        <span class="block  font-semibold mb-2">ชื่อผู้ใช้งาน</span>
         <input
           v-model="input.username"
           class="input input-bordered w-full p-2 border  rounded-md focus:outline-none focus:border-blue-500"
@@ -79,7 +79,7 @@ async function onLoginAdmin() {
         />
       </label>
       <label class="block">
-        <span class="block text-white font-semibold mb-2">รหัสผ่าน</span>
+        <span class="block  font-semibold mb-2">รหัสผ่าน</span>
         <input
           v-model="input.password"
           class="input input-bordered w-full p-2 border  rounded-md focus:outline-none focus:border-blue-500"
@@ -89,7 +89,7 @@ async function onLoginAdmin() {
       </label>
       <button
         :disabled="loading"
-        class="btn w-full py-2 mt-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:opacity-50"
+        class="btn w-full py-2 mt-4 bg-blue-500  font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:opacity-50"
       >
         เข้าสู่ระบบ
       </button>

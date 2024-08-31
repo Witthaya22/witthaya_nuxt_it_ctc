@@ -36,7 +36,7 @@ watch(page, () => fetchUsers());
   <div>
     <h2 class="font-bold text-2xl">รายการผู้ใช้</h2>
     <hr class="my-3" />
-    <nuxt-link class="btn btn-info text-white" to="/admin/user/create">เพิ่มผู้ใช้</nuxt-link>
+    <nuxt-link class="btn btn-info " to="/admin/user/create">เพิ่มผู้ใช้</nuxt-link>
     <div class="overflow-x-auto relative mt-3">
       <table class="table w-full">
         <thead>

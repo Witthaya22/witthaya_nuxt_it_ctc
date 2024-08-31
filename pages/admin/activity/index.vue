@@ -68,7 +68,7 @@ watch(page, () => fetchActivities())
   <div>
     <h2 class="font-bold text-2xl">รายการกิจกรรม</h2>
     <hr class="my-3" />
-    <nuxt-link class="btn btn-info text-white" to="/admin/activity/create">เพิ่มกิจกรรม</nuxt-link>
+    <nuxt-link class="btn btn-info " to="/admin/activity/create">เพิ่มกิจกรรม</nuxt-link>
     <div class="overflow-x-auto relative mt-3">
       <table class="table w-full">
         <thead>

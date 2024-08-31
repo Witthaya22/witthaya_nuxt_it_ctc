@@ -34,7 +34,7 @@ function goBack() {
 </script>
 
 <template>
-  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
     </svg>
@@ -43,10 +43,10 @@ function goBack() {
 
     <div class="container mx-auto px-4 py-8 max-w-6xl pt-20">
       <div class="shadow-sm shadow-white rounded-lg overflow-hidden backdrop-blur-lg">
-        <div class="md:flex text-white">
+        <div class="md:flex ">
           <div class="md:flex-shrink-0">
             <img :src="data.activity.images[0]" class="h-48 w-full object-cover md:w-48" alt="รูปภาพกิจกรรม"/>
-            <button @click="seccess" class="btn btn-success px-14 mt-4 text-white hover:bg-green-600 transition ease-in-out transform hover:scale-105">
+            <button @click="seccess" class="btn btn-success px-14 mt-4  hover:bg-green-600 transition ease-in-out transform hover:scale-105">
               จองกิจกรรม
             </button>
           </div>

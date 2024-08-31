@@ -125,7 +125,7 @@ function goBack() {
 </script>
 
 <template>
-  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
     </svg>
@@ -134,15 +134,15 @@ function goBack() {
   <div class="min-h-screen flex justify-center items-center p-4">
 
     <div class="card w-full max-w-6xl shadow-xl backdrop-blur-lg">
-      <h1 class="text-4xl font-bold mb-8 text-center text-white">{{ activityName }}<span @click="confirmat">เจ้า</span></h1>
+      <h1 class="text-4xl font-bold mb-8 text-center ">{{ activityName }}<span @click="confirmat">เจ้า</span></h1>
       <div class="w-1/2 h-1/2 mx-auto  ">
         <h1 v-if="showQRScanner" class="text-xl font-semibold text-red-600 mb-4 text-center animate-bounce" >โปรดตรวจสอบความถูกต้องของนักศึกษาก่อนสแกน</h1>
         <QrcodeStream v-if="showQRScanner"  @decode="onQRCodeScanned" />
-        <button v-if="showQRScanner" @click="showQRScanner = false" type="button" class="btn btn-warning w-full text-white">ปิดกล้อง</button>
+        <button v-if="showQRScanner" @click="showQRScanner = false" type="button" class="btn btn-warning w-full ">ปิดกล้อง</button>
         <button v-if="!showQRScanner" type="button" @click="showQRScanner = true" class="btn btn-secondary w-full">สแกน QR Code</button>
       </div>
 
-      <div class="card-body text-white">
+      <div class="card-body ">
         <!-- <h1 class="text-3xl font-bold text-center mb-6">{{ activityName }}</h1> -->
         <div class="flex justify-between items-center mb-6">
           <div>
@@ -154,7 +154,7 @@ function goBack() {
           </div>
         </div>
         <div>
-          <input v-model="activitySearchQuery" type="text" placeholder="ค้นหานักศึกษา" class="input input-bordered w-full max-w-xs text-black" />
+          <input v-model="activitySearchQuery" type="text" placeholder="ค้นหานักศึกษา" class="input input-bordered w-full max-w-xs " />
         </div>
 
         <div class="rounded-box p-6 backdrop-blur-lg">
@@ -170,8 +170,8 @@ function goBack() {
                 </span>
               </div>
               <div>
-                <button @click="confirmActivity(participant.id, 'approve')" class="btn btn-info mr-2 w-24 text-white">อนุมัติ</button>
-                <button @click="confirmActivity(participant.id, 'reject')" class="btn btn-error w-24 text-white">ไม่อนุมัติ</button>
+                <button @click="confirmActivity(participant.id, 'approve')" class="btn btn-info mr-2 w-24 ">อนุมัติ</button>
+                <button @click="confirmActivity(participant.id, 'reject')" class="btn btn-error w-24 ">ไม่อนุมัติ</button>
               </div>
             </li>
           </ul>

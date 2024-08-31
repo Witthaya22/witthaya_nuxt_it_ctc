@@ -96,7 +96,7 @@ new Chart(ctxActivity, {
   font-size: 2rem; /* Adjust the size of stat values */
 }
 
-.text-white {
+. {
   color: white; /* Ensure all text is white */
 }
 
@@ -106,31 +106,31 @@ canvas {
 </style>
 
 <template>
-  <div class="p-6 text-white">
+  <div class="p-6 ">
     <!-- ส่วนหัว -->
     <h1 class="text-4xl font-bold mb-6">แดชบอร์ด</h1>
 
     <!-- สถิติภาพรวม -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 text-white">
-      <div class="stat bg-gray-800 p-4 rounded-lg shadow-md text-white">
-        <div class="stat-title text-white">จำนวนผู้ใช้ทั้งหมด</div>
-        <div class="stat-value text-white">1,234</div>
-        <div class="stat-desc text-white" >เพิ่มขึ้น 21% จากเดือนที่แล้ว</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 ">
+      <div class="stat bg-gray-800 p-4 rounded-lg shadow-md ">
+        <div class="stat-title ">จำนวนผู้ใช้ทั้งหมด</div>
+        <div class="stat-value ">1,234</div>
+        <div class="stat-desc " >เพิ่มขึ้น 21% จากเดือนที่แล้ว</div>
       </div>
       <div class="stat bg-gray-800 p-4 rounded-lg shadow-md">
-        <div class="stat-title text-white">จำนวนกิจกรรมทั้งหมด</div>
-        <div class="stat-value text-white">567</div>
-        <div class="stat-desc text-white">กิจกรรมใหม่ 10 รายการในสัปดาห์นี้</div>
+        <div class="stat-title ">จำนวนกิจกรรมทั้งหมด</div>
+        <div class="stat-value ">567</div>
+        <div class="stat-desc ">กิจกรรมใหม่ 10 รายการในสัปดาห์นี้</div>
       </div>
       <div class="stat bg-gray-800 p-4 rounded-lg shadow-md">
-        <div class="stat-title text-white">กิจกรรมที่เสร็จสิ้น</div>
-        <div class="stat-value text-white">420</div>
-        <div class="stat-desc text-white">76% ของกิจกรรมทั้งหมด</div>
+        <div class="stat-title ">กิจกรรมที่เสร็จสิ้น</div>
+        <div class="stat-value ">420</div>
+        <div class="stat-desc ">76% ของกิจกรรมทั้งหมด</div>
       </div>
       <div class="stat bg-gray-800 p-4 rounded-lg shadow-md">
-        <div class="stat-title text-white">กิจกรรมที่ค้างอยู่</div>
-        <div class="stat-value text-white">147</div>
-        <div class="stat-desc text-white">24% ของกิจกรรมทั้งหมด</div>
+        <div class="stat-title ">กิจกรรมที่ค้างอยู่</div>
+        <div class="stat-value ">147</div>
+        <div class="stat-desc ">24% ของกิจกรรมทั้งหมด</div>
       </div>
     </div>
 
@@ -144,7 +144,7 @@ canvas {
         </div>
       </div>
       <!-- กราฟการเสร็จสิ้นกิจกรรม -->
-      <div class="card shadow-lg bg-gray-800 text-white">
+      <div class="card shadow-lg bg-gray-800 ">
         <div class="card-body">
           <h2 class="card-title">การเสร็จสิ้นกิจกรรม</h2>
           <canvas id="activityChart"></canvas>

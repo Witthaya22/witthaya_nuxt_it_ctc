@@ -73,7 +73,7 @@ function confirmActivity(participantId: number, action: 'approve' | 'reject') {
     <h2 class="font-bold text-2xl">รายละเอียดกิจกรรม</h2>
     <hr class="my-3" />
     <div class="card bg-base-100 shadow-xl">
-      <div class="card-body  text-black text-center flex justify-center items-center font-bold">
+      <div class="card-body   text-center flex justify-center items-center font-bold">
         <h2 class="card-title text-3xl font-bold">{{ activity.title }}</h2>
         <p><strong>รายละเอียด:</strong> {{ activity.description }}</p>
         <p><strong>วันที่:</strong> {{ activity.date }}</p>
@@ -109,8 +109,8 @@ function confirmActivity(participantId: number, action: 'approve' | 'reject') {
               </span>
             </td>
             <td>
-              <button @click="confirmActivity(participant.id, 'approve')" class="btn text-white btn-info btn-xs mr-2">อนุมัติ</button>
-              <button @click="confirmActivity(participant.id, 'reject')" class="btn text-white btn-error btn-xs">ไม่อนุมัติ</button>
+              <button @click="confirmActivity(participant.id, 'approve')" class="btn  btn-info btn-xs mr-2">อนุมัติ</button>
+              <button @click="confirmActivity(participant.id, 'reject')" class="btn  btn-error btn-xs">ไม่อนุมัติ</button>
             </td>
           </tr>
         </tbody>

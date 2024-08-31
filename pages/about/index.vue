@@ -35,7 +35,7 @@ const directors = [
         </div>
 
         <div class="relative">
-          <div class="relative   text-white font-bold py-3 px-6 rounded-full transform rotate-12 animate-bounce">
+          <div class="relative    font-bold py-3 px-6 rounded-full transform rotate-12 animate-bounce">
             สู่ความเป็นเลิศ!
           </div>
           <img src="~/assets/images/login.jpg" alt="เทคโนโลยีการศึกษา" class="rounded-xl shadow-2xl transform   ">
@@ -90,7 +90,7 @@ const directors = [
 
 
       <!-- <div class="mt-24 text-center">
-        <a href="#" class="bg-white text-blue-600 font-bold text-xl py-3 px-8 rounded-full hover:bg-yellow-400 hover:text-black transition-colors duration-300">
+        <a href="#" class="bg-white text-blue-600 font-bold text-xl py-3 px-8 rounded-full hover:bg-yellow-400 hover: transition-colors duration-300">
           สมัครเรียนวันนี้
         </a>
       </div> -->

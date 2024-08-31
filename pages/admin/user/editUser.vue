@@ -84,7 +84,7 @@ function confirmActivity(activityId: number, action: 'approve' | 'reject') {
     <h2 class="font-bold text-2xl">รายละเอียดผู้ใช้</h2>
     <hr class="my-3" />
     <div class="card bg-base-100 shadow-xl">
-      <div class="card-body text-black text-center flex justify-center items-center font-bold">
+      <div class="card-body  text-center flex justify-center items-center font-bold">
         <h2 class="card-title text-3xl  font-bold">{{ user.name }}</h2>
         <p class="avatar mb-4">
           <div class="w-32 h-32 rounded-full  ">
@@ -126,8 +126,8 @@ function confirmActivity(activityId: number, action: 'approve' | 'reject') {
               {{ getApprovalText(activity.approved) }}
             </td>
             <td >
-              <button @click="confirmActivity(activity.id, 'approve')" class="btn text-white btn-info btn-xs mr-2">อนุมัติ</button>
-              <button @click="confirmActivity(activity.id, 'reject')" class="btn text-white btn-error btn-xs">ไม่อนุมัติ</button>
+              <button @click="confirmActivity(activity.id, 'approve')" class="btn  btn-info btn-xs mr-2">อนุมัติ</button>
+              <button @click="confirmActivity(activity.id, 'reject')" class="btn  btn-error btn-xs">ไม่อนุมัติ</button>
             </td>
           </tr>
         </tbody>

@@ -147,8 +147,8 @@ const showAlert = () => {
           { title: 'จำนวนผู้ใช้ทั้งหมด', value: totalUsers, bgColor: 'bg-primary' },
           { title: 'จำนวนกิจกรรมทั้งหมด', value: totalActivities, bgColor: 'bg-secondary' },
           { title: 'กิจกรรมที่เปิดอยู่', value: openActivities, bgColor: 'bg-accent' }
-        ]" :key="index" :class="['stat text-white rounded-box shadow-xl', stat.bgColor]">
-          <div class="stat-title text-white">{{ stat.title }}</div>
+        ]" :key="index" :class="['stat  rounded-box shadow-xl', stat.bgColor]">
+          <div class="stat-title ">{{ stat.title }}</div>
           <div class="stat-value">{{ stat.value }}</div>
         </div>
       </div>
@@ -160,14 +160,14 @@ const showAlert = () => {
         </div>
         <div v-if="showActivities">
           <div class="flex justify-between items-center mb-4">
-            <input v-model="activitySearchQuery" type="text" placeholder="ค้นหากิจกรรม" class="text-black input input-bordered w-full max-w-xs" />
+            <input v-model="activitySearchQuery" type="text" placeholder="ค้นหากิจกรรม" class=" input input-bordered w-full max-w-xs" />
             <NuxtLink to="/forSmallAdmin/addActivity" class="btn btn-primary">เพิ่มกิจกรรม</NuxtLink>
 
           </div>
           <div class="overflow-x-auto ">
             <table class="table w-full">
               <thead>
-                <tr class="text-white">
+                <tr class="">
                   <th>ID</th>
                   <th>ชื่อกิจกรรม</th>
                   <th>วันที่</th>
@@ -227,14 +227,14 @@ const showAlert = () => {
         </div>
         <div v-if="showUsers">
           <div class="flex justify-between items-center mb-4">
-            <input v-model="userSearchQuery" type="text" placeholder="ค้นหาผู้ใช้" class=" text-black input input-bordered w-full max-w-xs" />
+            <input v-model="userSearchQuery" type="text" placeholder="ค้นหาผู้ใช้" class="  input input-bordered w-full max-w-xs" />
             <!-- <NuxtLink to="/forSmallAdmin/addUser" class="btn btn-primary">เพิ่มผู้ใช้</NuxtLink> -->
 
           </div>
           <div class="overflow-x-auto">
             <table class="table w-full">
               <thead>
-                <tr class="text-white">
+                <tr class="">
                   <th>ID</th>
                   <th>ชื่อ</th>
                   <th>อีเมล</th>

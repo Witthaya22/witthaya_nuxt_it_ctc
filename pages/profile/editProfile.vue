@@ -42,7 +42,7 @@ function goBack() {
 
 <template>
 
-<button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+<button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
     </svg>
@@ -71,49 +71,49 @@ function goBack() {
         />
       </div>
 
-      <form @submit.prevent="updateProfile" class="form-control text-white">
+      <form @submit.prevent="updateProfile" class="form-control ">
         <div class="form-group mb-4">
           <label for="username" class="label">
-            <span class="label-text font-semibold text-white">ชื่อผู้ใช้:</span>
+            <span class="label-text font-semibold ">ชื่อผู้ใช้:</span>
           </label>
           <input
             id="username"
             v-model="username"
             type="text"
             placeholder="กรอกชื่อผู้ใช้"
-            class="input input-bordered w-full text-slate-600"
+            class="input input-bordered w-full -600"
             required
           />
         </div>
 
         <div class="form-group mb-4">
           <label for="email" class="label">
-            <span class="label-text font-semibold text-white">รหัสประจำตัวนักศึกษา:</span>
+            <span class="label-text font-semibold ">รหัสประจำตัวนักศึกษา:</span>
           </label>
           <input
             id="email"
             v-model="email"
             type="email"
             placeholder="กรอกรหัสประจำตัวนักศึกษา"
-            class="input input-bordered w-full text-slate-600"
+            class="input input-bordered w-full -600"
             required
           />
         </div>
 
         <div class="form-group mb-6">
           <label for="bio" class="label">
-            <span class="label-text font-semibold text-white">เกี่ยวกับฉัน:</span>
+            <span class="label-text font-semibold ">เกี่ยวกับฉัน:</span>
           </label>
           <textarea
             id="bio"
             v-model="bio"
             placeholder="กรอกข้อมูลเกี่ยวกับตัวคุณ"
-            class="textarea textarea-bordered w-full text-slate-600"
+            class="textarea textarea-bordered w-full -600"
             rows="4"
           ></textarea>
         </div>
 
-        <button type="submit" class="btn btn-success w-full text-white">
+        <button type="submit" class="btn btn-success w-full ">
           บันทึกการเปลี่ยนแปลง
         </button>
       </form>

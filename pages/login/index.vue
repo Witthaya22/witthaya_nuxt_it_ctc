@@ -77,7 +77,7 @@ async function onLogin() {
         <div class="mb-4">
           <label
             for="email"
-            class="block text-base font-medium text-gray-400 my-2"
+            class="block text-base font-medium  my-2"
             >เลขประจำตัวนักศึกษา</label
           >
           <input
@@ -85,15 +85,15 @@ async function onLogin() {
             type="text"
             id="email"
             name="email"
-            class="text-black mt-1 p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-colors duration-300"
+            class=" mt-1 text-black p-2 w-full border rounded-md focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-colors duration-300"
             autocomplete="off"
           />
         </div>
         <div class="mb-4">
           <label
             for="password"
-            class="block text-base font-medium text-gray-400  my-2"
-            >รหัสผ่าน <span class="text-gray-500  italic">(เลขบัตรประชาชน)</span></label
+            class="block text-base font-medium   my-2"
+            >รหัสผ่าน <span class="text-gray-200  italic">(เลขบัตรประชาชน)</span></label
           >
           <input
             v-model="input.password"
@@ -105,17 +105,17 @@ async function onLogin() {
           />
         </div>
 
-        <div class="mb-6 text-blue-500">
+        <div class="mb-6 link">
           <nuxt-link to="/FGpassword"class="hover:underline">ลืมรหัสผ่าน</nuxt-link>
         </div>
         <button
           type="submit"
-          class="bg-info hover:bg-sky-600 text-white font-semibold rounded-md py-2 px-4 w-full"
+          class="bg-info hover:bg-blue-300 text-white  font-semibold rounded-md py-2 px-4 w-full"
         >
           เข้าสู่ระบบ
         </button>
       </form>
-      <div class="mt-6 text-blue-500 text-center">
+      <div class="mt-6  text-center">
         <nuxt-link to="signup" class="hover:underline"
           >สมัครสมาชิก</nuxt-link
         >
