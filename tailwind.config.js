@@ -13,14 +13,14 @@ export default {
   ],
   daisyui: {
     themes: [
-      {
-        // ธีมที่เราสร้างเอง
-        synthwave: [
-        "light",
-        "dark",
+      // {
+      //   // ธีมที่เราสร้างเอง
+      //   synthwave: [
+      //   "light",
+      //   "dark",
 
-        ],
-      },
+      //   ],
+      // },
       "light",
     ],
   },

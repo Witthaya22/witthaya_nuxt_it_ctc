@@ -3,7 +3,7 @@ useHead({ title: "เข้าสู่ระบบ" });
 
 
 definePageMeta({
-  layout: false,
+  layout: 'loglog',
 
   middleware: (to, from) => {
     const { admin } = useAuth()
@@ -73,7 +73,7 @@ async function onLoginAdmin() {
         <span class="block  font-semibold mb-2">ชื่อผู้ใช้งาน</span>
         <input
           v-model="input.username"
-          class="input input-bordered w-full p-2 border  rounded-md focus:outline-none focus:border-blue-500"
+          class="input input-bordered w-full p-2 border text-black rounded-md focus:outline-none focus:border-blue-500"
           type="text"
           placeholder="กรอกชื่อผู้ใช้งาน"
         />
@@ -82,7 +82,7 @@ async function onLoginAdmin() {
         <span class="block  font-semibold mb-2">รหัสผ่าน</span>
         <input
           v-model="input.password"
-          class="input input-bordered w-full p-2 border  rounded-md focus:outline-none focus:border-blue-500"
+          class="input input-bordered w-full p-2 border text-black rounded-md focus:outline-none focus:border-blue-500"
           type="password"
           placeholder="กรอกรหัสผ่าน"
         />

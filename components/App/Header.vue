@@ -161,7 +161,7 @@ watch(() => useRoute().fullPath, () => {
             <li>
               <NuxtLink
                 to="login"
-                class="text-lg font-bold -100 btn btn-info focus:outline-none focus:border-b-2 focus:border-info"
+                class="text-lg font-bold text-white btn btn-info focus:outline-none focus:border-b-2 focus:border-info"
               >
                 เข้าสู่ระบบ
               </NuxtLink>

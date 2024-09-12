@@ -113,7 +113,7 @@ function goBack() {
           ></textarea>
         </div>
 
-        <button type="submit" class="btn btn-success w-full ">
+        <button type="submit" class="btn btn-success w-full text-white ">
           บันทึกการเปลี่ยนแปลง
         </button>
       </form>

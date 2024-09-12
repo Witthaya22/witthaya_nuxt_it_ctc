@@ -46,7 +46,7 @@ function goBack() {
         <div class="md:flex ">
           <div class="md:flex-shrink-0">
             <img :src="data.activity.images[0]" class="h-48 w-full object-cover md:w-48" alt="รูปภาพกิจกรรม"/>
-            <button @click="seccess" class="btn btn-success px-14 mt-4  hover:bg-green-600 transition ease-in-out transform hover:scale-105">
+            <button @click="seccess" class="btn btn-success px-14 mt-4 text-white hover:bg-green-600 transition ease-in-out transform hover:scale-105">
               จองกิจกรรม
             </button>
           </div>

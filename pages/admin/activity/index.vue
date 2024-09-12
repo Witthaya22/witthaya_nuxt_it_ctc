@@ -68,7 +68,7 @@ watch(page, () => fetchActivities())
   <div>
     <h2 class="font-bold text-2xl">รายการกิจกรรม</h2>
     <hr class="my-3" />
-    <nuxt-link class="btn btn-info " to="/admin/activity/create">เพิ่มกิจกรรม</nuxt-link>
+    <nuxt-link class="btn btn-info text-white " to="/admin/activity/create">เพิ่มกิจกรรม</nuxt-link>
     <div class="overflow-x-auto relative mt-3">
       <table class="table w-full">
         <thead>
@@ -91,7 +91,7 @@ watch(page, () => fetchActivities())
               <nuxt-link class="text-warning" :to="`/admin/activity/${activity.id}`">แก้ไข</nuxt-link>
             </td>
             <td>
-              <nuxt-link class="text-blue-500" :to="`/admin/activity/editActivity`">จัดการกิจกรรม</nuxt-link>
+              <nuxt-link class="text-accent" :to="`/admin/activity/editActivity`">จัดการกิจกรรม</nuxt-link>
             </td>
             <td>
               <button class="text-purple-400" @click="showAlert">ส่งออก PDF</button>
@@ -104,8 +104,8 @@ watch(page, () => fetchActivities())
       </table>
     </div>
     <div class="space-x-5 text-right container mt-2 mr-1">
-      <span v-if="page > 1" class="text-xl btn btn-ghost text-blue-600 cursor-pointer" @click="page--">ย้อนกลับ</span>
-      <span class="text-xl btn btn-ghost text-blue-600 cursor-pointer" @click="page++">ถัดไป</span>
+      <span v-if="page > 1" class="text-xl btn btn-ghost text-accent cursor-pointer" @click="page--">ย้อนกลับ</span>
+      <span class="text-xl btn btn-ghost text-accent cursor-pointer" @click="page++">ถัดไป</span>
     </div>
   </div>
 </template>
