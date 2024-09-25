@@ -55,11 +55,12 @@ watch(() => useRoute().fullPath, () => {
 
 <template>
   <div class="navbar ">
+
     <div class="w-14 ms-4 rounded-full ">
       <img alt="วิทยาลัยเทคนิคชัยภูมิ" src="@/assets/images/logo.png" />
     </div>
     <div class="flex-1  ">
-      <NuxtLink to="/" class="btn btn-ghost text-xl md:hidden xl:flex">กิจกรรมวิทยาลัยเทคนิคชัยภูมิ</NuxtLink>
+      <NuxtLink to="/" class="btn btn-ghost pl-16 text-xl md:hidden xl:flex">กิจกรรมวิทยาลัยเทคนิคชัยภูมิ</NuxtLink>
 
     </div>
     <div class="flex-none hidden md:flex items-center ">
@@ -88,7 +89,7 @@ watch(() => useRoute().fullPath, () => {
           >
             กิจกรรมทั้งหมด
           </summary>
-          <ul @click="toggleMobileMenu" v-if="!mobileMenuStore.isOpen"  tabindex="0" class="dropdown-content">
+          <ul @click="toggleMobileMenu" v-if="!mobileMenuStore.isOpen"  tabindex="0" class="dropdown-content text-white">
             <li>
               <nuxt-link
                 class="text-base font-bold focus: focus:border-blue-500 shadow-2xl my-1 bg-lime-700 hover:bg-lime-500 "
@@ -133,7 +134,7 @@ watch(() => useRoute().fullPath, () => {
             >
               {{ auth.email }}
             </summary>
-            <ul tabindex="0" class="dropdown-content" @click="toggleMobileMenu" v-if="!mobileMenuStore.isOpen"  >
+            <ul tabindex="0" class="dropdown-content text-white" @click="toggleMobileMenu" v-if="!mobileMenuStore.isOpen"  >
               <li>
                 <nuxt-link
                   class="text-lg font-bold shadow-2xl my-1 bg-teal-700 hover:bg-teal-500 "
