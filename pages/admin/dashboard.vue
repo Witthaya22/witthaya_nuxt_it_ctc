@@ -20,7 +20,7 @@ onMounted(() => {
         label: 'ผู้ใช้งาน',
         data: [65, 59, 80, 81, 56, 55, 40],
         fill: false,
-        borderColor: 'white',
+        borderColor: 'black',
         tension: 0.1
       }]
     },
@@ -28,25 +28,25 @@ onMounted(() => {
     scales: {
       x: {
         grid: {
-          color: 'white', // White grid lines with some transparency
+          color: 'black', // black grid lines with some transparency
         },
         ticks: {
-          color: 'white' // White color for x-axis labels
+          color: 'black' // black color for x-axis labels
         }
       },
       y: {
         grid: {
-          color: 'white', // White grid lines with some transparency
+          color: 'black', // black grid lines with some transparency
         },
         ticks: {
-          color: 'white' // White color for y-axis labels
+          color: 'black' // black color for y-axis labels
         }
       }
     },
     plugins: {
       legend: {
         labels: {
-          color: 'white' // White color for legend text
+          color: 'black' // black color for legend text
         }
       }
     }
@@ -63,7 +63,7 @@ new Chart(ctxActivity, {
       label: 'Activities',
       data: [420, 147],
       fill: false, // Don't fill under the line
-      borderColor: 'white', // Line color (white)
+      borderColor: 'black', // Line color (black)
       tension: 0.1 // Smoothness of the line
     }]
   },
@@ -71,25 +71,25 @@ new Chart(ctxActivity, {
     scales: {
       x: {
         grid: {
-          color: 'white', // White grid lines with some transparency
+          color: 'black', // black grid lines with some transparency
         },
         ticks: {
-          color: 'white' // White color for x-axis labels
+          color: 'black' // black color for x-axis labels
         }
       },
       y: {
         grid: {
-          color: 'white', // White grid lines with some transparency
+          color: 'black', // black grid lines with some transparency
         },
         ticks: {
-          color: 'white' // White color for y-axis labels
+          color: 'black' // black color for y-axis labels
         }
       }
     },
     plugins: {
       legend: {
         labels: {
-          color: 'white' // White color for legend text
+          color: 'black' // black color for legend text
         }
       }
     }
@@ -119,29 +119,29 @@ canvas {
 <template>
   <div class="p-6 ">
     <!-- ส่วนหัว -->
-    <h1 class="text-4xl font-bold mb-6 text-white">แดชบอร์ด</h1>
+    <h1 class="text-4xl font-bold mb-6 text-black">แดชบอร์ด</h1>
 
     <!-- สถิติภาพรวม -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 text-white ">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 text-black ">
       <div class="stat backdrop-blur-2xl p-4 rounded-lg shadow-md ">
-        <div class="stat-title  text-white">จำนวนผู้ใช้ทั้งหมด</div>
-        <div class="stat-value text-white">1,234</div>
-        <div class="stat-desc text-white" >เพิ่มขึ้น 21% จากเดือนที่แล้ว</div>
+        <div class="stat-title  text-black">จำนวนผู้ใช้ทั้งหมด</div>
+        <div class="stat-value text-black">1,234</div>
+        <div class="stat-desc text-black" >เพิ่มขึ้น 21% จากเดือนที่แล้ว</div>
       </div>
       <div class="stat backdrop-blur-2xl p-4 rounded-lg shadow-md">
-        <div class="stat-title text-white">จำนวนกิจกรรมทั้งหมด</div>
-        <div class="stat-value text-white">567</div>
-        <div class="stat-desc text-white">กิจกรรมใหม่ 10 รายการในสัปดาห์นี้</div>
+        <div class="stat-title text-black">จำนวนกิจกรรมทั้งหมด</div>
+        <div class="stat-value text-black">567</div>
+        <div class="stat-desc text-black">กิจกรรมใหม่ 10 รายการในสัปดาห์นี้</div>
       </div>
       <div class="stat backdrop-blur-2xl p-4 rounded-lg shadow-md">
-        <div class="stat-title text-white">กิจกรรมที่เสร็จสิ้น</div>
-        <div class="stat-value text-white">420</div>
-        <div class="stat-desc text-white">76% ของกิจกรรมทั้งหมด</div>
+        <div class="stat-title text-black">กิจกรรมที่เสร็จสิ้น</div>
+        <div class="stat-value text-black">420</div>
+        <div class="stat-desc text-black">76% ของกิจกรรมทั้งหมด</div>
       </div>
       <div class="stat backdrop-blur-2xl p-4 rounded-lg shadow-md">
-        <div class="stat-title text-white">กิจกรรมที่ค้างอยู่</div>
-        <div class="stat-value text-white">147</div>
-        <div class="stat-desc text-white">24% ของกิจกรรมทั้งหมด</div>
+        <div class="stat-title text-black">กิจกรรมที่ค้างอยู่</div>
+        <div class="stat-value text-black">147</div>
+        <div class="stat-desc text-black">24% ของกิจกรรมทั้งหมด</div>
       </div>
     </div>
 
@@ -150,14 +150,14 @@ canvas {
       <!-- กราฟการเติบโตของผู้ใช้ -->
       <div class="card shadow-lg backdrop-blur-2xl">
         <div class="card-body">
-          <h2 class="card-title text-white">การเติบโตของผู้ใช้</h2>
+          <h2 class="card-title text-black">การเติบโตของผู้ใช้</h2>
           <canvas id="userChart"></canvas>
         </div>
       </div>
       <!-- กราฟการเสร็จสิ้นกิจกรรม -->
       <div class="card shadow-lg backdrop-blur-2xl ">
         <div class="card-body">
-          <h2 class="card-title text-white">การเสร็จสิ้นกิจกรรม</h2>
+          <h2 class="card-title text-black">การเสร็จสิ้นกิจกรรม</h2>
           <canvas id="activityChart"></canvas>
         </div>
       </div>

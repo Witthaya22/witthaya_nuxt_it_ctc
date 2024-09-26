@@ -100,7 +100,7 @@ function confirmActivity(activityId: number, action: 'approve' | 'reject') {
     </div>
 
     <h3 class="font-bold text-xl mt-6">กิจกรรมที่จอง</h3>
-    <div class="overflow-x-auto relative mt-3">
+    <div class="overflow-x-auto relative mt-3 ">
       <table class="table w-full">
         <thead>
           <tr class="bg-gray-200">
@@ -112,8 +112,8 @@ function confirmActivity(activityId: number, action: 'approve' | 'reject') {
             <th>จัดการ</th>
           </tr>
         </thead>
-        <tbody>
-          <tr v-for="activity in activities" :key="activity.id">
+        <tbody >
+          <tr v-for="activity in activities" :key="activity.id" class="backdrop-blur-lg">
             <td>{{ activity.id }}</td>
             <td>{{ activity.title }}</td>
             <td>{{ new Date(activity.date).toLocaleDateString('th-TH') }}</td>
