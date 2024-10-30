@@ -105,7 +105,7 @@ onMounted(() => {
     <div class="hero-content flex-col lg:flex-row-reverse">
       <img
         src="~/assets/images/logo.png"
-        class="max-w-52 mx-20 animate-bounce"
+        class="max-w-52 mx-20 "
 
       />
 

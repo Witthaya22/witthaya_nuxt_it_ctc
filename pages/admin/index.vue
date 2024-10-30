@@ -89,7 +89,7 @@ async function onLoginAdmin() {
       </label>
       <button
         :disabled="loading"
-        class="btn w-full py-2 mt-4 bg-blue-500  font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:opacity-50"
+        class="btn w-full py-2 mt-4 bg-blue-500 text-white  font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:opacity-50"
       >
         เข้าสู่ระบบ
       </button>

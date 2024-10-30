@@ -50,14 +50,14 @@ function goBack() {
 </script>
 
 <template>
-  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-white-600 backdrop-blur-lg shadow-inner shadow-black  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
     </svg>
     ย้อนกลับ
   </button>
-  <div class="min-h-screen flex justify-center items-center p-4 ">
-    <div class="card w-full max-w-4xl   relative backdrop-blur-lg shadow-sm shadow-white">
+  <div class="min-h-screen flex justify-center items-center  ">
+    <div class=" w-full max-w-4xl   relative   ">
       <div class="absolute top-4 right-4 text-right">
         <div class="text-3xl font-bold text-primary">
           คะแนน {{ completedActivities }}/{{ totalRequiredActivities }}
@@ -66,12 +66,12 @@ function goBack() {
            {{  isAllActivitiesCompleted ? 'ผ่านกิจกรรม' : 'ยังไม่ผ่านกิจกรรม' }}
         </div>
       </div>
-      <div class="card-body pt-16  ">
-        <h1 class="card-title text-3xl font-bold text-center mb-8">กิจกรรมที่จองไว้</h1>
+      <!-- <div class=" pt-16  "> -->
+        <h1 class=" text-4xl font-bold text-center mb-8">กิจกรรมที่จองไว้</h1>
 
         <div v-if="bookedActivities.length > 0">
           <ul class="space-y-4 ">
-            <li v-for="activity in bookedActivities" :key="activity.id" class=" rounded-lg p-4 transition-all shadow-sm shadow-white duration-300 hover:border-2 hover:border-white  hover:scale-105">
+            <li v-for="activity in bookedActivities" :key="activity.id" class=" rounded-lg p-4 transition-all shadow-sm shadow-black duration-300 hover:border-2   hover:scale-105">
               <nuxt-link to="http://localhost:3000/profile/Activirty[id]" class="flex justify-between items-center ">
                 <div>
                   <h2 class="text-xl font-semibold text-primary">{{ activity.name }}</h2>
@@ -105,5 +105,5 @@ function goBack() {
         </div>
       </div>
     </div>
-  </div>
+  <!-- </div> -->
 </template>

@@ -5,7 +5,7 @@ import swal from "sweetalert2";
 
 const mobileMenuStore = useMobileMenuStore()
 const checkSmallAdmin = () => {
-  if (auth.value?.email === "66309010020") {
+  if (auth.value?.email === "66309010031") {
     return true;
   }
 };

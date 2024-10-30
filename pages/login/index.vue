@@ -60,9 +60,18 @@ async function onLogin() {
   loading.value = false
 
 }
+function goBack() {
+  router.back()
+}
 </script>
 
 <template>
+  <button @click="goBack" class="absolute top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    ย้อนกลับ
+  </button>
   <div class="flex justify-center items-center h-screen">
     <!-- <div class="w-1/2 h-screen hidden lg:block">
       <img
@@ -93,7 +102,7 @@ async function onLogin() {
           <label
             for="password"
             class="block text-base font-medium   my-2"
-            >รหัสผ่าน <span class="text-gray-200  italic">(เลขบัตรประชาชน)</span></label
+            >รหัสผ่าน <span class="text-gray-500  italic">(เลขบัตรประชาชน)</span></label
           >
           <input
             v-model="input.password"

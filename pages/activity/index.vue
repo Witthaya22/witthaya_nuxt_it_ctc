@@ -42,7 +42,7 @@ watch(page, () => {
         v-for="activity in activityRes.activities"
         :key="activity.id"
         :to="`/activity/${activity.id}`"
-        class="card  rounded-xl shadow-md shadow-slate-600 hover:shadow-white transition-shadow duration-300 overflow-hidden flex flex-col"
+        class="card  rounded-xl shadow-md shadow-slate-600 hover:scale-105  transition-all duration-300 overflow-hidden flex flex-col"
       >
         <figure class="w-full h-64 overflow-hidden">
           <img :src="activity.images[0]" class="w-full h-full object-contain" alt="รูปภาพกิจกรรม"/>
@@ -76,13 +76,13 @@ watch(page, () => {
       <button
         v-if="page > 1"
         @click="page--"
-        class="px-6 py-2 bg-blue-600  rounded-full hover:bg-blue-700 transition-colors duration-300"
+        class="px-6 py-2 text-white bg-blue-600  rounded-full hover:bg-blue-700 transition-colors duration-300"
       >
         ย้อนกลับ
       </button>
       <button
         @click="page++"
-        class="px-6 py-2 bg-blue-600  rounded-full hover:bg-blue-700 transition-colors duration-300"
+        class="px-6 py-2 text-white bg-blue-600  rounded-full hover:bg-blue-700 transition-colors duration-300"
       >
         ถัดไป
       </button>

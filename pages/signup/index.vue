@@ -46,11 +46,20 @@ async function onSignup() {
   }
 
 }
+function goBack() {
+  router.back()
+}
 
 
 </script>
 
 <template>
+  <button @click="goBack" class="absolute top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    ย้อนกลับ
+  </button>
   <div class="flex justify-center  ">
     <!-- <div
       class="hidden lg:flex items-center justify-center flex-1  "
@@ -92,7 +101,7 @@ async function onSignup() {
           </div>
           <div>
             <label for="department" class="block text-sm font-medium " >แผนก</label>
-            <select class="select mt-1 p-2 w-full border text-black rounded-md  focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-colors duration-300">
+            <select class="select mt-1 p-2 w-full border  text-black rounded-md  focus:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-colors duration-300">
               <option disabled selected>แผนกของคุณ</option>
               <option>ช่างยนตร์</option>
               <option>ช่างไฟฟ้า</option>

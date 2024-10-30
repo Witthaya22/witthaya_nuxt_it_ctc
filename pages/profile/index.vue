@@ -2,7 +2,7 @@
 const username = ref('ชวัลวิชญ์ คงสำพันธ์')
 const email = ref('66309010020')
 const bio = ref('ฉันรักในกลิ่นน้ำมันเครื่อง👽')
-const profileImage = ref('https://scontent.fbkk7-2.fna.fbcdn.net/v/t1.6435-9/125985976_697934107811643_3815542183752697058_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=c7cdda&_nc_ohc=QHb9oMx_LAUQ7kNvgEwhEr3&_nc_ht=scontent.fbkk7-2.fna&gid=A7ZQbHAUSQqOXqLizSt8BLm&oh=00_AYCTu0A5o4Zv7plYt7TfoAjH4O6B1NzrIUtBjD2_Sr4kOw&oe=66D01F69')
+const profileImage = ref('https://scontent.fnak3-1.fna.fbcdn.net/v/t1.6435-9/125985976_697934107811643_3815542183752697058_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=94e2a3&_nc_ohc=80JW01Tyt8UQ7kNvgG5Tj2L&_nc_zt=23&_nc_ht=scontent.fnak3-1.fna&_nc_gid=Aq7GtohLOvhJt5hffzM3ZTo&oh=00_AYA4JB3YPmC2qNwBvl_xejfbiRR6AchcniUQ9Pq28XYA-g&oe=6749A1A9')
 const location = ref('ช่างยนต์')
 const joinDate = ref('1 มกราคม 2023')
 
@@ -88,7 +88,7 @@ const isAllActivitiesCompleted = computed(() =>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-4 h-4 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
             <span>{{ email }}</span>
           </div>
-          <div class="badge badge-lg badge-ghost gap-2 bg-rose-700 ">
+          <div class="badge badge-lg badge-ghost gap-2 bg-rose-700 text-white">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-4 h-4 stroke-current "><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             <span>{{ location }}</span>
           </div>
