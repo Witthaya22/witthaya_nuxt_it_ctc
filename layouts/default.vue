@@ -6,7 +6,7 @@
   <!-- Fixed Navbar -->
 
   <!-- Main content area -->
-  <div class="min-h-screen backgroundCustom">
+  <div class="min-h-screen backgroundCustom ">
     <div class="">
       <AppHeader />
       <main class="container mx-auto">
