@@ -25,7 +25,8 @@ const linkList: Link[] = [
           <nuxt-link class="mt-3 text-lg font-bold w-44 -100 btn btn-ghost" :to="link.to">{{ link.text }}</nuxt-link>
         </li>
         <li class="mt-auto">
-          <div @click="logout" class="mt-3 text-lg font-bold w-44 text-white btn btn-ghost bg-red-600 hover:bg-red-800">ออกจากระบบ</div>
+        <nuxt-link  class="mt-3 text-lg font-bold w-44 text-white btn btn-ghost bg-green-600 hover:bg-green-800" to="/">ไปที่หน้าหลัก</nuxt-link>
+        <div @click="logout" class="mt-2 text-lg font-bold w-44 text-white btn btn-ghost bg-red-600 hover:bg-red-800">ออกจากระบบ</div>
         </li>
       </ul>
     </aside>

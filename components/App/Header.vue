@@ -4,8 +4,8 @@ const { auth, logout } = useAuth();
 import swal from "sweetalert2";
 
 const mobileMenuStore = useMobileMenuStore()
-const checkSmallAdmin = () => {
-  if (auth.value?.email === "66309010031") {
+const checkAdmin = () => {
+  if (auth.value?.Role === "ADMIN" || auth.value?.Role === "SUPERADMIN") {
     return true;
   }
 };
@@ -65,12 +65,12 @@ watch(() => useRoute().fullPath, () => {
     </div>
     <div class="flex-none hidden md:flex items-center ">
       <ul class="menu menu-horizontal px-1 ">
-        <li v-if="checkSmallAdmin()">
+        <li v-if="checkAdmin()">
           <NuxtLink
-            to="/forSmallAdmin"
-            class="text-lg font-bold text-yellow-500 btn mx-1 btn-ghost focus:border-b-4 focus:border-b-yellow-500 focus:text-yellow-500"
+            to="/admin/dashboard"
+            class="text-lg font-bold text-green-600 btn mx-1 btn-ghost focus:border-b-4 focus:border-b-green-500 focus:text-green-500"
           >
-            จัดการกิจกรรม
+            ไปที่หน้าแอดมิน
           </NuxtLink>
         </li>
         <li>
@@ -132,7 +132,7 @@ watch(() => useRoute().fullPath, () => {
               role="button"
               class="text-lg font-bold btn mx-1 btn-ghost focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
             >
-              {{ auth.email }}
+              {{ auth.UserID }}
             </summary>
             <ul tabindex="0" class="dropdown-content text-white" @click="toggleMobileMenu" v-if="!mobileMenuStore.isOpen"  >
               <li>
@@ -236,7 +236,7 @@ watch(() => useRoute().fullPath, () => {
 
         </div>
         <div class="mt-3 px-2 space-y-1">
-          <div class="text-base font-medium ">ผู้ใช้: {{ auth.email }}</div>
+          <div class="text-base font-medium ">ผู้ใช้: {{ auth.UserID }}</div>
           <NuxtLink to="/profile" class="block px-3 py-2 rounded-md text-base font-medium  hover:text-gray-900 hover:bg-gray-50">ดูรายระเอียด</NuxtLink>
           <a @click="logoutConfirm" class="block px-3 py-2 rounded-md text-base font-medium  hover:text-gray-900 hover:bg-gray-50 cursor-pointer">ออกจากระบบ</a>
         </div>

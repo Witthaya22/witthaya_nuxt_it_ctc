@@ -2,16 +2,16 @@
 useHead({ title: "จัดการผู้ใช้" });
 definePageMeta({
   layout: "admin",
-  middleware: ["only-admin"],
+  // middleware: ["only-admin"],
 });
 
 interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  createdAt: string;
-  updatedAt: string;
+  UserID: string
+    UserFirstName: string
+    UserLastName: string
+    UserImage: string
+    DepartmentID: string
+    Role: string
 }
 
 const page = ref(1);
@@ -43,7 +43,7 @@ watch(page, () => fetchUsers());
           <tr class="bg-gray-200">
             <th>ID</th>
             <th>ชื่อผู้ใช้</th>
-            <th>อีเมล</th>
+            <th>นามสกุล</th>
             <th>บทบาท</th>
             <th>แก้ไข</th>
             <th>จัดการผู้ใช้</th>
@@ -51,13 +51,14 @@ watch(page, () => fetchUsers());
           </tr>
         </thead>
         <tbody class="">
-          <tr v-for="user in users" :key="user.id">
-            <td>{{ user.id }}</td>
-            <td>{{ user.name }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.role }}</td>
+          <tr v-for="user in users" :key="user.UserID">
+            <td>{{ user.UserID }}</td>
+            <td>{{ user.UserFirstName }}</td>
+            <td>{{ user.UserLastName }}</td>
+            <td>{{ user.Role }}</td>
+            <!-- <td>{{ user.role }}</td> -->
             <td >
-              <nuxt-link class="text-warning " :to="`/admin/user/${user.id}`">แก้ไข</nuxt-link>
+              <nuxt-link class="text-warning " :to="`/admin/user/${user.UserID}`">แก้ไข</nuxt-link>
             </td>
             <td>
               <nuxt-link class="text-accent" to="/admin/user/editUser">ดูรายละเอียด</nuxt-link>

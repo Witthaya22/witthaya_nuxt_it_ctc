@@ -2,7 +2,7 @@
 useHead({ title: "dashboard" });
 definePageMeta({
   layout: "admin",
-  middleware: ["only-admin"],
+  // middleware: ["only-admin"],
 });
 import { onMounted } from 'vue';
 import { Chart, registerables } from 'chart.js';

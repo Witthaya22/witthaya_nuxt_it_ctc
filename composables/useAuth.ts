@@ -1,11 +1,17 @@
 // import { User } from './useAuth';
 
 interface User {
-    id: number
-    email: string
-    name: string
-    createdAt: string
-    role: string
+    // id: number
+    // email: string
+    // name: string
+    // createdAt: string
+    // role: string
+    UserID: string
+    UserFirstName: string
+    UserLastName: string
+    UserImage: string
+    DepartmentID: string
+    Role: string
 }
 interface Admin {
     id: number

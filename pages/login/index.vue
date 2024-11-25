@@ -21,7 +21,7 @@ import Swal from 'sweetalert2'
 async function onLogin() {
   loading.value = true
   try {
-    const res = await axios.post<{ message: string }>('/api/login', input)
+    const res = await axios.post<{ message: string, role: string }>('/api/login', input)
 
     const Toast = Swal.mixin({
       toast: true,
@@ -40,7 +40,12 @@ async function onLogin() {
     });
 
     await checkAuth()
-    router.push('/')
+    if(res.data.role === 'ADMIN') {
+      router.push('/admin/dashboard')
+    }else {
+      router.push('/')
+    }
+    // router.push('/')
   } catch (error: any) {
     Swal.fire({
       icon: "error",

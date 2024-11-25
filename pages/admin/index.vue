@@ -8,7 +8,7 @@ definePageMeta({
   middleware: (to, from) => {
     const { admin } = useAuth()
     const { auth } = useAuth()
-    if(auth.value?.role !== 'Admin'){
+    if(auth.value?.Role !== 'ADMIN' && auth.value?.Role !== 'SUPERADMIN') {
       return navigateTo('/',{
         redirectCode: 302
       })

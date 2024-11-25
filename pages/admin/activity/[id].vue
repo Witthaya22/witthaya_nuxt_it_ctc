@@ -2,7 +2,7 @@
 useHead({ title: "เพิ่มกิจกรรม" });
 definePageMeta({
   layout: "admin",
-  middleware: ["only-admin"],
+  // middleware: ["only-admin"],
 });
 
 const route = useRoute();

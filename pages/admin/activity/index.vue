@@ -3,7 +3,7 @@
 useHead({ title: "จัดการกิจกรรม" });
 definePageMeta({
   layout: "admin",
-  middleware: ["only-admin"],
+  // middleware: ["only-admin"],
 });
 
 interface Activity {
