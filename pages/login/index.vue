@@ -25,7 +25,7 @@ async function onLogin() {
 
     const Toast = Swal.mixin({
       toast: true,
-      position: "top-end",
+      position: "top-start",
       showConfirmButton: false,
       timer: 3000,
       timerProgressBar: true,
@@ -85,7 +85,7 @@ function togglePassword() {
       <!-- Left Side - Welcome Text (Hidden on Mobile) -->
       <div class="hidden lg:flex flex-col items-start justify-center w-1/2 p-8">
         <h1 class="text-4xl lg:text-6xl font-bold text-gray-800 mb-6">ยินดีต้อนรับ<br>เข้าสู่ระบบ</h1>
-        <p class="text-lg text-gray-600 mb-8">เข้าสู่ระบบเพื่อจัดการข้อมูลของคุณ</p>
+        <p class="text-lg text-gray-600 mb-8">เข้าสู่ระบบเพื่อเข้าร่วมกิจกรรมของวิทยาลัยเทคนิคชัยภูมิ</p>
         <div class="flex gap-4 items-center p-4 bg-white/70 backdrop-blur-sm rounded-lg">
           <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

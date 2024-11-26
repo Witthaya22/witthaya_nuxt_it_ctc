@@ -101,7 +101,7 @@ onMounted(() => {
 
   <!-- </div> -->
 
-  <div class="hero min-h-screen">
+  <div class="hero min-h-screen ">
     <div class="hero-content flex-col lg:flex-row-reverse">
       <img
         src="~/assets/images/logo.png"

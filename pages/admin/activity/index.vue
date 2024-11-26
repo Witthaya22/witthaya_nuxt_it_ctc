@@ -7,11 +7,11 @@ definePageMeta({
 });
 
 interface Activity {
-  id: number;
-  title: string;
+  ID: number;
+  Title: string;
   description: string;
   images: string[];
-  score: number;
+  Score: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -83,12 +83,12 @@ watch(page, () => fetchActivities())
           </tr>
         </thead>
         <tbody>
-          <tr v-for="activity in activities" :key="activity.id">
-            <td>{{ activity.id }}</td>
-            <td>{{ activity.title }}</td>
-            <td>{{ activity.score }}</td>
+          <tr v-for="activity in activities" :key="activity.ID">
+            <td>{{ activity.ID }}</td>
+            <td>{{ activity.Title }}</td>
+            <td>{{ activity.Score }}</td>
             <td>
-              <nuxt-link class="text-warning" :to="`/admin/activity/${activity.id}`">แก้ไข</nuxt-link>
+              <nuxt-link class="text-warning" :to="`/admin/activity/${activity.ID}`">แก้ไข</nuxt-link>
             </td>
             <td>
               <nuxt-link class="text-accent" :to="`/admin/activity/editActivity`">จัดการกิจกรรม</nuxt-link>

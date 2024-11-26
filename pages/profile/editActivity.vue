@@ -1,4 +1,12 @@
 <script lang="ts" setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+// import { useAuth } from '~/composables/useAuth'
+
+const { auth } = useAuth(); // ใช้ auth เพื่อนำข้อมูล userID
+const userID = auth.value?.UserID; // รับ userID จาก auth
+
 interface Activity {
   id: number;
   name: string;
@@ -8,11 +16,7 @@ interface Activity {
   score: number | null;
 }
 
-const bookedActivities = ref<Activity[]>([
-  { id: 1, name: 'ไหว้เจ้า', date: '15 สิงหาคม 2024', location: 'วัดพระธาตุดอยสุเทพ', status: 'booking', score: 0.5 },
-  { id: 2, name: 'คอนเสิร์ตดนตรีคลาสสิคเทคนิคชัยภูมิ', date: '22 สิงหาคม 2024', location: 'หอประชุมวิทยาลัยเทคนิคชัยภูมิ', status: 'completed', score: 1 },
-  { id: 3, name: 'วันพ่อ', date: '5 ธันวาคม 2024', location: 'New York University', status: 'failed', score: 1 },
-]);
+const bookedActivities = ref<Activity[]>([]);
 
 const getStatusClass = (status: Activity['status']): string => {
   switch(status) {
@@ -42,12 +46,29 @@ const isAllActivitiesCompleted = computed(() =>
   completedActivities.value >= totalRequiredActivities
 );
 
-const router = useRouter()
+const router = useRouter();
+
 function goBack() {
-  router.back()
+  router.back();
 }
 
+// ดึงข้อมูลกิจกรรมที่จองไว้จาก API
+const fetchBookedActivities = async () => {
+  if (userID) {
+    try {
+      const response = await axios.get(`/api/activity/booked-activities/${userID}`);
+      bookedActivities.value = response.data;
+    } catch (error) {
+      console.error('Error fetching booked activities:', error);
+    }
+  }
+};
+
+onMounted(() => {
+  fetchBookedActivities();
+});
 </script>
+
 
 <template>
   <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-white-600 backdrop-blur-lg shadow-inner shadow-black  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
@@ -56,8 +77,9 @@ function goBack() {
     </svg>
     ย้อนกลับ
   </button>
-  <div class="min-h-screen flex justify-center items-center  ">
-    <div class=" w-full max-w-4xl   relative   ">
+
+  <div class="min-h-screen flex justify-center items-start">
+    <div class="w-full max-w-4xl relative">
       <div class="absolute top-4 right-4 text-right">
         <div class="text-3xl font-bold text-primary">
           คะแนน {{ completedActivities }}/{{ totalRequiredActivities }}
@@ -66,44 +88,43 @@ function goBack() {
            {{  isAllActivitiesCompleted ? 'ผ่านกิจกรรม' : 'ยังไม่ผ่านกิจกรรม' }}
         </div>
       </div>
-      <!-- <div class=" pt-16  "> -->
-        <h1 class=" text-4xl font-bold text-center mb-8">กิจกรรมที่จองไว้</h1>
+      <h1 class="text-4xl font-bold text-center mb-8">กิจกรรมที่จองไว้</h1>
 
-        <div v-if="bookedActivities.length > 0">
-          <ul class="space-y-4 ">
-            <li v-for="activity in bookedActivities" :key="activity.id" class=" rounded-lg p-4 transition-all shadow-sm shadow-black duration-300 hover:border-2   hover:scale-105">
-              <nuxt-link to="http://localhost:3000/profile/Activirty[id]" class="flex justify-between items-center ">
-                <div>
-                  <h2 class="text-xl font-semibold text-primary">{{ activity.name }}</h2>
-                  <p class="text-base-content/70 ">วันที่: {{ activity.date }}</p>
-                  <p class="text-base-content/70 ">สถานที่: {{ activity.location }}</p>
-                  <div class="mt-2">
-                    <span :class="['badge', getStatusClass(activity.status)]">
-                      {{ getStatusText(activity.status) }}
-                    </span>
-                    <span v-if="activity.score !== null" class="badge badge-info ml-2">
-                      {{ activity.score }} คะแนน
-                    </span>
-                  </div>
+      <div v-if="bookedActivities.length > 0">
+        <ul class="space-y-4">
+          <li v-for="activity in bookedActivities" :key="activity.id" class="rounded-lg p-4 transition-all shadow-sm shadow-black duration-300 hover:border-2 hover:scale-105">
+            <nuxt-link :to="`/profile/Activity/${activity.id}`" class="flex justify-between items-center">
+              <div>
+                <h2 class="text-xl font-semibold text-primary">{{ activity.name }}</h2>
+                <p class="text-base-content/70">วันที่: {{ activity.date }}</p>
+                <p class="text-base-content/70">สถานที่: {{ activity.location }}</p>
+                <div class="mt-2">
+                  <span :class="['badge', getStatusClass(activity.status)]">
+                    {{ getStatusText(activity.Status) }}
+                  </span>
+                  <span v-if="activity.score !== null" class="badge badge-info ml-2">
+                    {{ activity.score }} คะแนน
+                  </span>
                 </div>
-              </nuxt-link>
-            </li>
-          </ul>
-        </div>
+              </div>
+            </nuxt-link>
+          </li>
+        </ul>
+      </div>
 
-        <div v-else class="text-center py-8">
-          <p class="text-xl text-base-content/70">คุณยังไม่มีกิจกรรมที่จองไว้</p>
-        </div>
+      <div v-else class="text-center py-8">
+        <p class="text-xl text-base-content/70">คุณยังไม่มีกิจกรรมที่จองไว้</p>
+      </div>
 
-        <div class="card-actions justify-center mt-8">
-          <nuxt-link to="/activity" class="btn btn-primary">
-            ดูกิจกรรมที่กำลังเปิดรับ
-          </nuxt-link>
-          <nuxt-link to="/profile" class="btn btn-ghost">
-            กลับสู่หน้าโปรไฟล์
-          </nuxt-link>
-        </div>
+      <div class="card-actions justify-center mt-8">
+        <nuxt-link to="/activity" class="btn btn-primary">
+          ดูกิจกรรมที่กำลังเปิดรับ
+        </nuxt-link>
+        <nuxt-link to="/profile" class="btn btn-ghost">
+          กลับสู่หน้าโปรไฟล์
+        </nuxt-link>
       </div>
     </div>
-  <!-- </div> -->
+  </div>
 </template>
+

@@ -81,7 +81,7 @@ watch(() => useRoute().fullPath, () => {
             หน้าหลัก
           </NuxtLink>
         </li>
-        <div class="dropdown dropdown-end z-10">
+        <!-- <div class="dropdown dropdown-end z-10">
           <summary
             tabindex="0"
             role="button"
@@ -107,7 +107,25 @@ watch(() => useRoute().fullPath, () => {
               </nuxt-link>
             </li>
           </ul>
-        </div>
+        </div> -->
+        <li>
+          <NuxtLink
+            to="/activity"
+            class="text-lg font-bold btn mx-1 btn-ghost focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
+          >
+          กิจกรรมที่เปิด
+
+          </NuxtLink>
+        </li>
+        <li>
+          <NuxtLink
+            to="/profile/editActivity"
+            class="text-lg font-bold btn mx-1 btn-ghost focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
+          >
+          กิจกรรมที่จอง
+
+          </NuxtLink>
+        </li>
         <li>
           <NuxtLink
             to="/about"
@@ -117,14 +135,14 @@ watch(() => useRoute().fullPath, () => {
 
           </NuxtLink>
         </li>
-        <li>
+        <!-- <li>
           <NuxtLink
             to="/contact"
             class="text-lg font-bold btn mx-1 btn-ghost focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
           >
             ติดต่อเรา
           </NuxtLink>
-        </li>
+        </li> -->
         <template v-if="auth" >
           <div class="dropdown dropdown-end">
             <summary
@@ -161,7 +179,7 @@ watch(() => useRoute().fullPath, () => {
           <div>
             <li>
               <NuxtLink
-                to="login"
+                to="/login"
                 class="text-lg font-bold text-white btn btn-info focus:outline-none focus:border-b-2 focus:border-info"
               >
                 เข้าสู่ระบบ

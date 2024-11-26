@@ -1,12 +1,12 @@
 <script setup lang="ts">
 interface Activity {
-  id: number;
-  title: string;
-  description: string;
-  images: string[];
-  score: number;
-  createdAt: string;
-  updatedAt: string;
+  ID: number;
+  Title: string;
+  Description: string;
+  Images: string[];
+  Score: number;
+  CreatedAt: string;
+  UpdatedAt: string;
 }
 
 const axios = useAxios()
@@ -40,17 +40,17 @@ watch(page, () => {
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8  backdrop-blur-lg my-3">
       <NuxtLink
         v-for="activity in activityRes.activities"
-        :key="activity.id"
-        :to="`/activity/${activity.id}`"
+        :key="activity.ID"
+        :to="`/activity/${activity.ID}`"
         class="card  rounded-xl shadow-md shadow-slate-600 hover:scale-105  transition-all duration-300 overflow-hidden flex flex-col"
       >
         <figure class="w-full h-64 overflow-hidden">
-          <img :src="activity.images[0]" class="w-full h-full object-contain" alt="รูปภาพกิจกรรม"/>
+          <img :src="activity.Images[0]" class="w-full h-full object-contain" alt="รูปภาพกิจกรรม"/>
         </figure>
         <div class="p-6 flex-grow flex flex-col justify-between">
           <div>
-            <h2 class="text-xl font-semibold  mb-2 line-clamp-2">{{ activity.title }}</h2>
-            <p class="mb-4 line-clamp-3">{{ activity.description }}</p>
+            <h2 class="text-xl font-semibold  mb-2 line-clamp-2">{{ activity.Title }}</h2>
+            <p class="mb-4 line-clamp-3">{{ activity.Description }}</p>
           </div>
           <div class="flex justify-between items-center mt-auto">
             <div class="flex items-center">
@@ -59,7 +59,7 @@ watch(page, () => {
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
               </svg> -->
               <Icon class="w-5 h-5 text-yellow-400" name="ic-baseline-star" />
-              <span class="ml-1 ">{{ activity.score }}</span>
+              <span class="ml-1 ">{{ activity.Score }}</span>
             </div>
             <div class="flex space-x-2">
 

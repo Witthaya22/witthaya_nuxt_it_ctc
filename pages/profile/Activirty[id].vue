@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import QRCodeVue3 from 'qrcode-vue3'
 
 interface Activity {
@@ -13,8 +14,12 @@ interface Activity {
   score: number | null;
 }
 
+const route = useRoute()
+const router = useRouter()
+
+// สมมุติว่าได้ข้อมูลกิจกรรมจาก API หรือ Store
 const activity = ref<Activity>({
-  id: 1,
+  id: route.params.id ? Number(route.params.id) : 1, // ใช้ id จาก URL
   name: 'ไหว้เจ้า',
   date: '15 สิงหาคม 2024',
   time: '09:00 - 12:00',
@@ -49,35 +54,28 @@ const getStatusText = (status: Activity['status']): string => {
 
 const IN = ref(false)
 
-const checkInQRValue = computed(() => `http://localhost:3000/admin/edit/user/activity/[id]/checkIn/acpass=yes?no`)
-const checkOutQRValue = computed(() => `http://localhost:3000/admin/edit/user/activity/[id]/checkOut/acpass=yes?no`)
-const router = useRouter()
+const checkInQRValue = computed(() => `http://localhost:3000/admin/edit/user/activity/${activity.value.id}/checkIn/acpass=yes?no`)
+const checkOutQRValue = computed(() => `http://localhost:3000/admin/edit/user/activity/${activity.value.id}/checkOut/acpass=yes?no`)
+
 function goBack() {
   router.back()
 }
 </script>
 
 <template>
-  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
+  <button @click="goBack" class="sticky top-5 left-5 z-40 hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
     </svg>
     ย้อนกลับ
   </button>
-  <div class="min-h-screen  py-12 px-4 sm:px-6 lg:px-8">
+
+  <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
       <div class="backdrop-blur-lg shadow-2xl rounded-box overflow-hidden">
-        <!-- Activity Header -->
-        <!-- <div class="relative h-64 bg-gradient-to-r from-primary to-secondary">
-          <div class="absolute inset-0 flex items-center justify-center bg-opacity-75 bg-base-100">
-            <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-              {{ activity.name }}
-            </h1>
-          </div>
-        </div> -->
 
         <!-- User Info -->
-        <div class="flex items-center space-x-4 p-8 ">
+        <div class="flex items-center space-x-4 p-8">
           <div class="avatar">
             <div class="w-24 h-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
               <img :src="user.profileImage" alt="User profile" />
@@ -86,17 +84,15 @@ function goBack() {
           <div class="flex-1">
             <div class="flex justify-between">
               <span class="text-3xl font-semibold">{{ user.name }}</span>
-              <span class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">กิจกรรม  {{ activity.name }}</span>
+              <span class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">กิจกรรม {{ activity.name }}</span>
             </div>
-            <div class="mt-2 ">
-              <span :class="['badge', 'badge-lg', getStatusClass(activity.status), 'text-lg font-semibold animate-pulse ']">
+            <div class="mt-2">
+              <span :class="['badge', 'badge-lg', getStatusClass(activity.status), 'text-lg font-semibold animate-pulse']">
                 {{ getStatusText(activity.status) }}
-
               </span>
             </div>
           </div>
         </div>
-
 
         <!-- Activity Details -->
         <div class="p-8 space-y-6">
@@ -117,7 +113,7 @@ function goBack() {
         </div>
 
         <!-- QR Codes -->
-        <div class="p-8 ">
+        <div class="p-8">
           <h3 class="text-2xl font-semibold mb-6 text-center">QR Codes สำหรับเช็คอิน/เช็คเอาท์</h3>
           <div class="flex justify-around">
             <div v-if="IN == false" class="text-center">
@@ -134,7 +130,6 @@ function goBack() {
             </div>
           </div>
         </div>
-
 
       </div>
     </div>
