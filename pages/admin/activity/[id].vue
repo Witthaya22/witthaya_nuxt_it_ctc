@@ -15,6 +15,7 @@ interface Input {
   description: string;
   images: string[];
   score: number;
+  location: string;
 }
 
 const input = reactive<Input>({
@@ -22,6 +23,7 @@ const input = reactive<Input>({
   description: '',
   images: [],
   score: 0,
+  location: ''
 });
 
 interface Activity {
@@ -71,23 +73,24 @@ async function onUpsertActivity() {
         title: input.title,
         description: input.description,
         images: input.images,
-        score: input.score
+        score: input.score,
+        location: input.location,  // Add location to the request payload
       },
       {
         params: {
-          id: id.value
-        }
+          id: id.value,
+        },
       }
     );
     if (refreshCacge) {
-     refreshCacge()
+      refreshCacge();
     }
 
     Swal.fire({
       icon: "success",
       title: res.data.message,
       showConfirmButton: false,
-      timer: 1700
+      timer: 1700,
     });
     router.push('/admin/activity');
   } catch (error: any) {
@@ -99,6 +102,7 @@ async function onUpsertActivity() {
     loading.value = false;
   }
 }
+
 </script>
 
 <template>
@@ -114,6 +118,11 @@ async function onUpsertActivity() {
         <div class="mb-1 font-bold">คะแนนกิจกรรม:</div>
         <input v-model="input.score" class="input input-bordered w-full text-black" type="number" placeholder="คะแนนกิจกรรม" />
       </label>
+      <label class="block">
+  <div class="mb-1 font-bold">สถานที่กิจกรรม:</div>
+  <input v-model="input.location" class="input input-bordered w-full text-black" type="text" placeholder="สถานที่กิจกรรม" />
+</label>
+
       <div>
         <div class="mb-1 font-bold">รูปภาพกิจกรรม:</div>
         <div v-for="(image, i) in input.images" :key="i" class="flex mb-2">

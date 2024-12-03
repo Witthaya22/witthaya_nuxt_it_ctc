@@ -21,27 +21,28 @@ const axios = useAxios();
 const router = useRouter();
 const route = useRoute();
 
-const { data } = await axios.get<{ activity: Activity }>(
-  `/api/activity/${route.params.id}`
-);
+
+
+
+const { data } = await axios.get(`/api/activity/${route.params.id}`);
 
 async function reserveActivity() {
-  const activityID = Number(route.params.id); // Convert to number
-  const userID = auth.value?.UserID;  // Dynamically get the userID from the auth state
+  const activityID = Number(route.params.id);
+  const userID = auth.value?.UserID;
 
   if (!userID) {
     Swal.fire({
       icon: "error",
       title: "กรุณาล็อกอินก่อนจองกิจกรรม",
-      showConfirmButton: true
+      showConfirmButton: true,
     });
     return;
   }
 
   try {
-    const response = await axios.post('/api/activity/reserve', {
-      userID, // Use the dynamic userID
-      activityID, // Send activityID as a number
+    const response = await axios.post("/api/activity/reserve", {
+      userID,
+      activityID,
     });
 
     Swal.fire({
@@ -50,7 +51,6 @@ async function reserveActivity() {
       showConfirmButton: false,
       timer: 1700,
     });
-
   } catch (error) {
     Swal.fire({
       icon: "error",

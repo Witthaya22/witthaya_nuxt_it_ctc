@@ -3,9 +3,19 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 // import { useAuth } from '~/composables/useAuth'
+import Swal from "sweetalert2";
 
 const { auth } = useAuth(); // ใช้ auth เพื่อนำข้อมูล userID
 const userID = auth.value?.UserID; // รับ userID จาก auth
+
+onMounted(() => {
+  if (!userID) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'กรุณาล็อกอินเพื่อดำเนินการต่อ',
+    });
+  }
+})
 
 interface Activity {
   id: number;
@@ -54,15 +64,34 @@ function goBack() {
 
 // ดึงข้อมูลกิจกรรมที่จองไว้จาก API
 const fetchBookedActivities = async () => {
-  if (userID) {
-    try {
-      const response = await axios.get(`/api/activity/booked-activities/${userID}`);
+  if (!userID) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'กรุณาล็อกอินก่อนดูข้อมูลกิจกรรม',
+    });
+    return;
+  }
+
+  try {
+    const response = await axios.get(`/api/activity/booked-activities/${userID}`);
+    if (response.data && Array.isArray(response.data)) {
       bookedActivities.value = response.data;
-    } catch (error) {
-      console.error('Error fetching booked activities:', error);
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'ไม่พบข้อมูลกิจกรรม',
+      });
     }
+  } catch (error) {
+    console.error('Error fetching booked activities:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
+      text: error.response?.data?.message || 'ไม่สามารถดึงข้อมูลได้',
+    });
   }
 };
+
 
 onMounted(() => {
   fetchBookedActivities();
@@ -92,23 +121,23 @@ onMounted(() => {
 
       <div v-if="bookedActivities.length > 0">
         <ul class="space-y-4">
-          <li v-for="activity in bookedActivities" :key="activity.id" class="rounded-lg p-4 transition-all shadow-sm shadow-black duration-300 hover:border-2 hover:scale-105">
-            <nuxt-link :to="`/profile/Activity/${activity.id}`" class="flex justify-between items-center">
-              <div>
-                <h2 class="text-xl font-semibold text-primary">{{ activity.name }}</h2>
-                <p class="text-base-content/70">วันที่: {{ activity.date }}</p>
-                <p class="text-base-content/70">สถานที่: {{ activity.location }}</p>
-                <div class="mt-2">
-                  <span :class="['badge', getStatusClass(activity.status)]">
-                    {{ getStatusText(activity.Status) }}
-                  </span>
-                  <span v-if="activity.score !== null" class="badge badge-info ml-2">
-                    {{ activity.score }} คะแนน
-                  </span>
-                </div>
-              </div>
-            </nuxt-link>
-          </li>
+         <div v-for="activity in bookedActivities" :key="activity.id" class="rounded-lg p-4 transition-all shadow-sm shadow-black duration-300 hover:border-2 hover:scale-105">
+          <nuxt-link :to="`/profile/Activirty/${activity.id}`" class="flex justify-between items-center">
+      <div>
+        <h2 class="text-xl font-semibold text-primary">{{ activity.name }}</h2>
+        <p class="text-base-content/70">วันที่: {{ activity.date }}</p>
+        <p class="text-base-content/70">สถานที่: {{ activity.location }}</p>
+        <div class="mt-2">
+          <span :class="['badge', getStatusClass(activity.status)]">
+            {{ getStatusText(activity.status) }}
+          </span>
+          <span v-if="activity.score !== null" class="badge badge-info ml-2">
+            {{ activity.score }} คะแนน
+          </span>
+        </div>
+      </div>
+    </nuxt-link>
+  </div>
         </ul>
       </div>
 
