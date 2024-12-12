@@ -57,6 +57,41 @@ const showAlert = () => {
   });
 };
 
+async function deleteActivity(activityId: number) {
+  try {
+    const result = await Swal.fire({
+      title: 'ยืนยันการลบกิจกรรม',
+      text: "คุณแน่ใจหรือไม่ที่จะลบกิจกรรมนี้?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'ลบ',
+      cancelButtonText: 'ยกเลิก'
+    });
+
+    if (result.isConfirmed) {
+      await axios.delete(`/api/activity/${activityId}`);
+
+      // อัพเดทข้อมูลในตารางทันที
+      activities.value = activities.value.filter(act => act.ID !== activityId);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'ลบกิจกรรมสำเร็จ',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }
+  } catch (error: any) {
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาด',
+      text: error.response?.data?.message || 'ไม่สามารถลบกิจกรรมได้'
+    });
+  }
+}
+
 
 await fetchActivities();
 watch(page, () => fetchActivities())
@@ -68,44 +103,75 @@ watch(page, () => fetchActivities())
   <div>
     <h2 class="font-bold text-2xl">รายการกิจกรรม</h2>
     <hr class="my-3" />
-    <nuxt-link class="btn btn-info text-white " to="/admin/activity/create">เพิ่มกิจกรรม</nuxt-link>
-    <div class="overflow-x-auto relative mt-3">
+    <nuxt-link class="btn btn-info text-white" to="/admin/activity/create">เพิ่มกิจกรรม</nuxt-link>
+    <div class="overflow-x-auto mt-3">
       <table class="table w-full">
         <thead>
           <tr class="bg-gray-200">
-            <th>ID</th>
-            <th>ชื่อกิจกรรม</th>
-            <th>คะแนน</th>
-            <th>แก้ไข</th>
-            <th>จัดการกิจกรรม</th>
-            <th>รายงาน</th>
-            <th>ลบกิจกรรม</th>
+            <th class="w-20 text-center">ID</th>
+            <th class="w-1/3">ชื่อกิจกรรม</th>
+            <th class="w-24 text-center">คะแนน</th>
+            <th class="w-32 text-end">แก้ไข</th>
+            <th class="w-40 text-end">จัดการกิจกรรม</th>
+            <th class="w-32 text-end">รายงาน</th>
+            <th class="w-32 text-end">ลบกิจกรรม</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="activity in activities" :key="activity.ID">
-            <td>{{ activity.ID }}</td>
+            <td class="text-center">{{ activity.ID }}</td>
             <td>{{ activity.Title }}</td>
-            <td>{{ activity.Score }}</td>
-            <td>
-              <nuxt-link class="text-warning" :to="`/admin/activity/${activity.ID}`">แก้ไข</nuxt-link>
+            <td class="text-center">{{ activity.Score }}</td>
+            <td class="text-end">
+              <nuxt-link
+                class="btn btn-warning btn-sm"
+                :to="`/admin/activity/${activity.ID}`"
+              >
+                แก้ไข
+              </nuxt-link>
             </td>
-            <td>
-              <nuxt-link class="text-accent" :to="`/admin/activity/editActivity`">จัดการกิจกรรม</nuxt-link>
+            <td class="text-end">
+              <nuxt-link
+                class="btn btn-accent btn-sm"
+                :to="`/admin/activity/editActivity`"
+              >
+                จัดการกิจกรรม
+              </nuxt-link>
             </td>
-            <td>
-              <button class="text-purple-400" @click="showAlert">ส่งออก PDF</button>
+            <td class="text-end">
+              <button
+                class="btn btn-info btn-sm"
+                @click="showAlert"
+              >
+                ส่งออก PDF
+              </button>
             </td>
-            <td>
-              <button class="text-error ">ลบ</button>
+            <td class="text-end">
+              <button
+                class="btn btn-error btn-sm"
+                @click="deleteActivity(activity.ID)"
+              >
+                ลบ
+              </button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="space-x-5 text-right container mt-2 mr-1">
-      <span v-if="page > 1" class="text-xl btn btn-ghost text-accent cursor-pointer" @click="page--">ย้อนกลับ</span>
-      <span class="text-xl btn btn-ghost text-accent cursor-pointer" @click="page++">ถัดไป</span>
+    <div class="flex justify-end mt-4 gap-2">
+      <button
+        v-if="page > 1"
+        class="btn btn-ghost btn-sm"
+        @click="page--"
+      >
+        ย้อนกลับ
+      </button>
+      <button
+        class="btn btn-ghost btn-sm"
+        @click="page++"
+      >
+        ถัดไป
+      </button>
     </div>
   </div>
 </template>
