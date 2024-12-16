@@ -149,9 +149,9 @@ async function onUpsertActivity() {
           <div class="form-control">
             <label class="label">
               <span class="label-text font-bold">ชื่อกิจกรรม</span>
-              <span class="label-text-alt text-error">*</span>
+              <!-- <span class="label-text-alt text-error">*</span> -->
             </label>
-            <<input
+            <input
   v-model="input.title"
   class="input input-bordered"
   type="text"

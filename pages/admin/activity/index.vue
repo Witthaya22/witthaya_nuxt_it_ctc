@@ -131,13 +131,13 @@ watch(page, () => fetchActivities())
               </nuxt-link>
             </td>
             <td class="text-end">
-              <nuxt-link
-                class="btn btn-accent btn-sm"
-                :to="`/admin/activity/editActivity`"
-              >
-                จัดการกิจกรรม
-              </nuxt-link>
-            </td>
+                <nuxt-link
+                  class="btn btn-accent btn-sm"
+                  :to="`/admin/activity/participants/${activity.ID}`"
+                >
+                  ดูผู้เข้าร่วม
+                </nuxt-link>
+              </td>
             <td class="text-end">
               <button
                 class="btn btn-info btn-sm"

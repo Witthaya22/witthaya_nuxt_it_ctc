@@ -109,9 +109,12 @@ watch(page, () => fetchUsers());
               </nuxt-link>
             </td>
             <td>
-              <nuxt-link class="btn btn-accent btn-sm" to="/admin/user/editUser">
-                ดูรายละเอียด
-              </nuxt-link>
+              <nuxt-link
+  class="btn btn-info btn-sm"
+  :to="`/admin/user/details/${user.UserID}`"
+>
+  ดูรายละเอียด
+</nuxt-link>
             </td>
             <td>
               <button
