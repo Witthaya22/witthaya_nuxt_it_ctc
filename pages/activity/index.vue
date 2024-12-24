@@ -7,6 +7,10 @@ interface Activity {
   Score: number;
   CreatedAt: string;
   UpdatedAt: string;
+  StartDate: string;
+  EndDate: string;
+  Location: string;
+  MaxParticipants: number;
 }
 
 const axios = useAxios()
@@ -21,9 +25,7 @@ async function fetchActivities() {
       }
     })
 
-      activityRes.value = response.data
-
-
+    activityRes.value = response.data
 }
 
 await fetchActivities()
@@ -34,38 +36,37 @@ watch(page, () => {
 </script>
 <template>
   <div class="container mx-auto py-8 px-4">
-    <h1 class="text-4xl font-bold mb-12 text-center ">กิจกรรมทั้งหมด</h1>
+    <h1 class="text-4xl font-bold mb-12 text-center">กิจกรรมทั้งหมด</h1>
 
-    <input type="text" placeholder="ค้นหากิจกรรม" class="input  input-bordered w-full max-w-xs" />
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8  backdrop-blur-lg my-3">
+    <input type="text" placeholder="ค้นหากิจกรรม" class="input input-bordered w-full max-w-xs mb-6" />
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 backdrop-blur-lg my-3">
       <NuxtLink
         v-for="activity in activityRes.activities"
         :key="activity.ID"
         :to="`/activity/${activity.ID}`"
-        class="card  rounded-xl shadow-md shadow-slate-600 hover:scale-105  transition-all duration-300 overflow-hidden flex flex-col"
+        class="card rounded-xl shadow-md shadow-slate-600 hover:scale-105 transition-all duration-300 overflow-hidden flex flex-col"
       >
         <figure class="w-full h-64 overflow-hidden">
           <img :src="activity.Images[0]" class="w-full h-full object-contain" alt="รูปภาพกิจกรรม"/>
         </figure>
         <div class="p-6 flex-grow flex flex-col justify-between">
           <div>
-            <h2 class="text-xl font-semibold  mb-2 line-clamp-2">{{ activity.Title }}</h2>
+            <h2 class="text-xl font-semibold mb-2 line-clamp-2">{{ activity.Title }}</h2>
             <p class="mb-4 line-clamp-3">{{ activity.Description }}</p>
           </div>
           <div class="flex justify-between items-center mt-auto">
             <div class="flex items-center">
               คะแนน:&nbsp;&nbsp;
-              <!-- <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg> -->
               <Icon class="w-5 h-5 text-yellow-400" name="ic-baseline-star" />
-              <span class="ml-1 ">{{ activity.Score }}</span>
+              <span class="ml-1">{{ activity.Score }}</span>
             </div>
             <div class="flex space-x-2">
-
-
-              <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full"><Icon name="ic-baseline-person-2" />&nbsp;0/1000</span>
-              <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full"><Icon name="ic-baseline-edit-calendar" />&nbsp;15/6/2567</span>
+              <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                <Icon name="ic-baseline-person-2" />&nbsp;0/{{ activity.MaxParticipants }}
+              </span>
+              <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                <Icon name="ic-baseline-edit-calendar" />&nbsp;{{ new Date(activity.StartDate).toLocaleDateString() }}
+              </span>
             </div>
           </div>
         </div>
@@ -76,13 +77,13 @@ watch(page, () => {
       <button
         v-if="page > 1"
         @click="page--"
-        class="px-6 py-2 text-white bg-blue-600  rounded-full hover:bg-blue-700 transition-colors duration-300"
+        class="btn btn-primary"
       >
         ย้อนกลับ
       </button>
       <button
         @click="page++"
-        class="px-6 py-2 text-white bg-blue-600  rounded-full hover:bg-blue-700 transition-colors duration-300"
+        class="btn btn-primary"
       >
         ถัดไป
       </button>

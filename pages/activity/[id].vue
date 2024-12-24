@@ -13,6 +13,8 @@ interface Activity {
   Score: number;
   StartDate: string;
   EndDate: string;
+  Location: string;
+  MaxParticipants: number;
   CreatedAt: string;
   UpdatedAt: string;
 }
@@ -20,9 +22,6 @@ interface Activity {
 const axios = useAxios();
 const router = useRouter();
 const route = useRoute();
-
-
-
 
 const { data } = await axios.get(`/api/activity/${route.params.id}`);
 
@@ -130,7 +129,11 @@ function goBack() {
               </div>
               <span class="mx-4">|</span>
               <div>
-                <span>เริ่ม: </span>{{ data.activity.StartDate | formatDate }}
+                <span>เริ่ม: </span>{{ new Date(data.activity.StartDate).toLocaleDateString() }}
+              </div>
+              <span class="mx-4">|</span>
+              <div>
+                <span>สถานที่: </span>{{ data.activity.Location }}
               </div>
             </div>
           </div>
