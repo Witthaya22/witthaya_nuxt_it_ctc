@@ -2,20 +2,10 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-// import { useAuth } from '~/composables/useAuth'
 import Swal from "sweetalert2";
 
-const { auth } = useAuth(); // ใช้ auth เพื่อนำข้อมูล userID
-const userID = auth.value?.UserID; // รับ userID จาก auth
-
-onMounted(() => {
-  if (!userID) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'กรุณาล็อกอินเพื่อดำเนินการต่อ',
-    });
-  }
-})
+const { auth } = useAuth();
+const userID = auth.value?.UserID;
 
 interface Activity {
   id: number;
@@ -24,16 +14,18 @@ interface Activity {
   location: string;
   status: 'booking' | 'completed' | 'failed';
   score: number | null;
+  images: string[];
 }
 
 const bookedActivities = ref<Activity[]>([]);
+const isLoading = ref(true);
 
 const getStatusClass = (status: Activity['status']): string => {
   switch(status) {
-    case 'booking': return 'badge-warning';
-    case 'completed': return 'badge-success';
-    case 'failed': return 'badge-error';
-    default: return 'badge-ghost';
+    case 'booking': return 'bg-warning/10 text-warning';
+    case 'completed': return 'bg-success/10 text-success';
+    case 'failed': return 'bg-error/10 text-error';
+    default: return 'bg-base-200 text-base-content';
   }
 };
 
@@ -52,17 +44,12 @@ const completedActivities = computed(() =>
 
 const totalRequiredActivities = 3;
 
-const isAllActivitiesCompleted = computed(() =>
-  completedActivities.value >= totalRequiredActivities
-);
-
 const router = useRouter();
 
 function goBack() {
   router.back();
 }
 
-// ดึงข้อมูลกิจกรรมที่จองไว้จาก API
 const fetchBookedActivities = async () => {
   if (!userID) {
     Swal.fire({
@@ -73,87 +60,134 @@ const fetchBookedActivities = async () => {
   }
 
   try {
+    isLoading.value = true;
     const response = await axios.get(`/api/activity/booked-activities/${userID}`);
-    if (response.data && Array.isArray(response.data)) {
-      bookedActivities.value = response.data;
-    } else {
-      Swal.fire({
-        icon: 'error',
-        title: 'ไม่พบข้อมูลกิจกรรม',
-      });
-    }
+    bookedActivities.value = response.data;
   } catch (error) {
     console.error('Error fetching booked activities:', error);
     Swal.fire({
       icon: 'error',
       title: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-      text: error.response?.data?.message || 'ไม่สามารถดึงข้อมูลได้',
     });
+  } finally {
+    isLoading.value = false;
   }
 };
-
 
 onMounted(() => {
   fetchBookedActivities();
 });
 </script>
 
-
 <template>
-  <button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-white-600 backdrop-blur-lg shadow-inner shadow-black  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-    </svg>
-    ย้อนกลับ
-  </button>
-
-  <div class="min-h-screen flex justify-center items-start">
-    <div class="w-full max-w-4xl relative">
-      <div class="absolute top-4 right-4 text-right">
-        <div class="text-3xl font-bold text-primary">
-          คะแนน {{ completedActivities }}/{{ totalRequiredActivities }}
+  <div class="min-h-screen ">
+    <div class="container mx-auto px-4 py-8">
+      <!-- Header with Progress -->
+      <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+        <div class="flex items-center gap-4">
+          <button @click="goBack" class="btn btn-circle btn-ghost hover:bg-base-200">
+            <Icon name="ic:baseline-arrow-back" class="w-6 h-6" />
+          </button>
+          <h1 class="text-2xl font-bold">กิจกรรมของฉัน</h1>
         </div>
-        <div class="text-sm font-semibold" :class="isAllActivitiesCompleted ? 'text-success' : 'text-warning'">
-           {{  isAllActivitiesCompleted ? 'ผ่านกิจกรรม' : 'ยังไม่ผ่านกิจกรรม' }}
-        </div>
-      </div>
-      <h1 class="text-4xl font-bold text-center mb-8">กิจกรรมที่จองไว้</h1>
-
-      <div v-if="bookedActivities.length > 0">
-        <ul class="space-y-4">
-         <div v-for="activity in bookedActivities" :key="activity.id" class="rounded-lg p-4 transition-all shadow-sm shadow-black duration-300 hover:border-2 hover:scale-105">
-          <nuxt-link :to="`/profile/Activirty/${activity.id}`" class="flex justify-between items-center">
-      <div>
-        <h2 class="text-xl font-semibold text-primary">{{ activity.name }}</h2>
-        <p class="text-base-content/70">วันที่: {{ activity.date }}</p>
-        <p class="text-base-content/70">สถานที่: {{ activity.location }}</p>
-        <div class="mt-2">
-          <span :class="['badge', getStatusClass(activity.status)]">
-            {{ getStatusText(activity.status) }}
-          </span>
-          <span v-if="activity.score !== null" class="badge badge-info ml-2">
-            {{ activity.score }} คะแนน
-          </span>
+        <div class="stats bg-base-100 shadow">
+          <div class="stat place-items-center">
+            <div class="stat-title">ความคืบหน้า</div>
+            <div class="stat-value text-primary">{{ completedActivities }}/{{ totalRequiredActivities }}</div>
+            <div class="stat-desc">กิจกรรมที่ต้องเข้าร่วม</div>
+          </div>
         </div>
       </div>
-    </nuxt-link>
-  </div>
-        </ul>
+
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex justify-center items-center min-h-[200px]">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
       </div>
 
-      <div v-else class="text-center py-8">
-        <p class="text-xl text-base-content/70">คุณยังไม่มีกิจกรรมที่จองไว้</p>
+      <!-- Activities List -->
+      <div v-else-if="bookedActivities.length > 0"
+          class="grid grid-cols-1 gap-4">
+        <div v-for="activity in bookedActivities"
+            :key="activity.id"
+            class="card card-compact bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+          <nuxt-link :to="`/profile/Activirty/${activity.id}`">
+            <div class="flex">
+              <!-- Image with Overlay -->
+              <div class="relative w-32 h-32">
+              <img :src="activity.images[0]"
+                    :alt="activity.name"
+                    class="w-full h-full object-cover" />
+                <div class="absolute inset-0 bg-gradient-to-t from-base-100/50 to-transparent"></div>
+              </div>
+
+              <!-- Content -->
+              <div class="flex-1 p-4">
+                <div class="flex flex-col h-full justify-between">
+                  <!-- Top Section -->
+                  <div>
+                    <div class="flex items-start justify-between gap-4 mb-2">
+                      <h2 class="text-lg font-bold line-clamp-1">{{ activity.name }}</h2>
+                      <div :class="['px-3 py-1 rounded-full text-xs font-medium', getStatusClass(activity.status)]">
+                        {{ getStatusText(activity.status) }}
+                      </div>
+                    </div>
+
+                    <!-- Info with Icons -->
+                    <div class="flex flex-wrap gap-4">
+                      <div class="flex items-center gap-1.5 text-sm text-base-content/70">
+                        <div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Icon name="ic:baseline-calendar-today" class="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        {{ activity.date }}
+                      </div>
+                      <div class="flex items-center gap-1.5 text-sm text-base-content/70">
+                        <div class="w-6 h-6 rounded-full bg-secondary/10 flex items-center justify-center">
+                          <Icon name="ic:baseline-location-on" class="w-3.5 h-3.5 text-secondary" />
+                        </div>
+                        {{ activity.location }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Score Badge -->
+                  <div v-if="activity.score !== null"
+                       class="flex items-center gap-1 mt-2">
+                    <div class="badge badge-warning gap-1">
+                      <Icon name="ic:baseline-star" class="w-4 h-4" />
+                      {{ activity.score }} คะแนน
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </nuxt-link>
+        </div>
       </div>
 
-      <div class="card-actions justify-center mt-8">
-        <nuxt-link to="/activity" class="btn btn-primary">
-          ดูกิจกรรมที่กำลังเปิดรับ
-        </nuxt-link>
-        <nuxt-link to="/profile" class="btn btn-ghost">
-          กลับสู่หน้าโปรไฟล์
-        </nuxt-link>
+      <!-- Empty State -->
+      <div v-else class="card bg-base-100 shadow-lg">
+        <div class="card-body items-center text-center py-12">
+          <div class="rounded-full bg-base-200 p-4 mb-4">
+            <Icon name="ic:baseline-event-busy" class="w-12 h-12 text-base-content/30" />
+          </div>
+          <h2 class="card-title mb-2">ไม่พบกิจกรรม</h2>
+          <p class="text-base-content/70 mb-6">คุณยังไม่มีกิจกรรมที่จองไว้</p>
+          <nuxt-link to="/activity" class="btn btn-primary">
+            <Icon name="ic:baseline-add" class="w-5 h-5 mr-2" />
+            ดูกิจกรรมที่เปิดรับ
+          </nuxt-link>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
+<style scoped>
+.stats {
+  @apply rounded-xl border border-base-300;
+}
+
+.card {
+  @apply border border-base-200 rounded-xl backdrop-blur-sm;
+}
+</style>

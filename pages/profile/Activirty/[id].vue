@@ -30,12 +30,11 @@ const showQRCode = ref(false)
 
 // Generate unique QR code data
 const qrCodeData = computed(() => {
-  if (!activity.value || !auth.value?.UserID) return ''
   return JSON.stringify({
-    activityId: activity.value.id,
-    userId: auth.value.UserID,
-    timestamp: new Date().toISOString(),
-    type: 'activity-check-in'
+    activityId: activity.value?.id || 1,
+    activityName: activity.value?.name || 'กิจกรรมทดสอบ',
+    date: activity.value?.date || '27/11/2567',
+    location: activity.value?.location || 'วิทยาลัยเทคนิคชัยภูมิ'
   })
 })
 
@@ -92,140 +91,166 @@ function toggleQRCode() {
 </script>
 
 <template>
-  <div class="min-h-screen p-4 sm:p-6 lg:p-8">
+  <div class="min-h-screen bg-gradient-to-br from-base-100 to-base-200">
+    <!-- Back Button -->
     <button @click="goBack"
-      class="sticky top-5 left-5 z-40 btn btn-ghost btn-circle hover:bg-base-200">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-      </svg>
+      class="fixed top-4 left-4 btn btn-circle btn-ghost bg-base-100/50 backdrop-blur-sm hover:bg-base-100">
+      <Icon name="ic:baseline-arrow-back" class="w-6 h-6" />
     </button>
 
-    <div v-if="loading" class="flex justify-center items-center min-h-[50vh]">
-      <span class="loading loading-spinner loading-lg"></span>
-    </div>
+    <!-- Content -->
+    <div class="container mx-auto px-4 py-8">
+      <!-- Loading State -->
+      <div v-if="loading" class="flex justify-center items-center min-h-[60vh]">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
 
-    <div v-else-if="error" class="alert alert-error shadow-lg">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span>{{ error }}</span>
-    </div>
+      <!-- Error State -->
+      <div v-else-if="error" class="max-w-lg mx-auto mt-12">
+        <div class="alert alert-error shadow-xl">
+          <Icon name="ic:baseline-error" class="w-6 h-6" />
+          <span>{{ error }}</span>
+        </div>
+      </div>
 
-    <div v-else-if="activity" class="max-w-4xl mx-auto">
-      <div class="card bg-base-100 shadow-xl">
-        <!-- Activity Image -->
-        <figure v-if="activity.images?.length" class="px-4 pt-4">
-          <img :src="activity.images[0]" :alt="activity.name"
-            class="rounded-xl h-64 w-full object-cover">
-        </figure>
-
-        <div class="card-body">
-          <!-- Header -->
-          <div class="flex justify-between items-start">
-            <div>
-              <h2 class="card-title text-3xl">{{ activity.name }}</h2>
-              <div class="mt-2">
-                <span :class="['badge', 'badge-lg', getStatusClass(activity.status)]">
-                  {{ getStatusText(activity.status) }}
-                </span>
+      <!-- Activity Content -->
+      <div v-else-if="activity" class="max-w-4xl mx-auto mt-8">
+        <div class="card bg-base-100 shadow-xl overflow-hidden backdrop-blur-sm">
+          <!-- Hero Image Section -->
+          <figure class="relative h-72">
+            <img
+              :src="activity.images?.[0]"
+              :alt="activity.name"
+              class="w-full h-full object-cover"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+            <div class="absolute bottom-6 left-6 right-6">
+              <h1 class="text-3xl font-bold text-white mb-3">{{ activity.name }}</h1>
+              <div :class="['badge badge-lg', getStatusClass(activity.status)]">
+                {{ getStatusText(activity.status) }}
               </div>
             </div>
-            <!-- แก้ไขปุ่ม QR Code และเพิ่มคำอธิบาย -->
-<button @click="toggleQRCode"
-  class="btn btn-primary gap-2">
-  <svg xmlns="http://www.w3.org/2000/svg"
-    class="h-6 w-6" viewBox="0 0 24 24"
-    fill="none" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-      d="M3 3h6v6H3zm12 0h6v6h-6zM3 15h6v6H3zm12.5 0H21M15 18h6M15 21h6M12 3v18M3 12h18" />
-  </svg>
-  แสดง QR Code เช็คชื่อ
-</button>
-          </div>
+          </figure>
 
-         <!-- แก้ไข QR Code Modal -->
-<dialog :class="{ 'modal': true, 'modal-open': showQRCode }">
-  <div class="modal-box">
-    <h3 class="font-bold text-2xl text-center mb-6">QR Code สำหรับเช็คชื่อกิจกรรม</h3>
-    <div class="bg-white p-4 rounded-lg">
-      <div class="flex justify-center mb-4">
-        <QRCodeVue3
-          :value="qrCodeData"
-          :size="250"
-          level="H"
-        />
-      </div>
-      <div class="space-y-2 text-center">
-        <p class="font-semibold text-lg">{{ activity?.name }}</p>
-        <p class="text-gray-600">วันที่: {{ activity?.date }}</p>
-        <p class="text-gray-600">สถานที่: {{ activity?.location }}</p>
-      </div>
-      <div class="alert alert-info mt-4">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          class="stroke-current shrink-0 w-6 h-6">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <div class="text-sm">
-          <p>ใช้สำหรับเช็คชื่อเข้าร่วมกิจกรรม</p>
-          <p>แสดง QR Code นี้ให้เจ้าหน้าที่สแกนเพื่อบันทึกการเข้าร่วม</p>
+          <div class="card-body">
+            <!-- Activity Info Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div class="stats bg-base-200 shadow">
+                <div class="stat">
+                  <div class="stat-figure text-primary">
+                    <Icon name="ic:baseline-calendar-today" class="w-8 h-8" />
+                  </div>
+                  <div class="stat-title">วันที่</div>
+                  <div class="stat-value text-lg">{{ activity.date }}</div>
+                </div>
+              </div>
+
+              <div class="stats bg-base-200 shadow">
+                <div class="stat">
+                  <div class="stat-figure text-primary">
+                    <Icon name="ic:baseline-location-on" class="w-8 h-8" />
+                  </div>
+                  <div class="stat-title">สถานที่</div>
+                  <div class="stat-value text-lg">{{ activity.location }}</div>
+                </div>
+              </div>
+
+              <div class="stats bg-base-200 shadow">
+                <div class="stat">
+                  <div class="stat-figure text-warning">
+                    <Icon name="ic:baseline-star" class="w-8 h-8" />
+                  </div>
+                  <div class="stat-title">คะแนน</div>
+                  <div class="stat-value text-warning">{{ activity.score }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- QR Code Button -->
+            <div class="card-actions justify-center">
+              <button @click="toggleQRCode"
+                      class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all">
+                <Icon name="ic:baseline-qr-code-2" class="w-6 h-6" />
+                แสดง QR Code เช็คชื่อ
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="modal-action">
-      <button class="btn btn-primary" @click="toggleQRCode">ปิด</button>
+
+    <!-- QR Code Modal -->
+   <!-- QR Code Modal -->
+<dialog :class="{ 'modal': true, 'modal-open': showQRCode }">
+  <div class="modal-box relative bg-white max-w-sm p-6">
+    <h3 class="text-2xl font-bold text-center mb-8">QR Code สำหรับเช็คชื่อ</h3>
+
+    <!-- QR Code with white background -->
+    <div class="bg-white mb-6">
+      <QRCodeVue3
+        :value="qrCodeData"
+        :size="250"
+        level="H"
+        render-as="svg"
+        :foreground="'#9333ea'"
+        class="mx-auto"
+      />
     </div>
+
+    <!-- Activity Info -->
+    <div class="text-center space-y-4 mb-6">
+      <h4 class="text-xl font-bold">{{ activity?.name }}</h4>
+      <div class="bg-base-100/50 p-4 rounded-xl space-y-2">
+        <p class="text-base">
+          <Icon name="ic:baseline-calendar-today" class="w-5 h-5 inline-block mr-2" />
+          วันที่: {{ activity?.date }}
+        </p>
+        <p class="text-base">
+          <Icon name="ic:baseline-location-on" class="w-5 h-5 inline-block mr-2" />
+          สถานที่: {{ activity?.location }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Instructions Box -->
+    <div class="bg-[#00A3FF]/10 text-[#00A3FF] p-4 rounded-xl mb-6">
+      <div class="flex gap-3">
+        <Icon name="ic:baseline-info" class="w-6 h-6 flex-shrink-0" />
+        <div class="text-sm">
+          ใช้สำหรับเช็คชื่อเข้าร่วมกิจกรรม<br/>
+          แสดง QR Code นี้ให้เจ้าหน้าที่สแกนเพื่อบันทึกการเข้าร่วม
+        </div>
+      </div>
+    </div>
+
+    <!-- Close Button -->
+    <button class="btn btn-primary w-full" @click="toggleQRCode">ปิด</button>
   </div>
-  <form method="dialog" class="modal-backdrop">
-    <button @click="toggleQRCode">ปิด</button>
+  <form method="dialog" class="modal-backdrop" @click="toggleQRCode">
+    <button>ปิด</button>
   </form>
 </dialog>
-
-          <!-- Details -->
-          <div class="space-y-6 mt-6">
-            <div class="flex items-center gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>{{ activity.date }}</span>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>{{ activity.location }}</span>
-            </div>
-
-            <div v-if="activity.score !== null" class="flex items-center gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width=" 2"
-                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
-              <span>คะแนน: {{ activity.score }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div v-else class="text-center py-8">
-      <div class="alert alert-info shadow-lg">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          class="h-6 w-6 flex-shrink-0">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>ไม่พบข้อมูลกิจกรรม</span>
-      </div>
-    </div>
   </div>
 </template>
+
+<style scoped>
+.stats {
+  @apply rounded-xl border border-base-300;
+}
+
+/* .modal-box {
+  @apply p-6 rounded-2xl border border-base-300;
+}
+
+.modal-backdrop {
+  @apply bg-black/60 backdrop-blur-sm;
+} */
+
+.modal-box {
+  @apply border-0;
+}
+
+.modal-backdrop {
+  @apply bg-black/60 backdrop-blur-sm;
+}
+</style>
