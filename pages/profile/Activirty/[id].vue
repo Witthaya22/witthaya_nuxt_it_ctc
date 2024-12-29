@@ -91,7 +91,7 @@ function toggleQRCode() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-base-100 to-base-200">
+  <div class="min-h-screen bg-gradient-to-br from-base-100 to-base-200 animate-fade-in">
     <!-- Back Button -->
     <button @click="goBack"
       class="fixed top-4 left-4 btn btn-circle btn-ghost bg-base-100/50 backdrop-blur-sm hover:bg-base-100">
@@ -252,5 +252,20 @@ function toggleQRCode() {
 
 .modal-backdrop {
   @apply bg-black/60 backdrop-blur-sm;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

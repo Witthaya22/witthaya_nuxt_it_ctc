@@ -101,7 +101,7 @@ onMounted(() => {
 
   <!-- </div> -->
 
-  <div class="hero min-h-screen ">
+  <div class="hero min-h-screen animate-fade-in">
     <div class="hero-content flex-col lg:flex-row-reverse">
       <img
         src="~/assets/images/logo.png"
@@ -129,4 +129,19 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

@@ -80,7 +80,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen ">
+  <div class="min-h-screen animate-fade-in">
     <div class="container mx-auto px-4 py-8">
       <!-- Header with Progress -->
       <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
@@ -189,5 +189,20 @@ onMounted(() => {
 
 .card {
   @apply border border-base-200 rounded-xl backdrop-blur-sm;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

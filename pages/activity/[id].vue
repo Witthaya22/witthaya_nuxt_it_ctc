@@ -72,7 +72,7 @@ function goBack() {
 </script>
 
 <template>
-  <div class="container mx-auto py-10 px-4 max-w-6xl">
+  <div class="container mx-auto py-10 px-4 max-w-6xl animate-fade-in">
     <button
       @click="goBack"
       class="sticky top-5 left-5 z-40 btn btn-primary gap-2"
@@ -217,5 +217,20 @@ function goBack() {
 <style scoped>
 .card {
   @apply backdrop-blur-lg;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

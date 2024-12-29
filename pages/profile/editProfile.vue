@@ -1,123 +1,291 @@
+# pages/profile/edit.vue
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import Swal from 'sweetalert2'
 
-const username = ref('');
-const email = ref('');
-const bio = ref('');
-const profileImage = ref('');
-const fileInput = ref<HTMLInputElement | null>(null);
+const router = useRouter()
+const axios = useAxios()
+const { auth } = useAuth()
 
-const updateProfile = () => {
-  console.log('บันทึกโปรไฟล์:', {
-    username: username.value,
-    email: email.value,
-    bio: bio.value,
-  });
-};
+interface UserProfile {
+  UserFirstName: string
+  UserLastName: string
+  UserID: string
+  DepartmentID: string
+  Bio: string
+  UserImage: string | null
+}
 
-const handleImageUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      profileImage.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+const loading = ref(false)
+const previewImage = ref<string | null>(null)
+
+const profile = reactive<UserProfile>({
+  UserFirstName: '',
+  UserLastName: '',
+  UserID: '',
+  DepartmentID: '',
+  Bio: '',
+  UserImage: null
+})
+
+// Fetch user profile
+async function fetchUserProfile() {
+  try {
+    loading.value = true
+    const response = await axios.get(`/api/user/${auth.value?.UserID}`)
+    const userData = response.data.user
+
+    profile.UserFirstName = userData.UserFirstName
+    profile.UserLastName = userData.UserLastName
+    profile.UserID = userData.UserID
+    profile.DepartmentID = userData.DepartmentID
+    profile.Bio = userData.Bio || ''
+    profile.UserImage = userData.UserImage
+
+    if (userData.UserImage) {
+      previewImage.value = userData.UserImage
+    }
+  } catch (error) {
+    console.error('Error fetching user profile:', error)
+    Swal.fire({
+      icon: 'error',
+      title: 'ไม่สามารถโหลดข้อมูลผู้ใช้ได้',
+      text: 'กรุณาลองใหม่อีกครั้ง'
+    })
+  } finally {
+    loading.value = false
   }
-};
+}
+
+// Handle image upload
+function handleImageUpload(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (file) {
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      Swal.fire({
+        icon: 'error',
+        title: 'ขนาดไฟล์ใหญ่เกินไป',
+        text: 'กรุณาเลือกไฟล์ขนาดไม่เกิน 5MB'
+      })
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      previewImage.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+// Update profile
+async function updateProfile() {
+  try {
+    loading.value = true
+
+    if (!profile.UserFirstName || !profile.UserLastName) {
+      throw new Error('กรุณากรอกชื่อและนามสกุล')
+    }
+
+    const updateData = {
+      UserFirstName: profile.UserFirstName,
+      UserLastName: profile.UserLastName,
+      Bio: profile.Bio,
+      UserImage: previewImage.value
+    }
+
+    const response = await axios.post('/api/user/update', updateData)
+
+    Swal.fire({
+      icon: 'success',
+      title: 'อัพเดทข้อมูลสำเร็จ',
+      showConfirmButton: false,
+      timer: 1500
+    })
+
+    router.push('/profile')
+  } catch (error: any) {
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาด',
+      text: error.response?.data?.message || error.message
+    })
+  } finally {
+    loading.value = false
+  }
+}
 
 onMounted(() => {
-  username.value = 'ชวัลวิชญ์';
-  email.value = '66309010020';
-  bio.value = 'ฉันชอบการผจญภัยและการเรียนรู้สิ่งใหม่ๆ';
-  profileImage.value =
-    'https://scontent.fbkk7-2.fna.fbcdn.net/v/t1.6435-9/125985976_697934107811643_3815542183752697058_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=c7cdda&_nc_ohc=QHb9oMx_LAUQ7kNvgEwhEr3&_nc_ht=scontent.fbkk7-2.fna&gid=A7ZQbHAUSQqOXqLizSt8BLm&oh=00_AYCTu0A5o4Zv7plYt7TfoAjH4O6B1NzrIUtBjD2_Sr4kOw&oe=66D01F69';
-});
-const router = useRouter()
-function goBack() {
-  router.back()
-}
+  if (!auth.value?.UserID) {
+    router.push('/login')
+    return
+  }
+  fetchUserProfile()
+})
 </script>
 
 <template>
+  <div class="min-h-screen  py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
+    <div class="max-w-3xl mx-auto">
+      <!-- Back Button -->
+      <button
+        @click="router.back()"
+        class="fixed top-4 left-4 z-50 btn btn-circle btn-ghost bg-white/80 backdrop-blur-sm hover:bg-white/90"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
 
-<button @click="goBack" class="sticky top-5 left-5 z-40  hover:bg-blue-600 backdrop-blur-lg shadow-inner shadow-white  font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-    </svg>
-    ย้อนกลับ
-  </button>
-  <div class="min-h-screen flex flex-col items-center justify-center  p-6 ">
-    <div class=" rounded-xl shadow-lg p-8 w-full lg:w-1/2 backdrop-blur-lg">
-      <h1 class="text-4xl font-bold text-center mb-8">แก้ไขโปรไฟล์</h1>
+      <!-- Main Card -->
+      <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="relative h-40 bg-gradient-to-r from-primary to-primary/60">
+          <h1 class="absolute bottom-6 left-8 text-3xl font-bold text-white">
+            แก้ไขโปรไฟล์
+          </h1>
+        </div>
 
-      <div class="avatar mb-8 flex justify-center">
-        <div class="w-44 rounded-full ring ring-rose-700 ring-offset-base-100 ring-offset-2">
-          <img :src="profileImage" alt="รูปโปรไฟล์" />
+        <div class="p-8">
+          <div v-if="loading" class="flex justify-center items-center min-h-[400px]">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+          </div>
+
+          <form v-else @submit.prevent="updateProfile" class="space-y-8">
+            <!-- Profile Image -->
+            <div class="flex flex-col items-center gap-6">
+              <div class="avatar">
+                <div class="w-32 h-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden">
+                  <img
+                    :src="previewImage || '/default-avatar.png'"
+                    alt="Profile"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+
+              <label class="btn btn-outline btn-primary gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                เปลี่ยนรูปโปรไฟล์
+                <input
+                  type="file"
+                  class="hidden"
+                  @change="handleImageUpload"
+                  accept="image/*"
+                />
+              </label>
+            </div>
+
+            <!-- User Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text text-base font-medium">รหัสนักศึกษา</span>
+                </label>
+                <input
+                  v-model="profile.UserID"
+                  type="text"
+                  class="input input-bordered bg-gray-50"
+                  disabled
+                />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text text-base font-medium">แผนก</span>
+                </label>
+                <input
+                  :value="profile.DepartmentID === 'IT' ? 'แผนกเทคโนโลยีสารสนเทศ' : profile.DepartmentID"
+                  type="text"
+                  class="input input-bordered bg-gray-50"
+                  disabled
+                />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text text-base font-medium">ชื่อ</span>
+                  <span class="label-text-alt text-error">*</span>
+                </label>
+                <input
+                  v-model="profile.UserFirstName"
+                  type="text"
+                  class="input input-bordered"
+                  required
+                  placeholder="ชื่อ"
+                />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text text-base font-medium">นามสกุล</span>
+                  <span class="label-text-alt text-error">*</span>
+                </label>
+                <input
+                  v-model="profile.UserLastName"
+                  type="text"
+                  class="input input-bordered"
+                  required
+                  placeholder="นามสกุล"
+                />
+              </div>
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text text-base font-medium">เกี่ยวกับฉัน</span>
+              </label>
+              <textarea
+                v-model="profile.Bio"
+                class="textarea textarea-bordered h-32"
+                placeholder="เขียนข้อความแนะนำตัวของคุณ"
+              ></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-4 pt-4">
+              <button
+                type="button"
+                @click="router.back()"
+                class="btn btn-ghost"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                :disabled="loading"
+              >
+                <span class="loading loading-spinner" v-if="loading"></span>
+                บันทึกการเปลี่ยนแปลง
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-
-      <div class="flex justify-center mb-6">
-        <button @click="fileInput?.click()" class="btn btn-primary">
-          เปลี่ยนรูปโปรไฟล์
-        </button>
-        <input
-          type="file"
-          accept="image/*"
-          @change="handleImageUpload"
-          ref="fileInput"
-          class="hidden"
-        />
-      </div>
-
-      <form @submit.prevent="updateProfile" class="form-control ">
-        <div class="form-group mb-4">
-          <label for="username" class="label">
-            <span class="label-text font-semibold ">ชื่อผู้ใช้:</span>
-          </label>
-          <input
-            id="username"
-            v-model="username"
-            type="text"
-            placeholder="กรอกชื่อผู้ใช้"
-            class="input input-bordered w-full -600"
-            required
-          />
-        </div>
-
-        <div class="form-group mb-4">
-          <label for="email" class="label">
-            <span class="label-text font-semibold ">รหัสประจำตัวนักศึกษา:</span>
-          </label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="กรอกรหัสประจำตัวนักศึกษา"
-            class="input input-bordered w-full -600"
-            required
-          />
-        </div>
-
-        <div class="form-group mb-6">
-          <label for="bio" class="label">
-            <span class="label-text font-semibold ">เกี่ยวกับฉัน:</span>
-          </label>
-          <textarea
-            id="bio"
-            v-model="bio"
-            placeholder="กรอกข้อมูลเกี่ยวกับตัวคุณ"
-            class="textarea textarea-bordered w-full -600"
-            rows="4"
-          ></textarea>
-        </div>
-
-        <button type="submit" class="btn btn-success w-full text-white ">
-          บันทึกการเปลี่ยนแปลง
-        </button>
-      </form>
     </div>
   </div>
 </template>
 
+
+<style scoped>
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+</style>

@@ -84,9 +84,9 @@ const getStatusBadge = (activity: Activity) => {
 
 <template>
   <div class="min-h-screem">
-    <div class="container mx-auto py-8 px-4">
+    <div class="container mx-auto py-8 px-4 animate-fade-in">
       <!-- Header Section with Animation -->
-      <div class="text-center mb-12 animate-fade-in">
+      <div class="text-center mb-12">
         <h1 class="text-5xl font-bold mb-4 text-primary">กิจกรรมทั้งหมด</h1>
         <p class="text-xl text-base-content/80">ค้นหาและเข้าร่วมกิจกรรมที่คุณสนใจ</p>
       </div>

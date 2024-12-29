@@ -11,7 +11,7 @@ const directors = [
 </script>
 
 <template>
-  <div class="min-h-screen   ">
+  <div class="min-h-screen  animate-fade-in ">
     <div class="container mx-auto px-4 py-16 ">
       <h1 class="text-4xl font-bold text-center mb-16 ">วิทยาลัยเทคนิคชัยภูมิ</h1>
 
@@ -100,4 +100,19 @@ const directors = [
 
 <style scoped>
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 </style>
