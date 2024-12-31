@@ -1,82 +1,82 @@
 # pages/profile/edit.vue
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import Swal from 'sweetalert2'
+import { ref, reactive, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import Swal from "sweetalert2";
 
-const router = useRouter()
-const axios = useAxios()
-const { auth } = useAuth()
+const router = useRouter();
+const axios = useAxios();
+const { auth } = useAuth();
 
 interface UserProfile {
-  UserFirstName: string
-  UserLastName: string
-  UserID: string
-  DepartmentID: string
-  Bio: string
-  UserImage: string | null
+  UserFirstName: string;
+  UserLastName: string;
+  UserID: string;
+  DepartmentID: string;
+  Bio: string;
+  UserImage: string | null;
 }
 
-const loading = ref(false)
-const previewImage = ref<string | null>(null)
+const loading = ref(false);
+const previewImage = ref<string | null>(null);
 
 const profile = reactive<UserProfile>({
-  UserFirstName: '',
-  UserLastName: '',
-  UserID: '',
-  DepartmentID: '',
-  Bio: '',
-  UserImage: null
-})
+  UserFirstName: "",
+  UserLastName: "",
+  UserID: "",
+  DepartmentID: "",
+  Bio: "",
+  UserImage: null,
+});
 
 // Fetch user profile
 async function fetchUserProfile() {
   try {
-    loading.value = true
-    const response = await axios.get(`/api/user/${auth.value?.UserID}`)
-    const userData = response.data.user
+    loading.value = true;
+    const response = await axios.get(`/api/user/${auth.value?.UserID}`);
+    const userData = response.data.user;
 
-    profile.UserFirstName = userData.UserFirstName
-    profile.UserLastName = userData.UserLastName
-    profile.UserID = userData.UserID
-    profile.DepartmentID = userData.DepartmentID
-    profile.Bio = userData.Bio || ''
-    profile.UserImage = userData.UserImage
+    profile.UserFirstName = userData.UserFirstName;
+    profile.UserLastName = userData.UserLastName;
+    profile.UserID = userData.UserID;
+    profile.DepartmentID = userData.DepartmentID;
+    profile.Bio = userData.Bio || "";
+    profile.UserImage = userData.UserImage;
 
     if (userData.UserImage) {
-      previewImage.value = userData.UserImage
+      previewImage.value = `/api${userData.UserImage}`;
     }
   } catch (error) {
-    console.error('Error fetching user profile:', error)
+    console.error("Error fetching user profile:", error);
     Swal.fire({
-      icon: 'error',
-      title: 'ไม่สามารถโหลดข้อมูลผู้ใช้ได้',
-      text: 'กรุณาลองใหม่อีกครั้ง'
-    })
+      icon: "error",
+      title: "ไม่สามารถโหลดข้อมูลผู้ใช้ได้",
+      text: "กรุณาลองใหม่อีกครั้ง",
+    });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 // Handle image upload
 function handleImageUpload(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0]
+  const file = (event.target as HTMLInputElement).files?.[0];
   if (file) {
-    const maxSize = 5 * 1024 * 1024 // 5MB
+    const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       Swal.fire({
-        icon: 'error',
-        title: 'ขนาดไฟล์ใหญ่เกินไป',
-        text: 'กรุณาเลือกไฟล์ขนาดไม่เกิน 5MB'
-      })
-      return
+        icon: "error",
+        title: "ขนาดไฟล์ใหญ่เกินไป",
+        text: "กรุณาเลือกไฟล์ขนาดไม่เกิน 5MB",
+      });
+      return;
     }
 
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = (e) => {
-      previewImage.value = e.target?.result as string
-    }
-    reader.readAsDataURL(file)
+      previewImage.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   }
 }
 
@@ -89,14 +89,28 @@ async function updateProfile() {
       throw new Error('กรุณากรอกชื่อและนามสกุล')
     }
 
-    const updateData = {
-      UserFirstName: profile.UserFirstName,
-      UserLastName: profile.UserLastName,
-      Bio: profile.Bio,
-      UserImage: previewImage.value
+    // สร้าง FormData
+    const formData = new FormData()
+    formData.append('UserFirstName', profile.UserFirstName)
+    formData.append('UserLastName', profile.UserLastName)
+    formData.append('Bio', profile.Bio)
+
+    // เพิ่มไฟล์รูปภาพ (ถ้ามี)
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    if (fileInput?.files?.[0]) {
+      formData.append('UserImage', fileInput.files[0])
     }
 
-    const response = await axios.post('/api/user/update', updateData)
+    // เปลี่ยน endpoint และ method
+    const response = await axios.put(
+      `/api/user/${auth.value?.UserID}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    )
 
     Swal.fire({
       icon: 'success',
@@ -119,23 +133,34 @@ async function updateProfile() {
 
 onMounted(() => {
   if (!auth.value?.UserID) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
-  fetchUserProfile()
-})
+  fetchUserProfile();
+});
 </script>
 
 <template>
-  <div class="min-h-screen  py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
+  <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
     <div class="max-w-3xl mx-auto">
       <!-- Back Button -->
       <button
         @click="router.back()"
         class="fixed top-4 left-4 z-50 btn btn-circle btn-ghost bg-white/80 backdrop-blur-sm hover:bg-white/90"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
         </svg>
       </button>
 
@@ -148,17 +173,24 @@ onMounted(() => {
         </div>
 
         <div class="p-8">
-          <div v-if="loading" class="flex justify-center items-center min-h-[400px]">
-            <span class="loading loading-spinner loading-lg text-primary"></span>
+          <div
+            v-if="loading"
+            class="flex justify-center items-center min-h-[400px]"
+          >
+            <span
+              class="loading loading-spinner loading-lg text-primary"
+            ></span>
           </div>
 
           <form v-else @submit.prevent="updateProfile" class="space-y-8">
             <!-- Profile Image -->
             <div class="flex flex-col items-center gap-6">
               <div class="avatar">
-                <div class="w-32 h-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden">
+                <div
+                  class="w-32 h-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden"
+                >
                   <img
-                    :src="previewImage || '/default-avatar.png'"
+                    :src="previewImage || '/images/default-avatar.png'"
                     alt="Profile"
                     class="w-full h-full object-cover"
                   />
@@ -166,9 +198,19 @@ onMounted(() => {
               </div>
 
               <label class="btn btn-outline btn-primary gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
                 เปลี่ยนรูปโปรไฟล์
                 <input
@@ -184,7 +226,9 @@ onMounted(() => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="form-control">
                 <label class="label">
-                  <span class="label-text text-base font-medium">รหัสนักศึกษา</span>
+                  <span class="label-text text-base font-medium"
+                    >รหัสนักศึกษา</span
+                  >
                 </label>
                 <input
                   v-model="profile.UserID"
@@ -199,7 +243,11 @@ onMounted(() => {
                   <span class="label-text text-base font-medium">แผนก</span>
                 </label>
                 <input
-                  :value="profile.DepartmentID === 'IT' ? 'แผนกเทคโนโลยีสารสนเทศ' : profile.DepartmentID"
+                  :value="
+                    profile.DepartmentID === 'IT'
+                      ? 'แผนกเทคโนโลยีสารสนเทศ'
+                      : profile.DepartmentID
+                  "
                   type="text"
                   class="input input-bordered bg-gray-50"
                   disabled
@@ -237,7 +285,9 @@ onMounted(() => {
 
             <div class="form-control">
               <label class="label">
-                <span class="label-text text-base font-medium">เกี่ยวกับฉัน</span>
+                <span class="label-text text-base font-medium"
+                  >เกี่ยวกับฉัน</span
+                >
               </label>
               <textarea
                 v-model="profile.Bio"
@@ -255,11 +305,7 @@ onMounted(() => {
               >
                 ยกเลิก
               </button>
-              <button
-                type="submit"
-                class="btn btn-primary"
-                :disabled="loading"
-              >
+              <button type="submit" class="btn btn-primary" :disabled="loading">
                 <span class="loading loading-spinner" v-if="loading"></span>
                 บันทึกการเปลี่ยนแปลง
               </button>
@@ -270,7 +316,6 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .animate-fade-in {
@@ -287,5 +332,4 @@ onMounted(() => {
     transform: translateY(0);
   }
 }
-
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import QRCodeVue3 from 'qrcode-vue3'
@@ -7,6 +7,13 @@ import QRCodeVue3 from 'qrcode-vue3'
 const route = useRoute()
 const router = useRouter()
 const { auth } = useAuth()
+
+interface User {
+  UserID: string;
+  UserFirstName: string;
+  UserLastName: string;
+  UserImage: string | null;
+}
 
 interface Activity {
   id: number;
@@ -23,6 +30,7 @@ interface Activity {
   registeredCount?: number;
 }
 
+const user = ref<User | null>(null)
 const activity = ref<Activity | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -38,15 +46,25 @@ const qrCodeData = computed(() => {
   })
 })
 
+const profileImage = computed(() => {
+  return user.value?.UserImage ? `/api${user.value.UserImage}` : '/default-avatar.png'
+})
+
 onMounted(async () => {
   if (!auth.value?.UserID) {
     return router.push('/login')
   }
 
   try {
-    const response = await axios.get(`/api/activity/booked-activities/${auth.value.UserID}`)
-    if (response.data && Array.isArray(response.data)) {
-      const foundActivity = response.data.find(
+    const [userResponse, activityResponse] = await Promise.all([
+      axios.get(`/api/user/${auth.value.UserID}`),
+      axios.get(`/api/activity/booked-activities/${auth.value.UserID}`)
+    ])
+
+    user.value = userResponse.data.user
+
+    if (activityResponse.data && Array.isArray(activityResponse.data)) {
+      const foundActivity = activityResponse.data.find(
         (act: Activity) => act.id === parseInt(route.params.id as string)
       )
       if (foundActivity) {
@@ -91,7 +109,7 @@ function toggleQRCode() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-base-100 to-base-200 animate-fade-in">
+  <div class="min-h-screen animate-fade-in">
     <!-- Back Button -->
     <button @click="goBack"
       class="fixed top-4 left-4 btn btn-circle btn-ghost bg-base-100/50 backdrop-blur-sm hover:bg-base-100">
@@ -133,6 +151,19 @@ function toggleQRCode() {
           </figure>
 
           <div class="card-body">
+            <!-- User Info -->
+            <div class="flex items-center gap-4 mb-6">
+              <div class="avatar">
+                <div class="w-16 h-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden">
+                  <img :src="profileImage" alt="Profile" class="w-full h-full object-cover" />
+                </div>
+              </div>
+              <div>
+                <h2 class="text-xl font-bold">{{ user?.UserFirstName }} {{ user?.UserLastName }}</h2>
+                <p class="text-gray-500">{{ user?.UserID }}</p>
+              </div>
+            </div>
+
             <!-- Activity Info Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div class="stats bg-base-200 shadow">
@@ -180,56 +211,55 @@ function toggleQRCode() {
     </div>
 
     <!-- QR Code Modal -->
-   <!-- QR Code Modal -->
-<dialog :class="{ 'modal': true, 'modal-open': showQRCode }">
-  <div class="modal-box relative bg-white max-w-sm p-6">
-    <h3 class="text-2xl font-bold text-center mb-8">QR Code สำหรับเช็คชื่อ</h3>
+    <dialog :class="{ 'modal': true, 'modal-open': showQRCode }">
+      <div class="modal-box relative bg-white max-w-sm p-6">
+        <h3 class="text-2xl font-bold text-center mb-8">QR Code สำหรับเช็คชื่อ</h3>
 
-    <!-- QR Code with white background -->
-    <div class="bg-white mb-6">
-      <QRCodeVue3
-        :value="qrCodeData"
-        :size="250"
-        level="H"
-        render-as="svg"
-        :foreground="'#9333ea'"
-        class="mx-auto"
-      />
-    </div>
-
-    <!-- Activity Info -->
-    <div class="text-center space-y-4 mb-6">
-      <h4 class="text-xl font-bold">{{ activity?.name }}</h4>
-      <div class="bg-base-100/50 p-4 rounded-xl space-y-2">
-        <p class="text-base">
-          <Icon name="ic:baseline-calendar-today" class="w-5 h-5 inline-block mr-2" />
-          วันที่: {{ activity?.date }}
-        </p>
-        <p class="text-base">
-          <Icon name="ic:baseline-location-on" class="w-5 h-5 inline-block mr-2" />
-          สถานที่: {{ activity?.location }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Instructions Box -->
-    <div class="bg-[#00A3FF]/10 text-[#00A3FF] p-4 rounded-xl mb-6">
-      <div class="flex gap-3">
-        <Icon name="ic:baseline-info" class="w-6 h-6 flex-shrink-0" />
-        <div class="text-sm">
-          ใช้สำหรับเช็คชื่อเข้าร่วมกิจกรรม<br/>
-          แสดง QR Code นี้ให้เจ้าหน้าที่สแกนเพื่อบันทึกการเข้าร่วม
+        <!-- QR Code with white background -->
+        <div class="bg-white mb-6">
+          <QRCodeVue3
+            :value="qrCodeData"
+            :size="250"
+            level="H"
+            render-as="svg"
+            :foreground="'#9333ea'"
+            class="mx-auto"
+          />
         </div>
-      </div>
-    </div>
 
-    <!-- Close Button -->
-    <button class="btn btn-primary w-full" @click="toggleQRCode">ปิด</button>
-  </div>
-  <form method="dialog" class="modal-backdrop" @click="toggleQRCode">
-    <button>ปิด</button>
-  </form>
-</dialog>
+        <!-- Activity Info -->
+        <div class="text-center space-y-4 mb-6">
+          <h4 class="text-xl font-bold">{{ activity?.name }}</h4>
+          <div class="bg-base-100/50 p-4 rounded-xl space-y-2">
+            <p class="text-base">
+              <Icon name="ic:baseline-calendar-today" class="w-5 h-5 inline-block mr-2" />
+              วันที่: {{ activity?.date }}
+            </p>
+            <p class="text-base">
+              <Icon name="ic:baseline-location-on" class="w-5 h-5 inline-block mr-2" />
+              สถานที่: {{ activity?.location }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Instructions Box -->
+        <div class="bg-[#00A3FF]/10 text-[#00A3FF] p-4 rounded-xl mb-6">
+          <div class="flex gap-3">
+            <Icon name="ic:baseline-info" class="w-6 h-6 flex-shrink-0" />
+            <div class="text-sm">
+              ใช้สำหรับเช็คชื่อเข้าร่วมกิจกรรม<br/>
+              แสดง QR Code นี้ให้เจ้าหน้าที่สแกนเพื่อบันทึกการเข้าร่วม
+            </div>
+          </div>
+        </div>
+
+        <!-- Close Button -->
+        <button class="btn btn-primary w-full" @click="toggleQRCode">ปิด</button>
+      </div>
+      <form method="dialog" class="modal-backdrop" @click="toggleQRCode">
+        <button>ปิด</button>
+      </form>
+    </dialog>
   </div>
 </template>
 
@@ -237,14 +267,6 @@ function toggleQRCode() {
 .stats {
   @apply rounded-xl border border-base-300;
 }
-
-/* .modal-box {
-  @apply p-6 rounded-2xl border border-base-300;
-}
-
-.modal-backdrop {
-  @apply bg-black/60 backdrop-blur-sm;
-} */
 
 .modal-box {
   @apply border-0;

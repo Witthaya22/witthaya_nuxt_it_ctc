@@ -157,44 +157,44 @@ onMounted(fetchUserDetails);
       <!-- Activities Table -->
       <h3 class="font-bold text-xl mt-6">กิจกรรมที่จอง</h3>
       <div class="overflow-x-auto relative mt-3">
-  <table class="table w-full">
-    <thead>
-      <tr class="bg-gray-200">
-        <th>ID</th>
-        <th>ชื่อกิจกรรม</th>
-        <th>วันที่</th>
-        <th>สถานที่</th>
-        <th>สถานะ</th>
-        <th>คะแนน</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="activity in bookedActivities" :key="activity.id" class="hover backdrop-blur-lg">
-        <td>{{ activity.id }}</td>
-        <td>
-          <div class="flex items-center space-x-3">
-            <div class="avatar">
-              <div class="mask mask-squircle w-12 h-12">
-                <img :src="activity.images[0]" :alt="activity.name" />
-              </div>
-            </div>
-            <div>{{ activity.name }}</div>
-          </div>
-        </td>
-        <td>{{ activity.date }}</td>
-        <td>{{ activity.location }}</td>
-        <td>
-          <span :class="['badge', getStatusClass(activity.status)]">
-            {{ getStatusText(activity.status) }}
-          </span>
-        </td>
-        <td>
-          <span class="badge badge-primary">{{ activity.score }} คะแนน</span>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+        <table class="table w-full">
+          <thead>
+            <tr class="bg-gray-200">
+              <th>ID</th>
+              <th>ชื่อกิจกรรม</th>
+              <th>วันที่</th>
+              <th>สถานที่</th>
+              <th>สถานะ</th>
+              <th>คะแนน</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="activity in bookedActivities" :key="activity.id" class="hover:bg-base-100 transition-colors duration-200">
+              <td>{{ activity.id }}</td>
+              <td>
+                <div class="flex items-center space-x-3">
+                  <div class="avatar">
+                    <div class="mask mask-squircle w-12 h-12">
+                      <img :src="activity.images[0]" :alt="activity.name" />
+                    </div>
+                  </div>
+                  <div>{{ activity.name }}</div>
+                </div>
+              </td>
+              <td>{{ activity.date }}</td>
+              <td>{{ activity.location }}</td>
+              <td>
+                <span :class="['badge', getStatusClass(activity.status)]">
+                  {{ getStatusText(activity.status) }}
+                </span>
+              </td>
+              <td>
+                <span class="badge badge-primary">{{ activity.score }} คะแนน</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>

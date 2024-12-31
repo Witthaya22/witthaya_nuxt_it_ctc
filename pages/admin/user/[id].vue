@@ -202,20 +202,20 @@ async function onSubmit() {
           <!-- User Information -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="form-control">
-            <label class="label">
-              <span class="label-text">รหัสนักศึกษา</span>
-              <span class="label-text-alt text-error">*</span>
-            </label>
-            <input
-              v-model="input.UserID"
-              type="text"
-              class="input input-bordered"
-              required
-              placeholder="66xxxxxxxx"
-              maxlength="11"
-              :disabled="!isCreate"
-            />
-          </div>
+              <label class="label">
+                <span class="label-text">รหัสนักศึกษา</span>
+                <span class="label-text-alt text-error">*</span>
+              </label>
+              <input
+                v-model="input.UserID"
+                type="text"
+                class="input input-bordered"
+                required
+                placeholder="66xxxxxxxx"
+                maxlength="11"
+                :disabled="!isCreate"
+              />
+            </div>
 
             <div class="form-control">
               <label class="label">
