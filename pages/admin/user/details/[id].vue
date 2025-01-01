@@ -1,5 +1,5 @@
 <script setup lang="ts">
-useHead({ title: "รายละเอียดผู้ใช้" });
+useHead({ title: "รายละเอียดผู้ใช้ (Admin)" });
 definePageMeta({
   layout: "admin",
 });
@@ -7,7 +7,7 @@ definePageMeta({
 const route = useRoute();
 const router = useRouter();
 const axios = useAxios();
-
+import Swal from 'sweetalert2'
 interface BookedActivity {
   id: number;
   name: string;
@@ -16,6 +16,12 @@ interface BookedActivity {
   status: string;
   score: number;
   images: string[];
+  details: {
+    id: number;
+    details: string;
+    isApproved: boolean | null;
+    reviewNote?: string;
+  } | null;
 }
 
 interface User {
@@ -25,23 +31,32 @@ interface User {
   DepartmentID: string;
   Role: string;
   UserImage: string | null;
+  Department: {
+    Name: string;
+  };
 }
 
 const user = ref<User | null>(null);
 const bookedActivities = ref<BookedActivity[]>([]);
 const loading = ref(true);
 
-// ดึงข้อมูลผู้ใช้และกิจกรรม
-async function fetchUserDetails() {
-  try {
-    const [userRes, activitiesRes] = await Promise.all([
-      axios.get(`/api/user/${route.params.id}`),
-      axios.get(`/api/activity/booked-activities/${route.params.id}`)
-    ]);
+// แยกฟังก์ชันการโหลดข้อมูลเป็นส่วนๆ
+async function fetchUser() {
+  const response = await axios.get(`/api/user/${route.params.id}`);
+  user.value = response.data.user;
+}
 
-    user.value = userRes.data.user;
-    // ตรงนี้ไม่ต้อง check Array เพราะ API คืนค่าเป็น array อยู่แล้ว
-    bookedActivities.value = activitiesRes.data;
+// async function fetchActivities() {
+//   const response = await axios.get(`/api/activity/booked-activities/${route.params.id}`);
+//   bookedActivities.value = response.data;
+// }
+
+// ฟังก์ชันหลักสำหรับโหลดข้อมูลทั้งหมด
+async function loadData() {
+  try {
+    loading.value = true;
+    await fetchUser();
+    await fetchActivities();
   } catch (error) {
     console.error('Error:', error);
     Swal.fire({
@@ -53,12 +68,6 @@ async function fetchUserDetails() {
     loading.value = false;
   }
 }
-
-const completedActivities = computed(() =>
-  bookedActivities.value.filter(activity => activity.status === 'completed').length
-);
-
-const totalRequiredActivities = 3;
 
 function getStatusClass(status: string): string {
   switch(status) {
@@ -78,99 +87,149 @@ function getStatusText(status: string): string {
   }
 }
 
-const getApprovalText = (status: string) => {
-  switch(status) {
-    case 'completed': return 'อนุมัติแล้ว';
-    case 'failed': return 'ไม่อนุมัติ';
-    default: return 'รอการอนุมัติ';
-  }
-}
+const getApprovalStatus = (details: BookedActivity['details']) => {
+  if (!details) return { text: 'รอตรวจสอบ', class: 'badge-warning' };
+  return details.isApproved === true
+    ? { text: 'ผ่าน', class: 'badge-success' }
+    : details.isApproved === false
+    ? { text: 'ไม่ผ่าน', class: 'badge-error' }
+    : { text: 'รอตรวจสอบ', class: 'badge-warning' };
+};
 
-async function approveActivity(activityId: number, approve: boolean) {
+async function handleApproval(activityId: number, approve: boolean) {
   try {
-    await axios.post('/api/activity/approve', {
-      activityId,
-      approved: approve
+    const activity = bookedActivities.value.find(a => a.id === activityId);
+    if (!activity) {
+      console.error('Activity not found:', activityId);
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: 'ไม่พบข้อมูลกิจกรรม'
+      });
+      return;
+    }
+
+    if (!activity.details?.id) {
+      console.error('Activity details not found for activity:', activityId);
+      // สร้าง ActivityDetails ใหม่ถ้าไม่มี
+      try {
+        const createResponse = await axios.post(`/api/activity-details/${activityId}/${user.value?.UserID}`, {
+          details: ''
+        });
+        activity.details = createResponse.data.details;
+      } catch (error) {
+        console.error('Error creating activity details:', error);
+        throw error;
+      }
+    }
+
+    const result = await Swal.fire({
+      title: `${approve ? 'ผ่าน' : 'ไม่ผ่าน'}กิจกรรม`,
+      text: `ยืนยันการ${approve ? 'ผ่าน' : 'ไม่ผ่าน'}กิจกรรม`,
+      icon: 'warning',
+      input: 'textarea',
+      inputLabel: 'หมายเหตุ (ถ้ามี)',
+      inputPlaceholder: 'กรอกหมายเหตุ...',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยัน',
+      confirmButtonColor: approve ? '#4CAF50' : '#f44336',
+      cancelButtonText: 'ยกเลิก',
     });
-    await fetchUserDetails(); // รีโหลดข้อมูล
-    Swal.fire({
-      icon: 'success',
-      title: `${approve ? 'อนุมัติ' : 'ไม่อนุมัติ'}กิจกรรมสำเร็จ`,
-      showConfirmButton: false,
-      timer: 1500
-    });
+
+    if (result.isConfirmed && activity.details?.id) {
+      const response = await axios.put(`/api/activity-details/${activity.details.id}/review`, {
+        isApproved: approve,
+        reviewNote: result.value || '',
+        reviewedBy: user.value?.UserID
+      });
+
+      if (response.data) {
+        await fetchActivities();
+        Swal.fire({
+          icon: 'success',
+          title: `${approve ? 'ผ่าน' : 'ไม่ผ่าน'}กิจกรรมสำเร็จ`,
+          showConfirmButton: false,
+          timer: 1500
+        });
+      }
+    }
   } catch (error) {
+    console.error('Error in handleApproval:', error);
     Swal.fire({
       icon: 'error',
       title: 'เกิดข้อผิดพลาด',
-      text: 'ไม่สามารถอัพเดทสถานะกิจกรรมได้'
+      text: 'ไม่สามารถอัพเดทสถานะได้'
     });
   }
 }
 
-onMounted(fetchUserDetails);
+// ปรับปรุงฟังก์ชัน fetchActivities
+async function fetchActivities() {
+  try {
+    const response = await axios.get(`/api/activity/booked-activities/${route.params.id}`);
+    if (!response.data) {
+      throw new Error('No data received from activities API');
+    }
+    console.log('Fetched activities:', response.data);
+    bookedActivities.value = response.data;
+  } catch (error) {
+    console.error('Error fetching activities:', error);
+    throw error;
+  }
+}
+
+// เริ่มโหลดข้อมูลเมื่อ component ถูกโหลด
+onMounted(() => {
+  loadData();
+});
 </script>
 
 <template>
   <div class="max-w-4xl mx-auto p-6">
-    <!-- Header -->
-    <div class="flex justify-between items-center">
-      <h2 class="font-bold text-2xl">รายละเอียดผู้ใช้</h2>
-      <button @click="router.back()" class="btn btn-ghost btn-sm">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">จัดการกิจกรรมผู้ใช้ (Admin)</h1>
+      <button @click="router.back()" class="btn btn-ghost">
         ย้อนกลับ
       </button>
     </div>
-    <hr class="my-3" />
 
-    <!-- Loading State -->
     <div v-if="loading" class="flex justify-center py-8">
       <span class="loading loading-spinner loading-lg"></span>
     </div>
 
     <div v-else-if="user" class="space-y-6">
-      <!-- User Card -->
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body text-black text-center">
-          <h2 class="card-title text-3xl font-bold justify-center mb-4">
-            {{ user.UserFirstName }} {{ user.UserLastName }}
-          </h2>
-          <div class="avatar mb-4">
-            <div class="w-32 h-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 mx-auto">
-              <img :src="user.UserImage || '/default-avatar.png'" alt="รูปโปรไฟล์" />
+      <!-- User Info -->
+      <div class="card bg-base-100 shadow-xl p-6">
+        <div class="flex items-center space-x-4">
+          <div class="avatar">
+            <div class="w-24 h-24 rounded-full">
+              <img :src="user.UserImage || '/default-avatar.png'" alt="User avatar" />
             </div>
           </div>
-          <div class="space-y-2 font-bold">
-            <p><strong>รหัสนักศึกษา:</strong> {{ user.UserID }}</p>
-            <p><strong>บทบาท:</strong> {{ user.Role }}</p>
-            <p><strong>แผนก:</strong> {{ user.DepartmentID }}</p>
-            <p>
-              <strong>สถานะ:</strong>
-              <span :class="completedActivities >= totalRequiredActivities ? 'text-success' : 'text-warning'">
-                {{ completedActivities >= totalRequiredActivities ? 'ผ่านกิจกรรม' : 'ยังไม่ผ่านกิจกรรม' }}
-                (คะแนน {{ completedActivities }}/{{ totalRequiredActivities }})
-              </span>
-            </p>
+          <div>
+            <h2 class="text-xl font-bold">
+              {{ user.UserFirstName }} {{ user.UserLastName }}
+            </h2>
+            <p class="text-gray-600">รหัส: {{ user.UserID }}</p>
+            <p class="text-gray-600">แผนก: {{ user.Department.Name }}</p>
           </div>
         </div>
       </div>
 
       <!-- Activities Table -->
-      <h3 class="font-bold text-xl mt-6">กิจกรรมที่จอง</h3>
-      <div class="overflow-x-auto relative mt-3">
+      <div class="overflow-x-auto bg-base-100 rounded-lg shadow-xl">
         <table class="table w-full">
           <thead>
-            <tr class="bg-gray-200">
-              <th>ID</th>
-              <th>ชื่อกิจกรรม</th>
+            <tr>
+              <th>กิจกรรม</th>
               <th>วันที่</th>
-              <th>สถานที่</th>
-              <th>สถานะ</th>
-              <th>คะแนน</th>
+              <th class="text-center">สถานะการเข้าร่วม</th>
+              <th class="text-center">สถานะการอนุมัติ</th>
+              <th class="text-center">การจัดการ</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="activity in bookedActivities" :key="activity.id" class="hover:bg-base-100 transition-colors duration-200">
-              <td>{{ activity.id }}</td>
+            <tr v-for="activity in bookedActivities" :key="activity.id">
               <td>
                 <div class="flex items-center space-x-3">
                   <div class="avatar">
@@ -178,19 +237,76 @@ onMounted(fetchUserDetails);
                       <img :src="activity.images[0]" :alt="activity.name" />
                     </div>
                   </div>
-                  <div>{{ activity.name }}</div>
+                  <div class="font-bold">{{ activity.name }}</div>
                 </div>
               </td>
               <td>{{ activity.date }}</td>
-              <td>{{ activity.location }}</td>
-              <td>
+              <td class="text-center">
                 <span :class="['badge', getStatusClass(activity.status)]">
                   {{ getStatusText(activity.status) }}
                 </span>
               </td>
-              <td>
-                <span class="badge badge-primary">{{ activity.score }} คะแนน</span>
+              <td class="text-center">
+                <span :class="['badge', getApprovalStatus(activity.details).class]">
+                  {{ getApprovalStatus(activity.details).text }}
+                </span>
               </td>
+              <td>
+                <div class="flex justify-center gap-2">
+                  <!-- แสดงปุ่มเฉพาะเมื่อสถานะเป็น "booking" หรือยังไม่มีการอนุมัติ -->
+                  <template v-if="activity.status === 'booking' || !activity.details?.isApproved">
+                    <button
+                      @click="handleApproval(activity.id, true)"
+                      class="btn btn-success btn-sm"
+                      :disabled="activity.details?.isApproved === true">
+                      ผ่าน
+                    </button>
+                    <button
+                      @click="handleApproval(activity.id, false)"
+                      class="btn btn-error btn-sm"
+                      :disabled="activity.details?.isApproved === false">
+                      ไม่ผ่าน
+                    </button>
+                  </template>
+                  <!-- แสดงปุ่มดูหมายเหตุเมื่อมีหมายเหตุ -->
+                  <button
+                    v-if="activity.details?.reviewNote"
+                    @click="Swal.fire({
+                      title: 'หมายเหตุ',
+                      text: activity.details.reviewNote,
+                      icon: 'info'
+                    })"
+                    class="btn btn-info btn-sm">
+                    ดูหมายเหตุ
+                  </button>
+                </div>
+              </td>
+              <td>
+    <div class="flex justify-center gap-2">
+      <template v-if="!activity.details?.isApproved && activity.details?.isApproved !== false">
+        <button
+          @click="handleApproval(activity.id, true)"
+          class="btn btn-success btn-sm">
+          ผ่าน
+        </button>
+        <button
+          @click="handleApproval(activity.id, false)"
+          class="btn btn-error btn-sm">
+          ไม่ผ่าน
+        </button>
+      </template>
+      <button
+        v-if="activity.details?.reviewNote"
+        @click="Swal.fire({
+          title: 'หมายเหตุ',
+          text: activity.details.reviewNote,
+          icon: 'info'
+        })"
+        class="btn btn-info btn-sm">
+        ดูหมายเหตุ
+      </button>
+    </div>
+  </td>
             </tr>
           </tbody>
         </table>
