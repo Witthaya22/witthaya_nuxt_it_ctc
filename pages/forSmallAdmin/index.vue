@@ -139,10 +139,10 @@ const showAlert = () => {
 
 <template>
   <div class="min-h-screen p-8">
-    <div class="container mx-auto backdrop-blur-lg">
-      <h1 class="text-4xl font-bold mb-8 text-center text-primary">แดชบอร์ดผู้ดูแลระบบ</h1>
+    <div class="container mx-auto ">
+      <h1 class="text-4xl font-bold mb-8 text-center text-primary">แดชบอร์ดผู้ช่วยผู้ดูแล</h1>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div v-for="(stat, index) in [
           { title: 'จำนวนผู้ใช้ทั้งหมด', value: totalUsers, bgColor: 'bg-primary' },
           { title: 'จำนวนกิจกรรมทั้งหมด', value: totalActivities, bgColor: 'bg-secondary' },
@@ -151,9 +151,9 @@ const showAlert = () => {
           <div class="stat-title ">{{ stat.title }}</div>
           <div class="stat-value">{{ stat.value }}</div>
         </div>
-      </div>
+      </div> -->
 
-      <div class="rounded-box shadow-xl p-6 mb-8 backdrop-blur-lg">
+      <div class="rounded-box shadow-xl p-6 mb-8 ">
         <div class="flex justify-between items-center mb-4 cursor-pointer" @click="showActivities = !showActivities">
           <h2 class="text-2xl font-semibold">จัดการกิจกรรม</h2>
           <span class="text-2xl">{{ showActivities ? '⏬' : '⏫' }}</span>

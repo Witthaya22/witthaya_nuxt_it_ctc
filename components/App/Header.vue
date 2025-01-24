@@ -5,7 +5,12 @@ import swal from "sweetalert2";
 
 const mobileMenuStore = useMobileMenuStore()
 const checkAdmin = () => {
-  if (auth.value?.Role === "ADMIN" || auth.value?.Role === "SUPERADMIN") {
+  if (auth.value?.Role === "ADMIN") {
+    return true;
+  }
+};
+const checksupadmin = () => {
+  if (auth.value?.Role === "SUPERADMIN") {
     return true;
   }
 };
@@ -71,6 +76,14 @@ watch(() => useRoute().fullPath, () => {
             class="text-lg font-bold text-green-600 btn mx-1 btn-ghost focus:border-b-4 focus:border-b-green-500 focus:text-green-500"
           >
             ไปที่หน้าแอดมิน
+          </NuxtLink>
+        </li>
+        <li v-if="checksupadmin()">
+          <NuxtLink
+            to="/forSmallAdmin"
+            class="text-lg font-bold btn mx-1 btn-ghost focus:border-b-4 text-yellow-500 hover:text-yellow-600 hover:bg-gray-50"
+          >
+            จัดการกิจกรรม
           </NuxtLink>
         </li>
         <li>

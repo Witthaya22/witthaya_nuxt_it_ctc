@@ -22,8 +22,9 @@ interface UserInput {
   UserFirstName: string;
   UserLastName: string;
   UserPassword?: string;
-  Role: 'USER' | 'ADMIN';
+  Role: 'USER' | 'ADMIN' | 'EXECUTIVE' | 'SUPADMIN';
   DepartmentID: string;
+  UserImage?: File; // Add this line
 }
 
 const departments = ref<Department[]>([]);
@@ -263,6 +264,8 @@ async function onSubmit() {
               <select v-model="input.Role" class="select select-bordered">
                 <option value="USER">ผู้ใช้ทั่วไป</option>
                 <option value="ADMIN">ผู้ดูแลระบบ</option>
+                <option value="SUPERADMIN">ผู้ช่วย</option>
+                <option value="EXECUTIVE">ผู้บริหาร</option>
               </select>
             </div>
           </div>

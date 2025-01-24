@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen w-full bg-gradient-to-br from-blue-100 to-indigo-200 flex items-center justify-center p-4">
+  <div class="min-h-screen w-full  flex items-center justify-center p-4">
     <!-- Background Decoration -->
     <div class="absolute inset-0 overflow-hidden">
       <div class="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-br from-blue-400/20 to-purple-500/20 rounded-full filter blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>

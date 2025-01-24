@@ -9,7 +9,6 @@ const route = useRoute();
 const router = useRouter();
 const axios = useAxios();
 
-
 interface Input {
   title: string;
   description: string;
@@ -19,7 +18,7 @@ interface Input {
   startDate: string;
   endDate: string;
   type: string;
-  maxParticipants?: number; // Change null to undefined
+  maxParticipants?: number;
 }
 
 const input = reactive<Input>({
@@ -28,7 +27,7 @@ const input = reactive<Input>({
   images: [],
   score: 0,
   location: '',
-  startDate: new Date().toISOString().split('T')[0], // วันที่ปัจจุบัน
+  startDate: new Date().toISOString().split('T')[0],
   endDate: new Date().toISOString().split('T')[0],
   type: 'GENERAL',
   maxParticipants: undefined
@@ -51,20 +50,23 @@ interface Activity {
 
 const id = ref(-1);
 const isCreate = route.params.id === 'create';
-let refreshCacge: () => Promise<void> | null = null
+const selectedFiles = ref<File[]>([]);
+const previewImages = ref<string[]>([]);
+const fileInput = ref<HTMLInputElement | null>(null);
+let refreshCacge: () => Promise<void> | null = null;
 
-  if (!isCreate) {
+if (!isCreate) {
   const { data, refresh } = await useAsyncData<{ activity: Activity }>(
     `admin-activity-${route.params.id}`,
     async () => {
-      const res = await axios.get(`/api/activity/${route.params.id}`)
-      return res.data
+      const res = await axios.get(`/api/activity/${route.params.id}`);
+      return res.data;
     }
-  )
-  refreshCacge = refresh
+  );
+  refreshCacge = refresh;
   const activity = data.value.activity;
 
-  // Map ข้อมูลให้ตรงกับ input
+  // Map data
   id.value = activity.ID;
   input.title = activity.Title;
   input.description = activity.Description;
@@ -75,41 +77,77 @@ let refreshCacge: () => Promise<void> | null = null
   input.type = activity.Type;
   input.location = activity.Location;
   input.maxParticipants = activity.MaxParticipants;
+
+  // Load existing images for preview
+  input.images.forEach(imageUrl => {
+    previewImages.value.push(`/api${imageUrl}`);
+  });
 }
 
-// const { $swal } = useNuxtApp();
-import Swal from 'sweetalert2';
+const handleFileUpload = (event: Event) => {
+  const files = (event.target as HTMLInputElement).files;
+  if (!files) return;
 
+  selectedFiles.value = Array.from(files).filter(file => {
+    const isImage = file.type.startsWith('image/');
+    const isValidSize = file.size <= 5 * 1024 * 1024;
+    return isImage && isValidSize;
+  });
+
+  previewImages.value = [];
+  selectedFiles.value.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (typeof e.target?.result === 'string') {
+        previewImages.value.push(e.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+const removeImage = (index: number) => {
+  previewImages.value.splice(index, 1);
+  selectedFiles.value.splice(index, 1);
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
+};
+
+import Swal from 'sweetalert2';
 const loading = ref(false);
 
 async function onUpsertActivity() {
   loading.value = true;
   try {
-    // Validation พื้นฐาน
     if (!input.title || !input.description) {
       throw new Error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
     }
 
-    // สร้าง payload เฉพาะฟิลด์ที่มีการเปลี่ยนแปลง
-    const payload: Partial<typeof input> = {};
-
-    if (input.title) payload.title = input.title;
-    if (input.description) payload.description = input.description;
-    if (input.score !== undefined) payload.score = input.score;
-    if (input.location) payload.location = input.location;
-    if (input.startDate) payload.startDate = input.startDate;
-    if (input.endDate) payload.endDate = input.endDate;
-    if (input.type) payload.type = input.type;
+    const formData = new FormData();
+    formData.append('title', input.title);
+    formData.append('description', input.description);
+    formData.append('score', input.score.toString());
+    formData.append('location', input.location);
+    formData.append('startDate', input.startDate);
+    formData.append('endDate', input.endDate);
+    formData.append('type', input.type);
     if (input.maxParticipants !== undefined) {
-      payload.maxParticipants = input.maxParticipants;
+      formData.append('maxParticipants', input.maxParticipants.toString());
     }
-    if (input.images.length > 0) payload.images = input.images;
+
+    selectedFiles.value.forEach(file => {
+      formData.append('images', file);
+    });
 
     const res = await axios.post<{ message: string }>(
       '/api/admin/activity',
-      payload,
+      formData,
       {
-        params: id.value !== -1 ? { id: id.value } : undefined
+        params: id.value !== -1 ? { id: id.value } : undefined,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       }
     );
 
@@ -133,7 +171,6 @@ async function onUpsertActivity() {
     loading.value = false;
   }
 }
-
 </script>
 
 <template>
@@ -149,15 +186,15 @@ async function onUpsertActivity() {
           <div class="form-control">
             <label class="label">
               <span class="label-text font-bold">ชื่อกิจกรรม</span>
-              <!-- <span class="label-text-alt text-error">*</span> -->
+              <span class="label-text-alt text-error">*</span>
             </label>
             <input
-  v-model="input.title"
-  class="input input-bordered"
-  type="text"
-  required
-  :placeholder="isCreate ? 'ชื่อกิจกรรม' : 'เว้นว่างถ้าไม่ต้องการแก้ไข'"
-/>
+              v-model="input.title"
+              class="input input-bordered"
+              type="text"
+              required
+              :placeholder="isCreate ? 'ชื่อกิจกรรม' : 'เว้นว่างถ้าไม่ต้องการแก้ไข'"
+            />
           </div>
 
           <!-- วันที่จัดกิจกรรม -->
@@ -222,18 +259,45 @@ async function onUpsertActivity() {
             <label class="label">
               <span class="label-text font-bold">รูปภาพกิจกรรม</span>
             </label>
-            <div class="space-y-2">
-              <div v-for="(image, i) in input.images" :key="i" class="flex gap-2">
-                <input v-model="input.images[i]" class="input input-bordered flex-1" type="url" placeholder="URL รูปภาพ" />
-                <button type="button" class="btn btn-error btn-square" @click="input.images.splice(i, 1)">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+            <div class="space-y-4">
+              <!-- Preview images -->
+              <div v-if="previewImages.length > 0" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div v-for="(preview, i) in previewImages" :key="i" class="relative">
+                  <img :src="preview" class="w-full h-48 object-cover rounded-lg" />
+                  <button
+                    type="button"
+                    class="btn btn-error btn-sm btn-circle absolute top-2 right-2"
+                    @click="removeImage(i)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <button type="button" class="btn btn-outline btn-sm" @click="input.images.push('')">
-                เพิ่มรูปภาพ
-              </button>
+
+              <!-- File input -->
+              <div class="flex items-center justify-center w-full">
+                <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                  <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                    <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                    </svg>
+                    <p class="mb-2 text-sm text-gray-500">
+                      <span class="font-semibold">คลิกเพื่อเลือกรูปภาพ</span>
+                    </p>
+                    <p class="text-xs text-gray-500">PNG, JPG หรือ JPEG (สูงสุด 5MB)</p>
+                  </div>
+                  <input
+                    ref="fileInput"
+                    type="file"
+                    class="hidden"
+                    accept="image/png, image/jpeg, image/jpg"
+                    multiple
+                    @change="handleFileUpload"
+                  />
+                </label>
+              </div>
             </div>
           </div>
 

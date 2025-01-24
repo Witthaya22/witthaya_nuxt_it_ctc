@@ -1,13 +1,12 @@
 <script setup lang="ts">
 useHead({ title: "รายละเอียดผู้ใช้ (Admin)" });
-definePageMeta({
-  layout: "admin",
-});
+definePageMeta({ layout: "admin" });
 
 const route = useRoute();
 const router = useRouter();
 const axios = useAxios();
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2';
+
 interface BookedActivity {
   id: number;
   name: string;
@@ -40,18 +39,22 @@ const user = ref<User | null>(null);
 const bookedActivities = ref<BookedActivity[]>([]);
 const loading = ref(true);
 
-// แยกฟังก์ชันการโหลดข้อมูลเป็นส่วนๆ
+function getImageUrl(image: string) {
+  if (image.startsWith('data:')) return image;
+  return `/api${image}`;
+}
+
 async function fetchUser() {
   const response = await axios.get(`/api/user/${route.params.id}`);
   user.value = response.data.user;
 }
 
-// async function fetchActivities() {
-//   const response = await axios.get(`/api/activity/booked-activities/${route.params.id}`);
-//   bookedActivities.value = response.data;
-// }
+async function fetchActivities() {
+  const response = await axios.get(`/api/activity/booked-activities/${route.params.id}`);
+  if (!response.data) throw new Error('No data received from activities API');
+  bookedActivities.value = response.data;
+}
 
-// ฟังก์ชันหลักสำหรับโหลดข้อมูลทั้งหมด
 async function loadData() {
   try {
     loading.value = true;
@@ -100,7 +103,6 @@ async function handleApproval(activityId: number, approve: boolean) {
   try {
     const activity = bookedActivities.value.find(a => a.id === activityId);
     if (!activity) {
-      console.error('Activity not found:', activityId);
       Swal.fire({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
@@ -110,8 +112,6 @@ async function handleApproval(activityId: number, approve: boolean) {
     }
 
     if (!activity.details?.id) {
-      console.error('Activity details not found for activity:', activityId);
-      // สร้าง ActivityDetails ใหม่ถ้าไม่มี
       try {
         const createResponse = await axios.post(`/api/activity-details/${activityId}/${user.value?.UserID}`, {
           details: ''
@@ -163,22 +163,6 @@ async function handleApproval(activityId: number, approve: boolean) {
   }
 }
 
-// ปรับปรุงฟังก์ชัน fetchActivities
-async function fetchActivities() {
-  try {
-    const response = await axios.get(`/api/activity/booked-activities/${route.params.id}`);
-    if (!response.data) {
-      throw new Error('No data received from activities API');
-    }
-    console.log('Fetched activities:', response.data);
-    bookedActivities.value = response.data;
-  } catch (error) {
-    console.error('Error fetching activities:', error);
-    throw error;
-  }
-}
-
-// เริ่มโหลดข้อมูลเมื่อ component ถูกโหลด
 onMounted(() => {
   loadData();
 });
@@ -203,13 +187,11 @@ onMounted(() => {
         <div class="flex items-center space-x-4">
           <div class="avatar">
             <div class="w-24 h-24 rounded-full">
-              <img :src="user.UserImage || '/default-avatar.png'" alt="User avatar" />
+              <img :src="getImageUrl(user.UserImage || '/default-avatar.png')" alt="User avatar" />
             </div>
           </div>
           <div>
-            <h2 class="text-xl font-bold">
-              {{ user.UserFirstName }} {{ user.UserLastName }}
-            </h2>
+            <h2 class="text-xl font-bold">{{ user.UserFirstName }} {{ user.UserLastName }}</h2>
             <p class="text-gray-600">รหัส: {{ user.UserID }}</p>
             <p class="text-gray-600">แผนก: {{ user.Department.Name }}</p>
           </div>
@@ -234,7 +216,7 @@ onMounted(() => {
                 <div class="flex items-center space-x-3">
                   <div class="avatar">
                     <div class="mask mask-squircle w-12 h-12">
-                      <img :src="activity.images[0]" :alt="activity.name" />
+                      <img :src="getImageUrl(activity.images[0])" :alt="activity.name" />
                     </div>
                   </div>
                   <div class="font-bold">{{ activity.name }}</div>
@@ -252,49 +234,23 @@ onMounted(() => {
                 </span>
               </td>
               <td>
-                <div class="flex justify-center gap-2">
-                  <!-- แสดงปุ่มเฉพาะเมื่อสถานะเป็น "booking" หรือยังไม่มีการอนุมัติ -->
-                  <template v-if="activity.status === 'booking' || !activity.details?.isApproved">
-                    <button
-                      @click="handleApproval(activity.id, true)"
-                      class="btn btn-success btn-sm"
-                      :disabled="activity.details?.isApproved === true">
-                      ผ่าน
-                    </button>
-                    <button
-                      @click="handleApproval(activity.id, false)"
-                      class="btn btn-error btn-sm"
-                      :disabled="activity.details?.isApproved === false">
-                      ไม่ผ่าน
-                    </button>
-                  </template>
-                  <!-- แสดงปุ่มดูหมายเหตุเมื่อมีหมายเหตุ -->
-                  <button
-                    v-if="activity.details?.reviewNote"
-                    @click="Swal.fire({
-                      title: 'หมายเหตุ',
-                      text: activity.details.reviewNote,
-                      icon: 'info'
-                    })"
-                    class="btn btn-info btn-sm">
-                    ดูหมายเหตุ
-                  </button>
-                </div>
-              </td>
-              <td>
     <div class="flex justify-center gap-2">
-      <template v-if="!activity.details?.isApproved && activity.details?.isApproved !== false">
+      <!-- แสดงปุ่มเฉพาะเมื่อสถานะเป็น "booking" หรือยังไม่มีการอนุมัติ -->
+      <template v-if="activity.status === 'booking' || !activity.details?.isApproved">
         <button
           @click="handleApproval(activity.id, true)"
-          class="btn btn-success btn-sm">
+          class="btn btn-success btn-sm"
+          :disabled="activity.details?.isApproved === true">
           ผ่าน
         </button>
         <button
           @click="handleApproval(activity.id, false)"
-          class="btn btn-error btn-sm">
+          class="btn btn-error btn-sm"
+          :disabled="activity.details?.isApproved === false">
           ไม่ผ่าน
         </button>
       </template>
+      <!-- แสดงปุ่มดูหมายเหตุเมื่อมีหมายเหตุ -->
       <button
         v-if="activity.details?.reviewNote"
         @click="Swal.fire({
@@ -313,6 +269,10 @@ onMounted(() => {
       </div>
     </div>
   </div>
-
-  <!-- เช็คๆ -->
 </template>
+
+<style scoped>
+.card {
+  @apply backdrop-blur-lg;
+}
+</style>

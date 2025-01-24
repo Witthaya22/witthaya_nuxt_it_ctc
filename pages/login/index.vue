@@ -68,7 +68,7 @@ function togglePassword() {
 </script>
 
 <template>
-  <div class="min-h-screen w-full bg-gradient-to-br from-blue-100 to-indigo-200 flex flex-col justify-center items-center relative overflow-hidden">
+  <div class="min-h-screen w-full flex flex-col justify-center items-center relative overflow-hidden">
     <!-- Background Decoration -->
     <div class="absolute top-0 left-0 w-full h-full">
       <div class="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-br from-blue-400/20 to-purple-500/20 rounded-full filter blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
@@ -188,24 +188,3 @@ function togglePassword() {
   </div>
 </template>
 
-<style scoped>
-.btn-primary {
-  @apply bg-blue-600 hover:bg-blue-700 border-none text-white;
-}
-
-.input:focus {
-  @apply border-blue-600 ring-2 ring-blue-600/20;
-}
-
-/* Glass Morphism */
-.glass-card {
-  @apply bg-white/80 backdrop-blur-xl;
-}
-
-/* Responsive Text Adjustments */
-@media (min-width: 1024px) {
-  .text-responsive {
-    @apply text-lg;
-  }
-}
-</style>
