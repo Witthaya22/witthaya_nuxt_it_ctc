@@ -1,6 +1,5 @@
 <script setup lang="ts">
 useHead({ title: "รายละเอียดผู้เข้าร่วมกิจกรรม" });
-definePageMeta({ layout: "admin" });
 
 const route = useRoute();
 const activityId = route.params.id;

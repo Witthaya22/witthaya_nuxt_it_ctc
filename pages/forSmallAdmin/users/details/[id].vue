@@ -1,6 +1,5 @@
 <script setup lang="ts">
 useHead({ title: "รายละเอียดผู้ใช้ (Admin)" });
-definePageMeta({ layout: "admin" });
 
 const route = useRoute();
 const router = useRouter();

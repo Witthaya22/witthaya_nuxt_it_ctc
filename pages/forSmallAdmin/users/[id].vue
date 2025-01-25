@@ -1,9 +1,6 @@
 <script lang="ts" setup>
 useHead({ title: "จัดการข้อมูลผู้ใช้" });
-definePageMeta({
-  layout: "admin",
-  // middleware: ["only-admin"],
-});
+
 import { ref, reactive, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Swal from "sweetalert2";

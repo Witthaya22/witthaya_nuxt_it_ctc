@@ -53,7 +53,7 @@ const isCreate = route.params.id === 'create';
 const selectedFiles = ref<File[]>([]);
 const previewImages = ref<string[]>([]);
 const fileInput = ref<HTMLInputElement | null>(null);
-let refreshCacge: () => Promise<void> | null = null;
+let refreshCacge: (() => Promise<void>) | null = null;
 
 if (!isCreate) {
   const { data, refresh } = await useAsyncData<{ activity: Activity }>(

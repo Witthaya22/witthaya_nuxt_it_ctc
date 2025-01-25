@@ -1,285 +1,403 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-// const axios = useAxios()
+import { ref, computed, onMounted } from 'vue'
+const router = useRouter()
+const axios = useAxios()
+import Swal from 'sweetalert2'
 
 interface Activity {
-  id: number; name: string; date: string; location: string
-  status: 'open' | 'closed'; participantsCount: number
-  score: number; description: string
+ ID: number;
+ Title: string;
+ description: string;
+ images: string[];
+ Score: number;
+ createdAt: string;
+ updatedAt: string;
 }
 
 interface User {
-  id: number; name: string; email: string
-  role: 'user' | 'admin'; lastLogin: string
-  completedActivities: number
+ UserID: string;
+ UserFirstName: string;
+ UserLastName: string;
+ DepartmentID: string;
+ Role: string;
+ Department: {
+   Name: string;
+ }
 }
 
-import Swal from 'sweetalert2';
-import ms from 'ms'
+const activeTab = ref('activities')
+const activities = ref<Activity[]>([])
+const users = ref<User[]>([])
+const page = ref(1)
+const searchQuery = ref('')
 
-const router = useRouter()
-const activitySearchQuery = ref('')
-const userSearchQuery = ref('')
-const showActivities = ref(true)
-const showUsers = ref(false)
-const activitiesPerPage = 15
-const usersPerPage = 15
-const currentActivityPage = ref(1)
-const currentUserPage = ref(1)
+function switchTab(tab: string) {
+  activeTab.value = tab
+}
 
 
-const activities = ref<Activity[]>([
-  { id: 1, name: 'ไหว้เจ้า', date: '15 สิงหาคม 2024', location: 'วัดพระธาตุดอยสุเทพ', status: 'open', participantsCount: 500, score: 1, description: 'กิจกรรมไหว้เจ้าประจำปี' },
-  { id: 2, name: 'คอนเสิร์ตดนตรีคลาสสิค', date: '22 สิงหาคม 2024', location: 'หอประชุมวิทยาลัยเทคนิคชัยภูมิ', status: 'closed', participantsCount: 2000, score: 1, description: 'คอนเสิร์ตดนตรีคลาสสิคประจำปี' },
-  { id: 3, name: 'วันพ่อ', date: '5 ธันวาคม 2024', location: 'หอประชุมวิทยาลัยเทคนิคชัยภูมิ', status: 'open', participantsCount: 1000, score: 1, description: 'กิจกรรมวันพ่อแห่งชาติ' },
-])
-
-const users = ref<User[]>([
-  { id: 1, name: 'ชวัลวิชญ์ คงสำพันธ์', email: '66309010020', role: 'user', lastLogin: '2024-08-13 14:30', completedActivities: 1 },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'admin', lastLogin: '2024-08-14 09:15', completedActivities: 3 },
-  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'user', lastLogin: '2024-08-12 18:45', completedActivities: 1 },
-])
-
-const totalUsers = computed(() => users.value.length)
-const totalActivities = computed(() => activities.value.length)
-const openActivities = computed(() => activities.value.filter(a => a.status === 'open').length)
-
-const getStatusClass = (status: 'open' | 'closed') => status === 'open' ? 'badge-success' : 'badge-error'
-const getStatusText = (status: 'open' | 'closed') => status === 'open' ? 'เปิด' : 'ปิด'
-
-const filteredActivities = computed(() => {
-  return activities.value.filter(activity =>
-    activity.name.toLowerCase().includes(activitySearchQuery.value.toLowerCase()) ||
-    activity.id.toString().includes(activitySearchQuery.value)
-  )
+const avgScore = computed(() => {
+ const avg = activities.value.reduce((sum, act) => sum + act.Score, 0) / activities.value.length
+ return avg.toFixed(1)
 })
 
 const filteredUsers = computed(() => {
+  if (!searchQuery.value) return users.value
+  const query = searchQuery.value.toLowerCase()
   return users.value.filter(user =>
-    user.name.toLowerCase().includes(userSearchQuery.value.toLowerCase()) ||
-    user.email.toLowerCase().includes(userSearchQuery.value.toLowerCase()) ||
-    user.id.toString().includes(userSearchQuery.value)
+    user.UserFirstName.toLowerCase().includes(query) ||
+    user.UserLastName.toLowerCase().includes(query) ||
+    user.UserID.toLowerCase().includes(query) ||
+    (user.Department?.Name || '').toLowerCase().includes(query)
   )
 })
 
-const paginatedActivities = computed(() => {
-  const start = (currentActivityPage.value - 1) * activitiesPerPage
-  const end = start + activitiesPerPage
-  return filteredActivities.value.slice(start, end)
+async function fetchActivities() {
+ const res = await axios.get<{ activities: Activity[] }>('/api/activity', {
+   params: { page: page.value }
+ })
+ activities.value = res.data.activities
+}
+
+async function fetchUsers() {
+ const res = await axios.get<{ users: User[] }>('/api/users')
+ users.value = res.data.users
+}
+
+async function deleteActivity(activityId: number) {
+ try {
+   const result = await Swal.fire({
+     title: 'ยืนยันการลบกิจกรรม',
+     text: "คุณต้องการลบกิจกรรมนี้หรือไม่?",
+     icon: 'warning',
+     showCancelButton: true,
+     confirmButtonColor: '#d33',
+     cancelButtonColor: '#3085d6',
+     confirmButtonText: 'ลบ',
+     cancelButtonText: 'ยกเลิก'
+   })
+
+   if (result.isConfirmed) {
+     await axios.delete(`/api/activity/${activityId}`)
+     activities.value = activities.value.filter(act => act.ID !== activityId)
+     await Swal.fire({
+       icon: 'success',
+       title: 'ลบกิจกรรมสำเร็จ',
+       timer: 1500,
+       showConfirmButton: false
+     })
+   }
+ } catch (error: any) {
+   Swal.fire({
+     icon: 'error',
+     title: 'เกิดข้อผิดพลาด',
+     text: error.response?.data?.message || 'ไม่สามารถลบกิจกรรมได้'
+   })
+ }
+}
+
+async function deleteUser(userId: string) {
+ try {
+   const result = await Swal.fire({
+     title: 'ยืนยันการลบผู้ใช้',
+     text: "คุณต้องการลบผู้ใช้นี้หรือไม่?",
+     icon: 'warning',
+     showCancelButton: true,
+     confirmButtonColor: '#d33',
+     cancelButtonColor: '#3085d6',
+     confirmButtonText: 'ลบ',
+     cancelButtonText: 'ยกเลิก'
+   })
+
+   if (result.isConfirmed) {
+     await axios.delete(`/api/users/${userId}`)
+     users.value = users.value.filter(user => user.UserID !== userId)
+     await Swal.fire({
+       icon: 'success',
+       title: 'ลบผู้ใช้สำเร็จ',
+       timer: 1500,
+       showConfirmButton: false
+     })
+   }
+ } catch (error: any) {
+   Swal.fire({
+     icon: 'error',
+     title: 'เกิดข้อผิดพลาด',
+     text: error.response?.data?.message || 'ไม่สามารถลบผู้ใช้ได้'
+   })
+ }
+}
+
+onMounted(async () => {
+ await fetchActivities()
+ await fetchUsers()
 })
 
-const paginatedUsers = computed(() => {
-  const start = (currentUserPage.value - 1) * usersPerPage
-  const end = start + usersPerPage
-  return filteredUsers.value.slice(start, end)
-})
-
-const totalActivityPages = computed(() => Math.ceil(filteredActivities.value.length / activitiesPerPage))
-const totalUserPages = computed(() => Math.ceil(filteredUsers.value.length / usersPerPage))
-
-const changePage = (section: 'activities' | 'users', page: number) => {
-  if (section === 'activities') {
-    currentActivityPage.value = page
-  } else {
-    currentUserPage.value = page
-  }
-}
-
-const editUser = (user: User) => {
-  alert(`แก้ไขข้อมูลผู้ใช้: ${user.name}`)
-}
-
-const addActivity = () => {
-  router.push('/admin/activity/create')
-}
-
-const exportActivityToPDF = (activity: Activity) => {
-  alert(`ส่งออก PDF สำหรับกิจกรรม: ${activity.name}`)
-}
-
-// async function fetchActivities() {
-//     const res = await axios.get<{ activities: Activity[] }>(
-//       '/api/activity',
-//       {
-//         params: {
-//           page: page.value,
-//         },
-//       }
-//     );
-//     activities.value = res.data.activities;
-
-// }
-
-let timerInterval: any;
-const showAlert = () => {
-  Swal.fire({
-    title: "กำลังรวบรวมข้อมูล...",
-    html: "กำลังส่งออก PDF ใน <b></b> มิลลิวินาที.",
-    timer: ms('4s'),
-    timerProgressBar: true,
-    didOpen: () => {
-      Swal.showLoading();
-      const timer = Swal.getPopup()?.querySelector("b");
-      if (timer) {
-        timerInterval = setInterval(() => {
-          timer.textContent = `${Swal.getTimerLeft()}`;
-        }, 100);
-      }
-    },
-    willClose: () => {
-      clearInterval(timerInterval);
-    }
-  });
-};
-
-
-
+watch(page, fetchActivities)
 </script>
 
 <template>
-  <div class="min-h-screen p-8">
-    <div class="container mx-auto ">
-      <h1 class="text-4xl font-bold mb-8 text-center text-primary">แดชบอร์ดผู้ช่วยผู้ดูแล</h1>
-
-      <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div v-for="(stat, index) in [
-          { title: 'จำนวนผู้ใช้ทั้งหมด', value: totalUsers, bgColor: 'bg-primary' },
-          { title: 'จำนวนกิจกรรมทั้งหมด', value: totalActivities, bgColor: 'bg-secondary' },
-          { title: 'กิจกรรมที่เปิดอยู่', value: openActivities, bgColor: 'bg-accent' }
-        ]" :key="index" :class="['stat  rounded-box shadow-xl', stat.bgColor]">
-          <div class="stat-title ">{{ stat.title }}</div>
-          <div class="stat-value">{{ stat.value }}</div>
-        </div>
-      </div> -->
-
-      <div class="rounded-box shadow-xl p-6 mb-8 ">
-        <div class="flex justify-between items-center mb-4 cursor-pointer" @click="showActivities = !showActivities">
-          <h2 class="text-2xl font-semibold">จัดการกิจกรรม</h2>
-          <span class="text-2xl">{{ showActivities ? '⏬' : '⏫' }}</span>
-        </div>
-        <div v-if="showActivities">
-          <div class="flex justify-between items-center mb-4">
-            <input v-model="activitySearchQuery" type="text" placeholder="ค้นหากิจกรรม" class=" input input-bordered w-full max-w-xs" />
-            <NuxtLink to="/forSmallAdmin/addActivity" class="btn btn-primary">เพิ่มกิจกรรม</NuxtLink>
-
-          </div>
-          <div class="overflow-x-auto ">
-            <table class="table w-full">
-              <thead>
-                <tr class="">
-                  <th>ID</th>
-                  <th>ชื่อกิจกรรม</th>
-                  <th>วันที่</th>
-                  <th>สถานที่</th>
-                  <th>สถานะ</th>
-                  <th>จำนวนผู้เข้าร่วม</th>
-                  <th>คะแนน</th>
-                  <th>การดำเนินการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="activity in paginatedActivities" :key="activity.id">
-                  <td>{{ activity.id }}</td>
-                  <td>{{ activity.name }}</td>
-                  <td>{{ activity.date }}</td>
-                  <td>{{ activity.location }}</td>
-                  <td>
-                    <span :class="['badge', getStatusClass(activity.status)]">
-                      {{ getStatusText(activity.status) }}
-                    </span>
-                  </td>
-                  <td>{{ activity.participantsCount }}</td>
-                  <td>{{ activity.score }}</td>
-                  <td>
-                    <div class="flex space-x-2">
-                      <nuxt-link to="/forSmallAdmin/checkActivity/" class="btn btn-sm btn-primary">ดูรายละเอียด</nuxt-link>
-                      <nuxt-link to="/forSmallAdmin/editActivity/" class="btn btn-sm btn-warning">แก้ไข</nuxt-link>
-                      <button @click="showAlert" class="btn btn-sm btn-secondary">ส่งออก PDF</button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="flex justify-center mt-4">
-            <div class="btn-group">
-              <span class="text-xl btn btn-ghost text-blue-600 cursor-pointer" >ย้อนกลับ</span>
-              <button v-for="page in totalActivityPages" :key="page"
-                      @click="changePage('activities', page)"
-                      :class="['btn', currentActivityPage === page ? 'btn-ghost' : ''] ">
-                {{ page }}
-              </button>
-                <span class="text-xl btn btn-ghost text-blue-600 cursor-pointer" >ถัดไป</span>
-              <!-- <div class="space-x-5 text-right container mt-2 mr-1">
-                <span v-if="page > 1" class="text-xl btn btn-ghost text-blue-600 cursor-pointer" @click="page--">ย้อนกลับ</span>
-                <span class="text-xl btn btn-ghost text-blue-600 cursor-pointer" @click="page++">ถัดไป</span>
-              </div> -->
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class=" rounded-box shadow-xl p-6 backdrop-blur-lg">
-        <div class="flex justify-between items-center mb-4 cursor-pointer " @click="showUsers = !showUsers">
-          <h2 class="text-2xl font-semibold">จัดการผู้ใช้</h2>
-          <span class="text-2xl">{{ showUsers ? '⏬' : '⏫' }}</span>
-        </div>
-        <div v-if="showUsers">
-          <div class="flex justify-between items-center mb-4">
-            <input v-model="userSearchQuery" type="text" placeholder="ค้นหาผู้ใช้" class="  input input-bordered w-full max-w-xs" />
-            <!-- <NuxtLink to="/forSmallAdmin/addUser" class="btn btn-primary">เพิ่มผู้ใช้</NuxtLink> -->
-
-          </div>
-          <div class="overflow-x-auto">
-            <table class="table w-full">
-              <thead>
-                <tr class="">
-                  <th>ID</th>
-                  <th>ชื่อ</th>
-                  <th>อีเมล</th>
-                  <th>บทบาท</th>
-                  <th>เข้าสู่ระบบล่าสุด</th>
-                  <th>กิจกรรมที่เสร็จสิ้น</th>
-                  <th>การดำเนินการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="user in paginatedUsers" :key="user.id">
-                  <td>{{ user.id }}</td>
-                  <td>{{ user.name }}</td>
-                  <td>{{ user.email }}</td>
-                  <td>
-                    <span :class="user.role === 'admin' ? 'badge badge-primary' : 'badge'">
-                      {{ user.role === 'admin' ? 'ผู้ดูแลระบบ' : 'นักศึกษา' }}
-                    </span>
-                  </td>
-                  <td>{{ user.lastLogin }}</td>
-                  <td>{{ user.completedActivities }}</td>
-                  <td>
-                    <div class="flex space-x-2">
-                    <nuxt-link class="btn btn-sm btn-primary" to="forSmallAdmin/profileaUser">ดูรายละเอียด</nuxt-link>
-                    <nuxt-link class="btn btn-sm btn-secondary" to="forSmallAdmin/editUser">แก้ไขข้อมูล</nuxt-link>
-                    <!-- <button @click="editUser(user)" class="btn btn-sm btn-warning">ดูรายละเอียด</button> -->
-                  </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="flex justify-center mt-4">
-            <div class="btn-group">
-              <span class="text-xl btn btn-ghost text-blue-600 cursor-pointer" >ย้อนกลับ</span>
-              <button v-for="page in totalUserPages" :key="page"
-                      @click="changePage('users', page)"
-                      :class="['btn', currentUserPage === page ? 'btn-ghost' : '']">
-                {{ page }}
-              </button>
-               <span class="text-xl btn btn-ghost text-blue-600 cursor-pointer" >ถัดไป</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+ <div class="min-h-screen p-4 ">
+   <div class="max-w-7xl mx-auto space-y-6">
+     <!-- Header with Tabs -->
+     <div class="tabs tabs-boxed">
+    <button
+      class="tab tab-lg flex-1 gap-2"
+      :class="{ 'tab-active': activeTab === 'activities' }"
+      @click="switchTab('activities')"
+    >
+      <Icon name="mdi:calendar" class="w-5 h-5" />
+      จัดการกิจกรรม
+    </button>
+    <button
+      class="tab tab-lg flex-1 gap-2"
+      :class="{ 'tab-active': activeTab === 'users' }"
+      @click="switchTab('users')"
+    >
+      <Icon name="mdi:account-group" class="w-5 h-5" />
+      จัดการผู้ใช้งาน
+    </button>
   </div>
+
+
+     <!-- Activities Management -->
+     <div v-if="activeTab === 'activities'" class="space-y-6">
+       <div class="flex justify-between items-center">
+         <nuxt-link to="/forSmallAdmin/activity/create" class="btn btn-primary gap-2">
+           <Icon name="mdi:plus" class="w-5 h-5" />
+           เพิ่มกิจกรรม
+         </nuxt-link>
+       </div>
+
+       <!-- Stats -->
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+         <div class="stat bg-base-100 shadow rounded-box">
+           <div class="stat-figure text-primary">
+             <Icon name="mdi:calendar" class="w-8 h-8" />
+           </div>
+           <div class="stat-title">กิจกรรมทั้งหมด</div>
+           <div class="stat-value text-primary">{{ activities.length }}</div>
+         </div>
+
+         <div class="stat bg-base-100 shadow rounded-box">
+           <div class="stat-figure text-secondary">
+             <Icon name="mdi:star" class="w-8 h-8" />
+           </div>
+           <div class="stat-title">คะแนนเฉลี่ย</div>
+           <div class="stat-value text-secondary">{{ avgScore }}</div>
+         </div>
+
+         <div class="stat bg-base-100 shadow rounded-box">
+           <div class="stat-figure text-accent">
+             <Icon name="mdi:clock" class="w-8 h-8" />
+           </div>
+           <div class="stat-title">อัพเดทล่าสุด</div>
+           <div class="stat-value text-accent text-2xl">
+             {{ new Date().toLocaleDateString('th-TH') }}
+           </div>
+         </div>
+       </div>
+
+       <!-- Activities Table -->
+       <div class="bg-base-100 rounded-box shadow-lg overflow-hidden">
+         <table class="table table-zebra w-full">
+           <thead>
+             <tr>
+               <th>ID</th>
+               <th>ชื่อกิจกรรม</th>
+               <th class="text-center">คะแนน</th>
+               <th class="text-end">จัดการ</th>
+             </tr>
+           </thead>
+           <tbody>
+             <tr v-for="activity in activities" :key="activity.ID">
+               <td>{{ activity.ID }}</td>
+               <td>{{ activity.Title }}</td>
+               <td class="text-center">
+                 <div class="badge badge-lg badge-primary">{{ activity.Score }}</div>
+               </td>
+               <td>
+                 <div class="flex justify-end gap-2">
+                   <nuxt-link :to="`/forSmallAdmin/activity/${activity.ID}`"
+                            class="btn btn-sm btn-warning gap-2">
+                     <Icon name="mdi:pencil" class="w-4 h-4" />
+                     แก้ไข
+                   </nuxt-link>
+                   <nuxt-link :to="`/forSmallAdmin/activity/participants/${activity.ID}`"
+                            class="btn btn-sm btn-info gap-2">
+                     <Icon name="mdi:account-group" class="w-4 h-4" />
+                     ผู้เข้าร่วม
+                   </nuxt-link>
+                   <button @click="deleteActivity(activity.ID)"
+                           class="btn btn-sm btn-error gap-2">
+                     <Icon name="mdi:delete" class="w-4 h-4" />
+                     ลบ
+                   </button>
+                 </div>
+               </td>
+             </tr>
+           </tbody>
+         </table>
+       </div>
+
+       <!-- Pagination -->
+       <div class="flex justify-end gap-2">
+         <button v-if="page > 1"
+                 @click="page--"
+                 class="btn btn-ghost btn-sm">
+           ย้อนกลับ
+         </button>
+         <div class="join">
+           <button class="join-item btn btn-sm">{{ page }}</button>
+         </div>
+         <button @click="page++"
+                 class="btn btn-ghost btn-sm">
+           ถัดไป
+         </button>
+       </div>
+     </div>
+
+     <!-- Users Management -->
+     <div v-else class="space-y-6">
+       <!-- Search -->
+       <div class="form-control">
+         <div class="input-group">
+           <input v-model="searchQuery"
+                  type="text"
+                  placeholder="ค้นหาผู้ใช้..."
+                  class="input input-bordered w-full" />
+           <!-- <button class="btn btn-primary btn-square">
+             <Icon name="mdi:magnify" class="w-6 h-6" />
+           </button> -->
+         </div>
+       </div>
+            <div class="flex justify-between items-center">
+          <nuxt-link to="/forSmallAdmin/users/create" class="btn btn-primary gap-2">
+            <Icon name="mdi:account-plus" class="w-5 h-5" />
+            เพิ่มผู้ใช้งาน
+          </nuxt-link>
+        </div>
+        <!-- Stats Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4" >
+            <div class="stat bg-base-100 shadow rounded-box">
+              <div class="stat-figure text-primary">
+                <Icon name="mdi:account-group" class="w-8 h-8" />
+              </div>
+              <div class="stat-title">ผู้ใช้ทั้งหมด</div>
+              <div class="stat-value text-primary">{{ users.length }}</div>
+            </div>
+
+            <div class="stat bg-base-100 shadow rounded-box">
+              <div class="stat-figure text-success">
+                <Icon name="mdi:shield-account" class="w-8 h-8" />
+              </div>
+              <div class="stat-title">ผู้ดูแลระบบ</div>
+              <div class="stat-value text-success">
+                {{ users.filter(u => u.Role === 'ADMIN').length }}
+              </div>
+            </div>
+
+            <div class="stat bg-base-100 shadow rounded-box">
+              <div class="stat-figure text-warning">
+                <Icon name="mdi:shield-star" class="w-8 h-8" />
+              </div>
+              <div class="stat-title">ผู้ช่วยผู้ดูแลระบบ</div>
+              <div class="stat-value text-warning">
+                {{ users.filter(u => u.Role === 'SUPERADMIN').length }}
+              </div>
+            </div>
+
+            <div class="stat bg-base-100 shadow rounded-box">
+              <div class="stat-figure text-error">
+                <Icon name="mdi:account-tie" class="w-8 h-8" />
+              </div>
+              <div class="stat-title">ผู้บริหาร</div>
+              <div class="stat-value text-error">
+                {{ users.filter(u => u.Role === 'EXECUTIVE').length }}
+              </div>
+            </div>
+
+            <div class="stat bg-base-100 shadow rounded-box">
+              <div class="stat-figure text-neutral">
+                <Icon name="mdi:account-circle" class="w-8 h-8" />
+              </div>
+              <div class="stat-title">ผู้ใช้ทั่วไป</div>
+              <div class="stat-value text-neutral">
+                {{ users.filter(u => u.Role === 'USER').length }}
+              </div>
+            </div>
+          </div>
+
+
+
+       <!-- Users Table -->
+       <div class="bg-base-100 rounded-box shadow-lg overflow-hidden">
+         <table class="table table-zebra w-full">
+           <thead>
+             <tr>
+               <th>รหัสนักศึกษา</th>
+               <th>ชื่อ-นามสกุล</th>
+               <th>แผนก</th>
+               <th>สถานะ</th>
+               <th class="text-end">จัดการ</th>
+             </tr>
+           </thead>
+           <tbody v-for="user in filteredUsers" :key="user.UserID">
+             <tr v-show="user.Role !== 'ADMIN'">
+
+               <td>{{ user.UserID }}</td>
+               <td>{{ user.UserFirstName }} {{ user.UserLastName }}</td>
+               <td>{{ user.Department?.Name || 'ไม่ระบุแผนก' }}</td>
+               <td>
+                 <div class="badge badge-lg"
+                      :class="user.Role === 'ADMIN' ? 'badge-primary' : 'badge-secondary'">
+                   {{ user.Role }}
+                 </div>
+               </td>
+               <td>
+                 <div class="flex justify-end gap-2" v-if="user.Role !== 'ADMIN'">
+                   <button
+                     class="btn btn-sm btn-warning gap-2"
+                     @click="router.push(`/forSmallAdmin/users/${user.UserID}`)"
+                   >
+                     <Icon name="mdi:pencil" class="w-4 h-4" />
+                     แก้ไข
+                   </button>
+                   <button
+                     class="btn btn-sm btn-info gap-2"
+                     @click="router.push(`/forSmallAdmin/users/details/${user.UserID}`)"
+                   >
+                     <Icon name="mdi:calendar-check" class="w-4 h-4" />
+                     กิจกรรม
+                   </button>
+                   <button
+                           @click="deleteUser(user.UserID)"
+                           class="btn btn-sm btn-error gap-2">
+                     <Icon name="mdi:delete" class="w-4 h-4" />
+                     ลบ
+                   </button>
+                 </div>
+               </td>
+             </tr>
+           </tbody>
+         </table>
+       </div>
+     </div>
+   </div>
+ </div>
 </template>
+
+<style scoped>
+.rounded-box {
+ @apply rounded-xl;
+}
+.tab {
+ @apply transition-all duration-200;
+}
+.tab-active {
+ @apply bg-primary text-primary-content;
+}
+.input-group .input-bordered {
+ @apply focus:outline-none focus:border-primary;
+}
+</style>
