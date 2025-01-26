@@ -10,7 +10,7 @@ const checkAdmin = () => {
   }
 };
 const checksupadmin = () => {
-  if (auth.value?.Role === "SUPERADMIN" || auth.value?.Role === "ADMIN") {
+  if (auth.value?.Role === "SUPERADMIN" || auth.value?.Role === "ADMIN" || auth.value?.Role === "EXECUTIVE") {
     return true;
   }
 };
