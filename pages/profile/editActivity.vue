@@ -150,7 +150,7 @@ onMounted(() => {
      <div v-else-if="bookedActivities.length > 0" class="grid grid-cols-1 gap-4">
        <nuxt-link v-for="activity in bookedActivities"
                   :key="activity.id"
-                  :to="`/activity/${activity.id}`"
+                  :to="`/profile/Activirty/${activity.id}`"
                   class="card bg-base-100 shadow-lg hover:shadow-xl transition-all">
          <div class="flex relative">
            <!-- Image -->

@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from "vue";
 const router = useRouter();
 const axios = useAxios();
 import Swal from "sweetalert2";
-
+import { QrcodeStream } from 'vue-qrcode-reader'
 interface Activity {
   ID: number;
   Title: string;
@@ -44,7 +44,36 @@ const users = ref<User[]>([]);
 const page = ref(1);
 const searchQuery = ref("");
 const activityResults = ref<ActivityResult[]>([]);
+  const showQRScanner = ref(false);
 
+
+  let cameraStream: MediaStream | null = null
+
+  function stopCamera() {
+  if (cameraStream) {
+    // Get all the video tracks from the camera stream
+    const tracks = cameraStream.getTracks()
+
+    // Stop each video track
+    tracks.forEach(track => track.stop())
+
+    // Set the camera stream to null
+    cameraStream = null
+  }
+}
+
+function resetScanState() {
+  // Reset any variables related to the scan state
+  lastScan.value = ''
+  error.value = ''
+  loading.value = false
+}
+
+function closeQRScanner() {
+  showQRScanner.value = false
+  stopCamera()
+  resetScanState()
+}
 interface AdminRequest {
   ID: number;
   Title: string;
@@ -63,6 +92,15 @@ function switchTab(tab: string) {
   activeTab.value = tab;
 }
 
+function toggleQRScanner() {
+  showQRScanner.value = !showQRScanner.value;
+}
+
+// function closeQRScanner() {
+//   showQRScanner.value = false;
+//   // เขียนฟังก์ชันเพื่อปิดกล้องและ reset สถานะต่างๆ
+//   // เช่น stopCamera(), resetScanState()
+// }
 const avgScore = computed(() => {
   const avg =
     activities.value.reduce((sum, act) => sum + act.Score, 0) /
@@ -137,6 +175,92 @@ async function deleteActivity(activityId: number) {
     });
   }
 }
+const scanner = ref(null)
+const loading = ref(false)
+const lastScan = ref('')
+const error = ref('')
+
+interface ScanData {
+  activityId: number
+  userId: string
+  checkInCode: string
+  timestamp: string
+}
+
+async function onScan(result: string) {
+  try {
+    // ป้องกันการสแกนซ้ำ
+    if (lastScan.value === result) return
+    lastScan.value = result
+
+    loading.value = true
+    const data: ScanData = JSON.parse(result)
+
+    // ตรวจสอบว่าข้อมูลครบถ้วน
+    if (!data.activityId || !data.userId || !data.checkInCode) {
+      throw new Error('QR Code ไม่ถูกต้อง')
+    }
+
+    const response = await axios.post('/api/activity/check-in', {
+      activityId: data.activityId,
+      userId: data.userId,
+      checkInCode: data.checkInCode
+    })
+
+    if (response.data.success) {
+      await Swal.fire({
+        icon: 'success',
+        title: 'เช็คอินสำเร็จ',
+        text: `รหัสผู้ใช้: ${data.userId}`,
+        timer: 1500,
+        showConfirmButton: false
+      })
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error('Scan error:', err)
+      error.value = err.message || 'เกิดข้อผิดพลาดในการสแกน'
+
+      await Swal.fire({
+        icon: 'error',
+        title: 'เช็คอินไม่สำเร็จ',
+        text: error.value
+      })
+    } else {
+      console.error('Unknown error:', err)
+      error.value = 'เกิดข้อผิดพลาดที่ไม่รู้จัก'
+    }
+  } finally {
+    loading.value = false
+    // รีเซ็ต lastScan หลังจาก 3 วินาที
+    setTimeout(() => {
+      lastScan.value = ''
+    }, 3000)
+  }
+}
+
+function onInit(promise: Promise<any>) {
+  promise.catch(err => {
+    if (err.name === 'NotAllowedError') {
+      error.value = 'กรุณาอนุญาตการเข้าถึงกล้อง'
+    } else if (err.name === 'NotFoundError') {
+      error.value = 'ไม่พบกล้องในอุปกรณ์นี้'
+    } else if (err.name === 'NotSupportedError') {
+      error.value = 'ต้องใช้งานผ่าน HTTPS หรือ localhost'
+    } else if (err.name === 'NotReadableError') {
+      error.value = 'กล้องถูกใช้งานอยู่'
+    } else if (err.name === 'OverconstrainedError') {
+      error.value = 'กล้องที่ติดตั้งไม่รองรับ'
+    } else if (err.name === 'StreamApiNotSupportedError') {
+      error.value = 'เบราว์เซอร์ไม่รองรับ Stream API'
+    } else if (err.name === 'InsecureContextError') {
+      error.value = 'กรุณาใช้งานผ่าน HTTPS หรือ localhost'
+    } else {
+      error.value = 'เกิดข้อผิดพลาดในการเข้าถึงกล้อง'
+    }
+  })
+}
+
 
 async function fetchRequests() {
   const res = await axios.get('/api/admin-requests')
@@ -275,9 +399,13 @@ watch(page, fetchActivities);
             <Icon name="mdi:plus" class="w-5 h-5" />
             เพิ่มกิจกรรม
           </nuxt-link>
+          <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
+            <Icon name="mdi:qrcode" class="w-16 h-5" />
+            สแกน QR Code
+          </button>
           <nuxt-link
             to="/forSmallAdmin/adminRequest"
-            class="btn btn-primary gap-2"
+            class="btn btn-secondary gap-2"
           >
             <Icon name="mdi:message-alert" class="w-5 h-5" />
             ส่งคำขอ
@@ -399,6 +527,10 @@ watch(page, fetchActivities);
             <Icon name="mdi:account-plus" class="w-5 h-5" />
             เพิ่มผู้ใช้งาน
           </nuxt-link>
+          <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
+            <Icon name="mdi:qrcode" class="w-16 h-5" />
+            สแกน QR Code
+          </button>
           <nuxt-link
             to="/forSmallAdmin/adminRequest"
             class="btn btn-primary gap-2"
@@ -550,9 +682,57 @@ watch(page, fetchActivities);
             </tbody>
           </table>
         </div>
+
       </div>
+
+
     </div>
 
+
+
+    <!-- QR Code Scanner Modal -->
+    <dialog :class="{ 'modal': true, 'modal-open': showQRScanner }">
+    <div class="modal-box relative bg-white max-w-lg p-6">
+      <h3 class="text-2xl font-bold text-center mb-8">สแกน QR Code เช็คอิน</h3>
+      <button class="btn btn-circle btn-error w-1/6 h-10 absolute top-2 right-2 mt-6" @click="closeQRScanner">ปิด</button>
+      <form method="dialog" class="modal-backdrop" @click="closeQRScanner">
+        <button>ปิด</button>
+      </form>
+
+      <!-- QR Code Scanner -->
+      <div class="bg-black rounded-lg overflow-hidden" v-if="showQRScanner">
+        <qrcode-stream
+          @decode="onScan"
+          @init="onInit"
+          :track="loading"
+          class="w-full aspect-square"
+        />
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="mt-4 flex justify-center">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="error" class="mt-4">
+        <div class="alert alert-error">
+          <Icon name="mdi:alert" class="w-6 h-6" />
+          <span>{{ error }}</span>
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="bg-base-200 rounded-lg p-4 mt-6">
+        <h3 class="font-bold mb-2">วิธีใช้งาน</h3>
+        <ul class="list-disc list-inside space-y-2 text-sm">
+          <li>ส่องกล้องไปที่ QR Code ของผู้เข้าร่วมกิจกรรม</li>
+          <li>ระบบจะทำการตรวจสอบและบันทึกการเข้าร่วมโดยอัตโนมัติ</li>
+          <li>รอให้แสดงผลการเช็คอินก่อนสแกน QR Code ถัดไป</li>
+        </ul>
+      </div>
+    </div>
+  </dialog>
 </div>
 </template>
 

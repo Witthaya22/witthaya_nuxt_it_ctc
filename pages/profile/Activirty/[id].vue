@@ -1,33 +1,31 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import axios from 'axios'
+const router = useRouter()
+const axios = useAxios()
+const { auth } = useAuth()
+const route = useRoute()
 import QRCodeVue3 from 'qrcode-vue3'
 
-const route = useRoute()
-const router = useRouter()
-const { auth } = useAuth()
-
 interface User {
-  UserID: string;
-  UserFirstName: string;
-  UserLastName: string;
-  UserImage: string | null;
+  UserID: string
+  UserFirstName: string
+  UserLastName: string
+  UserImage: string | null
 }
 
 interface Activity {
-  id: number;
-  name: string;
-  date: string;
-  location: string;
-  status: 'booking' | 'completed' | 'failed';
-  score: number | null;
-  images?: string[];
-  description?: string;
-  startTime?: string;
-  endTime?: string;
-  capacity?: number;
-  registeredCount?: number;
+  id: number
+  name: string
+  date: string
+  location: string
+  status: 'booking' | 'completed' | 'failed'
+  score: number | null
+  images?: string[]
+  description?: string
+  startTime?: string
+  endTime?: string
+  capacity?: number
+  registeredCount?: number
 }
 
 const user = ref<User | null>(null)
@@ -36,35 +34,59 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const showQRCode = ref(false)
 
-// Generate unique QR code data
+// Add a check in the computed property
 const qrCodeData = computed(() => {
-  return JSON.stringify({
-    activityId: activity.value?.id || 1,
-    activityName: activity.value?.name || 'กิจกรรมทดสอบ',
-    date: activity.value?.date || '27/11/2567',
-    location: activity.value?.location || 'วิทยาลัยเทคนิคชัยภูมิ'
-  })
-})
+  if (!activity.value || !user.value) {
+    console.warn('Cannot generate QR code: missing activity or user data');
+    return '';
+  }
+
+  const checkInCode = generateCheckInCode(
+    activity.value.id,
+    user.value.UserID,
+    activity.value.date
+  );
+
+  const data = {
+    activityId: activity.value.id,
+    userId: user.value.UserID,
+    checkInCode,
+    timestamp: new Date().toISOString()
+  };
+
+  console.log('Generated QR Code Data:', data);
+  return JSON.stringify(data);
+});
+
+function generateCheckInCode(activityId: number, userId: string, date: string) {
+  return btoa(`${activityId}-${userId}-${date}`)
+}
+
+const getImageUrl = (image: string | undefined) => {
+  if (!image) return '/placeholder.jpg'
+  if (image.startsWith('data:')) return image
+  return `http://localhost:4000${image}`
+}
 
 const profileImage = computed(() => {
-  return user.value?.UserImage ? `/api${user.value.UserImage}` : '/default-avatar.png'
+  return user.value?.UserImage ? getImageUrl(user.value.UserImage) : '/default-avatar.png'
 })
 
-onMounted(async () => {
+async function loadData() {
   if (!auth.value?.UserID) {
     return router.push('/login')
   }
 
   try {
-    const [userResponse, activityResponse] = await Promise.all([
+    const [userRes, activityRes] = await Promise.all([
       axios.get(`/api/user/${auth.value.UserID}`),
       axios.get(`/api/activity/booked-activities/${auth.value.UserID}`)
     ])
 
-    user.value = userResponse.data.user
+    user.value = userRes.data.user
 
-    if (activityResponse.data && Array.isArray(activityResponse.data)) {
-      const foundActivity = activityResponse.data.find(
+    if (activityRes.data && Array.isArray(activityRes.data)) {
+      const foundActivity = activityRes.data.find(
         (act: Activity) => act.id === parseInt(route.params.id as string)
       )
       if (foundActivity) {
@@ -74,12 +96,12 @@ onMounted(async () => {
       }
     }
   } catch (err) {
-    console.error('Error fetching activity:', err)
+    console.error('Error:', err)
     error.value = 'เกิดข้อผิดพลาดในการโหลดข้อมูล'
   } finally {
     loading.value = false
   }
-})
+}
 
 const getStatusClass = (status: Activity['status']): string => {
   switch(status) {
@@ -106,6 +128,12 @@ function goBack() {
 function toggleQRCode() {
   showQRCode.value = !showQRCode.value
 }
+console.log('QR Code Data:', qrCodeData.value);
+console.log('Activity:', activity.value);
+console.log('User:', user.value);
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <template>
@@ -115,6 +143,7 @@ function toggleQRCode() {
       class="fixed top-4 left-4 btn btn-circle btn-ghost bg-base-100/50 backdrop-blur-sm hover:bg-base-100">
       <Icon name="ic:baseline-arrow-back" class="w-6 h-6" />
     </button>
+
 
     <!-- Content -->
     <div class="container mx-auto px-4 py-8">
@@ -216,16 +245,14 @@ function toggleQRCode() {
         <h3 class="text-2xl font-bold text-center mb-8">QR Code สำหรับเช็คชื่อ</h3>
 
         <!-- QR Code with white background -->
-        <div class="bg-white mb-6">
-          <QRCodeVue3
-            :value="qrCodeData"
-            :size="250"
-            level="H"
-            render-as="svg"
-            :foreground="'#9333ea'"
-            class="mx-auto"
-          />
-        </div>
+        <QRCodeVue3
+  :value="qrCodeData"
+  :size="250"
+  level="H"
+  render-as="svg"
+  :foreground="'#9333ea'"
+  class="mx-auto"
+/>
 
         <!-- Activity Info -->
         <div class="text-center space-y-4 mb-6">
