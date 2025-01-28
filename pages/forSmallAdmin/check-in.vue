@@ -24,24 +24,27 @@ async function onScan(result: string) {
     lastScan.value = result
 
     loading.value = true
+    console.log('Scanning QR:', result);
     const data: ScanData = JSON.parse(result)
+    console.log('Sending check-in request:', data);
 
     // ตรวจสอบว่าข้อมูลครบถ้วน
     if (!data.activityId || !data.userId || !data.checkInCode) {
       throw new Error('QR Code ไม่ถูกต้อง')
     }
 
-    const response = await axios.post('/api/activity/check-in', {
+    const response = await axios.post('/api/activity/check-in2activity', {
       activityId: data.activityId,
       userId: data.userId,
       checkInCode: data.checkInCode
     })
+    console.log('Check-in response:', response.data);
 
     if (response.data.success) {
       await Swal.fire({
         icon: 'success',
         title: 'เช็คอินสำเร็จ',
-        text: `รหัสผู้ใช้: ${data.userId}`,
+        text: `รหัสผู้ใช้: ${data.userId}\nสถานะ: ${response.data.result.Status}`,
         timer: 1500,
         showConfirmButton: false
       })

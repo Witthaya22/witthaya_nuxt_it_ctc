@@ -10,9 +10,9 @@ const checkAdmin = () => {
   }
 };
 const checksupadmin = () => {
-  if (auth.value?.Role === "SUPERADMIN" || auth.value?.Role === "ADMIN" || auth.value?.Role === "EXECUTIVE") {
+  // if (auth.value?.Role === "SUPERADMIN" || auth.value?.Role === "ADMIN" || auth.value?.Role === "EXECUTIVE") {
     return true;
-  }
+  // }
 };
 
 const profileImage = ref('https://scontent.fbkk7-2.fna.fbcdn.net/v/t1.6435-9/125985976_697934107811643_3815542183752697058_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=c7cdda&_nc_ohc=QHb9oMx_LAUQ7kNvgEwhEr3&_nc_ht=scontent.fbkk7-2.fna&gid=A7ZQbHAUSQqOXqLizSt8BLm&oh=00_AYCTu0A5o4Zv7plYt7TfoAjH4O6B1NzrIUtBjD2_Sr4kOw&oe=66D01F69')

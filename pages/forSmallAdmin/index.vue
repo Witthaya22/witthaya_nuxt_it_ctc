@@ -69,10 +69,24 @@ function resetScanState() {
   loading.value = false
 }
 
+// const camera = ref({
+//   hasPermission: false,
+//   error: null as string | null
+// })
+
 function closeQRScanner() {
-  showQRScanner.value = false
-  stopCamera()
-  resetScanState()
+  showQRScanner.value = false;
+  error.value = '';
+  loading.value = false;
+  hasCameraPermission.value = false;
+
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => {
+      track.stop();
+      console.log('Camera track stopped');
+    });
+    cameraStream = null;
+  }
 }
 interface AdminRequest {
   ID: number;
@@ -86,14 +100,24 @@ interface AdminRequest {
   Message: string;
 }
 
+const hasCameraPermission = ref(false)
+
+
+
+
 const requests = ref<AdminRequest[]>([])
 
 function switchTab(tab: string) {
   activeTab.value = tab;
 }
-
-function toggleQRScanner() {
-  showQRScanner.value = !showQRScanner.value;
+async function toggleQRScanner() {
+  if (!showQRScanner.value) {
+    showQRScanner.value = true;
+    // ขอสิทธิ์กล้องทันทีเมื่อเปิด modal
+    await requestCameraPermission();
+  } else {
+    closeQRScanner();
+  }
 }
 
 // function closeQRScanner() {
@@ -140,6 +164,12 @@ function formatDate(date: string) {
 async function fetchUsers() {
   const res = await axios.get<{ users: User[] }>("/api/users");
   users.value = res.data.users;
+}
+
+const isMobile = ref(false);
+
+function checkDevice() {
+  isMobile.value = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
 
 async function deleteActivity(activityId: number) {
@@ -194,8 +224,9 @@ async function onScan(result: string) {
     lastScan.value = result
 
     loading.value = true
+    console.log('Processing scan:', result);
     const data: ScanData = JSON.parse(result)
-
+    console.log('Parsed data:', data);
     // ตรวจสอบว่าข้อมูลครบถ้วน
     if (!data.activityId || !data.userId || !data.checkInCode) {
       throw new Error('QR Code ไม่ถูกต้อง')
@@ -206,6 +237,7 @@ async function onScan(result: string) {
       userId: data.userId,
       checkInCode: data.checkInCode
     })
+    console.log('Check-in response:', response.data);
 
     if (response.data.success) {
       await Swal.fire({
@@ -239,28 +271,62 @@ async function onScan(result: string) {
   }
 }
 
+
+const camera = ref({
+  hasPermission: false,
+  error: null as string | null
+})
+
 function onInit(promise: Promise<any>) {
-  promise.catch(err => {
-    if (err.name === 'NotAllowedError') {
-      error.value = 'กรุณาอนุญาตการเข้าถึงกล้อง'
-    } else if (err.name === 'NotFoundError') {
-      error.value = 'ไม่พบกล้องในอุปกรณ์นี้'
-    } else if (err.name === 'NotSupportedError') {
-      error.value = 'ต้องใช้งานผ่าน HTTPS หรือ localhost'
-    } else if (err.name === 'NotReadableError') {
-      error.value = 'กล้องถูกใช้งานอยู่'
-    } else if (err.name === 'OverconstrainedError') {
-      error.value = 'กล้องที่ติดตั้งไม่รองรับ'
-    } else if (err.name === 'StreamApiNotSupportedError') {
-      error.value = 'เบราว์เซอร์ไม่รองรับ Stream API'
-    } else if (err.name === 'InsecureContextError') {
-      error.value = 'กรุณาใช้งานผ่าน HTTPS หรือ localhost'
-    } else {
-      error.value = 'เกิดข้อผิดพลาดในการเข้าถึงกล้อง'
-    }
-  })
+  console.log('Initializing camera...');
+  promise
+    .then(() => {
+      console.log('Camera initialized successfully');
+      hasCameraPermission.value = true;
+      camera.value.error = null;
+    })
+    .catch(error => {
+      console.error('Camera init error:', error);
+      hasCameraPermission.value = false;
+
+      // แสดงข้อความ error ที่เหมาะสมกับแต่ละอุปกรณ์
+      if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+        camera.value.error = 'สำหรับ iOS กรุณาอนุญาตการใช้งานกล้องในการตั้งค่า Safari';
+      } else if (/Android/.test(navigator.userAgent)) {
+        camera.value.error = 'กรุณาอนุญาตการใช้งานกล้องในการตั้งค่าของเบราว์เซอร์';
+      } else {
+        camera.value.error = 'กรุณาอนุญาตการใช้งานกล้องในการตั้งค่า';
+      }
+    });
 }
 
+// function onInit(promise: Promise<any>) {
+//   promise.catch(err => {
+//     if (err.name === 'NotAllowedError') {
+//       error.value = 'กรุณาอนุญาตการเข้าถึงกล้อง'
+//     } else if (err.name === 'NotFoundError') {
+//       error.value = 'ไม่พบกล้องในอุปกรณ์นี้'
+//     } else if (err.name === 'NotSupportedError') {
+//       error.value = 'ต้องใช้งานผ่าน HTTPS หรือ localhost'
+//     } else if (err.name === 'NotReadableError') {
+//       error.value = 'กล้องถูกใช้งานอยู่'
+//     } else if (err.name === 'OverconstrainedError') {
+//       error.value = 'กล้องที่ติดตั้งไม่รองรับ'
+//     } else if (err.name === 'StreamApiNotSupportedError') {
+//       error.value = 'เบราว์เซอร์ไม่รองรับ Stream API'
+//     } else if (err.name === 'InsecureContextError') {
+//       error.value = 'กรุณาใช้งานผ่าน HTTPS หรือ localhost'
+//     } else {
+//       error.value = 'เกิดข้อผิดพลาดในการเข้าถึงกล้อง'
+//     }
+//   })
+// }
+
+
+const onDecode = (result: string) => {
+  console.log('QR Code Scanned:', result);
+  onScan(result);
+}
 
 async function fetchRequests() {
   const res = await axios.get('/api/admin-requests')
@@ -329,6 +395,45 @@ const userActivityStatus = computed(() => {
   });
 });
 
+async function requestCameraPermission() {
+  try {
+    console.log('Requesting camera permission...');
+
+    // สำหรับมือถือ ให้ลองใช้กล้องหลังก่อน ถ้าไม่ได้ค่อยใช้กล้องหน้า
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: 'environment' } }
+      });
+      cameraStream = stream;
+    } catch (err) {
+      // ถ้าใช้กล้องหลังไม่ได้ ลองใช้กล้องหน้า
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true
+      });
+      cameraStream = stream;
+    }
+
+    hasCameraPermission.value = true;
+    camera.value.hasPermission = true;
+    camera.value.error = null;
+
+  } catch (error: any) {
+    console.error('Camera permission error:', error);
+    hasCameraPermission.value = false;
+
+    // แสดงข้อความที่เหมาะสมกับแต่ละกรณี
+    if (error.name === 'NotAllowedError') {
+      camera.value.error = 'กรุณาอนุญาตการใช้งานกล้องในการตั้งค่าอุปกรณ์';
+    } else if (error.name === 'NotFoundError') {
+      camera.value.error = 'ไม่พบกล้องในอุปกรณ์';
+    } else if (error.name === 'NotSupportedError' || error.name === 'InsecureContextError') {
+      camera.value.error = 'กรุณาเปิดผ่าน HTTPS';
+    } else {
+      camera.value.error = `ไม่สามารถเข้าถึงกล้องได้: ${error.message}`;
+    }
+  }
+}
+
 // เพิ่มฟังก์ชันช่วยสำหรับคำนวณจำนวนกิจกรรมที่เสร็จสมบูรณ์
 const getCompletedActivities = computed(() => {
   const userCounts = new Map();
@@ -349,13 +454,31 @@ const getCompletedActivities = computed(() => {
 });
 
 onMounted(async () => {
+  // ตรวจสอบว่าอยู่ใน secure context หรือไม่
+  checkDevice();
+  const isSecureContext = window.isSecureContext;
+  if (!isSecureContext) {
+    camera.value.error = 'กรุณาใช้งานผ่าน HTTPS';
+    return;
+  }
+
+  // ตรวจสอบว่าสามารถใช้งานกล้องได้หรือไม่
+  if (!navigator.mediaDevices?.getUserMedia) {
+    camera.value.error = 'เบราว์เซอร์ไม่รองรับการใช้งานกล้อง';
+    return;
+  }
+
   await fetchActivities();
   await fetchUsers();
   await fetchActivityResults();
-  await fetchRequests()
+  await fetchRequests();
 });
 
-watch(page, fetchActivities);
+watch(showQRScanner, (newValue) => {
+  if (!newValue) {
+    closeQRScanner();
+  }
+})
 </script>
 
 <template>
@@ -699,15 +822,34 @@ watch(page, fetchActivities);
         <button>ปิด</button>
       </form>
 
-      <!-- QR Code Scanner -->
-      <div class="bg-black rounded-lg overflow-hidden" v-if="showQRScanner">
-        <qrcode-stream
-          @decode="onScan"
-          @init="onInit"
-          :track="loading"
-          class="w-full aspect-square"
-        />
-      </div>
+<!-- QR Code Scanner -->
+<div class="bg-black rounded-lg overflow-hidden" v-if="showQRScanner">
+  <div v-if="!hasCameraPermission" class="p-4 text-center">
+    <p class="text-error mb-4">กรุณาอนุญาตการใช้งานกล้อง</p>
+    <p class="text-sm mb-4">ถ้าใช้งานบนมือถือ กรุณาเปิดผ่าน HTTPS</p>
+    <button @click="requestCameraPermission" class="btn btn-primary btn-lg gap-2">
+      <Icon name="mdi:camera" class="w-6 h-6" />
+      เปิดกล้อง
+    </button>
+  </div>
+
+  <div v-else-if="camera.error" class="p-4 text-center">
+    <p class="text-error mb-4">{{ camera.error }}</p>
+    <button @click="requestCameraPermission" class="btn btn-primary btn-lg gap-2">
+      <Icon name="mdi:refresh" class="w-6 h-6" />
+      ลองใหม่
+    </button>
+  </div>
+
+  <div v-else>
+    <qrcode-stream
+      @decode="onDecode"
+      @init="onInit"
+      :track="loading"
+      class="w-full aspect-square"
+    />
+  </div>
+</div>
 
       <!-- Loading State -->
       <div v-if="loading" class="mt-4 flex justify-center">
@@ -749,4 +891,32 @@ watch(page, fetchActivities);
 .input-group .input-bordered {
   @apply focus:outline-none focus:border-primary;
 }
+
+.qrcode-stream {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+}
+
+/* เพิ่ม z-index ให้ modal อยู่ด้านบนสุด */
+.modal {
+  z-index: 9999;
+}
+
+.qrcode-stream {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  max-height: 80vh; /* เพิ่มความสูงสูงสุดสำหรับมือถือ */
+}
+
+/* สำหรับมือถือ */
+@media (max-width: 768px) {
+  .modal-box {
+    margin: 0;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
 </style>

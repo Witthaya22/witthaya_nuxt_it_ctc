@@ -1,136 +1,164 @@
 <script setup lang="ts">
+// นำเข้าส่วนประกอบที่จำเป็น
 import { ref, onMounted, computed } from 'vue'
-const router = useRouter()
-const axios = useAxios()
-const { auth } = useAuth()
-const route = useRoute()
+const router = useRouter()  // สำหรับการนำทาง
+const axios = useAxios()    // สำหรับเรียก API
+const { auth } = useAuth()  // สำหรับจัดการการยืนยันตัวตน
+const route = useRoute()    // สำหรับอ่านค่าพารามิเตอร์จาก URL
 import QRCodeVue3 from 'qrcode-vue3'
 
+// กำหนดโครงสร้างข้อมูลผู้ใช้
 interface User {
-  UserID: string
-  UserFirstName: string
-  UserLastName: string
-  UserImage: string | null
+  UserID: string           // รหัสผู้ใช้
+  UserFirstName: string    // ชื่อจริง
+  UserLastName: string     // นามสกุล
+  UserImage: string | null // รูปโปรไฟล์
 }
 
+// กำหนดโครงสร้างข้อมูลกิจกรรม
 interface Activity {
   id: number
-  name: string
-  date: string
-  location: string
-  status: 'booking' | 'completed' | 'failed'
-  score: number | null
-  images?: string[]
-  description?: string
-  startTime?: string
-  endTime?: string
-  capacity?: number
-  registeredCount?: number
+  name: string            // ชื่อกิจกรรม
+  date: string           // วันที่จัดกิจกรรม
+  location: string       // สถานที่จัดกิจกรรม
+  status: 'RESERVED' | 'completed' | 'failed'  // สถานะกิจกรรม
+  score: number | null   // คะแนน
+  images?: string[]      // รูปภาพกิจกรรม
+  description?: string   // รายละเอียด
+  startTime?: string     // เวลาเริ่ม
+  endTime?: string       // เวลาสิ้นสุด
+  capacity?: number      // จำนวนที่รับได้
+  registeredCount?: number // จำนวนที่ลงทะเบียนแล้ว
 }
 
-const user = ref<User | null>(null)
-const activity = ref<Activity | null>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
-const showQRCode = ref(false)
+// ตัวแปรสำหรับเก็บข้อมูล
+const user = ref<User | null>(null)           // ข้อมูลผู้ใช้
+const activity = ref<Activity | null>(null)   // ข้อมูลกิจกรรม
+const loading = ref(true)                     // สถานะการโหลด
+const error = ref<string | null>(null)        // ข้อความแสดงข้อผิดพลาด
+const showQRCode = ref(false)                 // สถานะการแสดง QR Code
 
-// Add a check in the computed property
+// สร้างข้อมูลสำหรับ QR Code
 const qrCodeData = computed(() => {
+  console.log('Loading:', loading.value);
+  console.log('Activity:', activity.value);
+  console.log('User:', user.value);
+
   if (!activity.value || !user.value) {
-    console.warn('Cannot generate QR code: missing activity or user data');
+    console.warn('ไม่สามารถสร้าง QR code: ไม่พบข้อมูลกิจกรรมหรือผู้ใช้');
     return '';
   }
-
-  const checkInCode = generateCheckInCode(
-    activity.value.id,
-    user.value.UserID,
-    activity.value.date
-  );
 
   const data = {
     activityId: activity.value.id,
     userId: user.value.UserID,
-    checkInCode,
+    checkInCode: generateCheckInCode(
+      activity.value.id,
+      user.value.UserID,
+      activity.value.date
+    ),
     timestamp: new Date().toISOString()
   };
 
-  console.log('Generated QR Code Data:', data);
+  console.log('Generated QR Data:', data);
   return JSON.stringify(data);
 });
 
+// ฟังก์ชันสร้างรหัสเช็คอิน
 function generateCheckInCode(activityId: number, userId: string, date: string) {
   return btoa(`${activityId}-${userId}-${date}`)
 }
 
+// ฟังก์ชันแปลงที่อยู่รูปภาพ
 const getImageUrl = (image: string | undefined) => {
   if (!image) return '/placeholder.jpg'
   if (image.startsWith('data:')) return image
-  return `http://localhost:4000${image}`
+  // แก้เป็น
+  return `${image.startsWith('/') ? 'http://localhost:4000' : ''}${image}`
 }
 
+// คำนวณที่อยู่รูปโปรไฟล์
 const profileImage = computed(() => {
   return user.value?.UserImage ? getImageUrl(user.value.UserImage) : '/default-avatar.png'
 })
 
+// ฟังก์ชันโหลดข้อมูล
 async function loadData() {
-  if (!auth.value?.UserID) {
-    return router.push('/login')
-  }
-
   try {
     const [userRes, activityRes] = await Promise.all([
-      axios.get(`/api/user/${auth.value.UserID}`),
-      axios.get(`/api/activity/booked-activities/${auth.value.UserID}`)
+      axios.get(`/api/user/${auth.value?.UserID}`),
+      axios.get(`/api/activity/booked-activities/${auth.value?.UserID}`)
     ])
 
-    user.value = userRes.data.user
+    user.value = userRes.data.user;
+    console.log('Activity Response:', activityRes.data);
+    console.log('Activity Images:', activityRes.data.find(
+      (act: Activity) => act.id === parseInt(route.params.id as string)
+    )?.images);
 
     if (activityRes.data && Array.isArray(activityRes.data)) {
       const foundActivity = activityRes.data.find(
         (act: Activity) => act.id === parseInt(route.params.id as string)
       )
       if (foundActivity) {
-        activity.value = foundActivity
+        activity.value = foundActivity;
       } else {
-        error.value = 'ไม่พบข้อมูลกิจกรรม'
+        error.value = 'ไม่พบข้อมูลกิจกรรม';
       }
     }
   } catch (err) {
-    console.error('Error:', err)
-    error.value = 'เกิดข้อผิดพลาดในการโหลดข้อมูล'
+    console.error('Error:', err);
+    error.value = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
   } finally {
-    loading.value = false
+    loading.value = false  // ต้องแน่ใจว่าบรรทัดนี้ทำงาน
   }
 }
-
+// ฟังก์ชันกำหนดคลาสสถานะ
 const getStatusClass = (status: Activity['status']): string => {
   switch(status) {
-    case 'booking': return 'badge-warning'
-    case 'completed': return 'badge-success'
-    case 'failed': return 'badge-error'
-    default: return 'badge-ghost'
+    case 'RESERVED': return 'badge-warning'    // กำลังจอง
+    case 'completed': return 'badge-success'  // เสร็จสมบูรณ์
+    case 'failed': return 'badge-error'       // ล้มเหลว
+    default: return 'badge-ghost'             // ไม่ทราบสถานะ
   }
 }
 
+// ฟังก์ชันแปลงข้อความสถานะเป็นภาษาไทย
 const getStatusText = (status: Activity['status']): string => {
   switch(status) {
-    case 'booking': return 'กำลังจอง'
+    case 'RESERVED': return 'กำลังจอง'
     case 'completed': return 'เข้าร่วมสำเร็จ'
     case 'failed': return 'เข้าร่วมไม่สำเร็จ'
     default: return 'ไม่ทราบสถานะ'
   }
 }
 
+const activityImage = computed(() => {
+  return activity.value?.images?.[0] ? getImageUrl(activity.value.images[0]) : '/placeholder.jpg'
+})
+
+function handleImageError(event: Event) {
+  const img = event.target as HTMLImageElement;
+  img.src = '/placeholder.jpg';  // รูปภาพสำรอง
+}
+
+console.log('Activity Image URL:', activity.value?.images?.[0]);
+console.log('Processed Image URL:', getImageUrl(activity.value?.images?.[0]));
+// ฟังก์ชันย้อนกลับ
 function goBack() {
   router.back()
 }
 
+// ฟังก์ชันสลับการแสดง QR Code
 function toggleQRCode() {
-  showQRCode.value = !showQRCode.value
+  if (!activity.value || !user.value) {
+    console.warn('ไม่สามารถแสดง QR Code: ข้อมูลไม่พร้อม');
+    return;
+  }
+  showQRCode.value = !showQRCode.value;
 }
-console.log('QR Code Data:', qrCodeData.value);
-console.log('Activity:', activity.value);
-console.log('User:', user.value);
+
+// เรียกโหลดข้อมูลเมื่อคอมโพเนนต์ถูกโหลด
 onMounted(() => {
   loadData()
 })
@@ -166,10 +194,11 @@ onMounted(() => {
           <!-- Hero Image Section -->
           <figure class="relative h-72">
             <img
-              :src="activity.images?.[0]"
-              :alt="activity.name"
-              class="w-full h-full object-cover"
-            />
+  :src="getImageUrl(activity.images?.[0])"
+  :alt="activity.name"
+  class="w-full h-full object-cover"
+  @error="handleImageError"
+/>
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
             <div class="absolute bottom-6 left-6 right-6">
               <h1 class="text-3xl font-bold text-white mb-3">{{ activity.name }}</h1>
@@ -244,15 +273,23 @@ onMounted(() => {
       <div class="modal-box relative bg-white max-w-sm p-6">
         <h3 class="text-2xl font-bold text-center mb-8">QR Code สำหรับเช็คชื่อ</h3>
 
-        <!-- QR Code with white background -->
-        <QRCodeVue3
-  :value="qrCodeData"
-  :size="250"
-  level="H"
-  render-as="svg"
-  :foreground="'#9333ea'"
-  class="mx-auto"
-/>
+       <!-- QR Code Modal Content -->
+<div v-if="qrCodeData" class="text-center">
+  <QRCodeVue3
+    :value="qrCodeData"
+    :size="250"
+    :level="'H'"
+    :background="'#ffffff'"
+    :foreground="'#9333ea'"
+    class="mx-auto"
+  />
+</div>
+<div v-else-if="loading" class="flex justify-center">
+  <span class="loading loading-spinner loading-lg text-primary"></span>
+</div>
+<div v-else class="text-center text-error">
+  <p>ไม่สามารถสร้าง QR Code ได้</p>
+</div>
 
         <!-- Activity Info -->
         <div class="text-center space-y-4 mb-6">
