@@ -533,6 +533,10 @@ watch(showQRScanner, (newValue) => {
             <Icon name="mdi:message-alert" class="w-5 h-5" />
             ส่งคำขอ
           </nuxt-link>
+          <nuxt-link to="/forSmallAdmin/report" class="btn btn-secondary gap-2">
+  <Icon name="mdi:file-pdf-box" class="w-5 h-5" />
+  รายงานกิจกรรม
+</nuxt-link>
         </div>
 
         <!-- Stats -->
