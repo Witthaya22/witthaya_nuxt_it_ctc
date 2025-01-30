@@ -1,4 +1,8 @@
 <script setup lang="ts">
+definePageMeta({
+  layout: "admin",
+  // middleware: ["only-admin"],
+});
 import { ref, computed, onMounted } from "vue";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -7,12 +11,6 @@ import "dayjs/locale/th";
 import Swal from "sweetalert2";
 
 import fonts from '@/config/fonts.json';
-const { auth } = useAuth(); // เพิ่ม auth
-const isTeacher = computed(() => auth.value?.Role === 'TEACHER');
-const userDepartment = computed(() => auth.value?.DepartmentID);
-// เพิ่ม state สำหรับการเลือกประเภทรายงาน
-const reportType = ref('all'); // all, department, completed, failed, status
-const selectedReportDepartment = ref('');
 
 const axios = useAxios();
 const loading = ref(false);
@@ -61,44 +59,11 @@ interface ActivityResult {
 // Computed properties for filtering and pagination
 const departments = computed(() => {
   const deps = new Set(results.value.map(r => r.DepartmentID));
-  // ถ้าเป็น TEACHER ให้เห็นแค่แผนกตัวเอง
-  if (isTeacher.value) {
-    return [userDepartment.value];
-  }
   return Array.from(deps);
 });
 
-const getFilteredDataForReport = () => {
-  let reportData = [...results.value];
-
-  // ถ้าเป็น TEACHER ให้เห็นแค่แผนกตัวเอง
-  if (isTeacher.value) {
-    reportData = reportData.filter(result => result.DepartmentID === userDepartment.value);
-  }
-
-  switch (reportType.value) {
-    case 'department':
-      return reportData.filter(result => result.DepartmentID === selectedReportDepartment.value);
-    case 'completed':
-      return reportData.filter(result => result.Status === 'completed');
-    case 'failed':
-      return reportData.filter(result => result.Status === 'failed');
-    case 'status':
-      return reportData.filter(result => ['completed', 'failed'].includes(result.Status));
-    default:
-      return reportData;
-  }
-};
-
 const filteredResults = computed(() => {
-  let filtered = results.value;
-
-  // ถ้าเป็น TEACHER ให้เห็นแค่แผนกตัวเอง
-  if (isTeacher.value) {
-    filtered = filtered.filter(result => result.DepartmentID === userDepartment.value);
-  }
-
-  return filtered.filter(result => {
+  return results.value.filter(result => {
     const activity = activities.value.find(a => a.ID === result.ActivityID);
     const user = users.value.find(u => u.UserID === result.UserID);
     const searchString = `${activity?.Title} ${user?.UserFirstName} ${user?.UserLastName} ${result.DepartmentID}`.toLowerCase();
@@ -173,6 +138,12 @@ async function loadData() {
 async function generateDetailedPDF() {
   try {
     if (!results.value.length || !activities.value.length || !users.value.length) {
+      console.log('Starting PDF generation...');
+    console.log('Data:', {
+      results: results.value.length,
+      activities: activities.value.length,
+      users: users.value.length
+    });
       await Swal.fire({
         icon: 'warning',
         title: 'ไม่พบข้อมูล',
@@ -180,19 +151,6 @@ async function generateDetailedPDF() {
       });
       return;
     }
-
-    // Get filtered data based on report type
-    const reportData = getFilteredDataForReport();
-
-    if (reportData.length === 0) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'ไม่พบข้อมูล',
-        text: 'ไม่พบข้อมูลสำหรับเงื่อนไขที่เลือก'
-      });
-      return;
-    }
-
     loading.value = true;
     Swal.fire({
       title: "กำลังสร้างรายงาน PDF",
@@ -202,30 +160,12 @@ async function generateDetailedPDF() {
         Swal.showLoading();
       },
     });
-
     const doc = new jsPDF();
 
      // เพิ่ม font ภาษาไทย
      doc.addFileToVFS('THSarabunNew-normal.ttf', fonts.thSarabun);
     doc.addFont('THSarabunNew-normal.ttf', 'THSarabunNew', 'normal');
     doc.setFont('THSarabunNew');
-
-      // ปรับปรุงชื่อรายงานตามประเภท
-      let reportTitle = "รายงานการเข้าร่วมกิจกรรม";
-    switch (reportType.value) {
-      case 'department':
-        reportTitle += ` - แผนก ${selectedReportDepartment.value}`;
-        break;
-      case 'completed':
-        reportTitle += " - ผ่านการเข้าร่วม";
-        break;
-      case 'failed':
-        reportTitle += " - ไม่ผ่านการเข้าร่วม";
-        break;
-      case 'status':
-        reportTitle += " - สรุปผลการเข้าร่วม";
-        break;
-    }
 
     // เพิ่มหัวกระดาษ
     doc.setFontSize(20);
@@ -256,7 +196,7 @@ async function generateDetailedPDF() {
     doc.text(`รอดำเนินการ: ${pendingCount} รายการ`, 160, 63);
 
     // สร้างตารางข้อมูล
-    const tableData = reportData.map((result) => {
+    const tableData = results.value.map((result) => {
       const activity = activities.value.find((a) => a.ID === result.ActivityID);
       const user = users.value.find((u) => u.UserID === result.UserID);
 
@@ -340,7 +280,7 @@ async function generateDetailedPDF() {
     }
 
     // บันทึก PDF
-    doc.save(`activity-report-${reportType.value}-${dayjs().format("YYYYMMDD-HHmm")}.pdf`);
+    doc.save(`activity-report-${dayjs().format("YYYYMMDD-HHmm")}.pdf`);
     await Swal.fire({
       icon: "success",
       title: "สร้างรายงานสำเร็จ",
@@ -368,41 +308,18 @@ onMounted(loadData);
       <!-- Header -->
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">รายงานการเข้าร่วมกิจกรรม</h1>
-
-          <!-- Report Options -->
-          <div class="flex items-center gap-4">
-          <select v-model="reportType" class="select select-bordered">
-            <option value="all">ทั้งหมด</option>
-            <option value="department">ตามแผนก</option>
-            <option value="completed">ผ่านการเข้าร่วม</option>
-            <option value="failed">ไม่ผ่านการเข้าร่วม</option>
-            <option value="status">สรุปผลการเข้าร่วม</option>
-          </select>
-
-          <select
-            v-if="reportType === 'department'"
-            v-model="selectedReportDepartment"
-            class="select select-bordered"
-          >
-            <option value="" disabled>เลือกแผนก</option>
-            <option v-for="dept in departments" :key="dept" :value="dept">
-              {{ dept }}
-            </option>
-          </select>
-
-          <button
-            @click="generateDetailedPDF"
-            :disabled="loading || (reportType === 'department' && !selectedReportDepartment)"
-            class="btn btn-primary gap-2"
-          >
-            <span v-if="loading" class="loading loading-spinner"></span>
-            <Icon
-              :name="loading ? 'mdi:loading' : 'mdi:file-pdf-box'"
-              class="w-5 h-5"
-            />
-            {{ loading ? "กำลังสร้างรายงาน..." : "ส่งออกรายงาน PDF" }}
-          </button>
-        </div>
+        <button
+          @click="generateDetailedPDF"
+          :disabled="loading"
+          class="btn btn-primary gap-2"
+        >
+          <span v-if="loading" class="loading loading-spinner"></span>
+          <Icon
+            :name="loading ? 'mdi:loading' : 'mdi:file-pdf-box'"
+            class="w-5 h-5"
+          />
+          {{ loading ? "กำลังสร้างรายงาน..." : "ส่งออกรายงาน PDF" }}
+        </button>
       </div>
 
       <!-- Stats Cards -->

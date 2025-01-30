@@ -12,7 +12,9 @@ const linkList: Link[] = [
     { text: 'หน้าระบบหลัก', to: '/admin/dashboard' },
     { text: 'รายละเอียดนักศึกษา', to: '/admin/user' },
     { text: 'รายละเอียดกิจกรรม', to: '/admin/activity' },
-    { text: 'คำขอร้อง', to: '/admin/Request' }
+    { text: 'คำขอร้อง', to: '/admin/Request' },
+    { text: 'สรุปผลกิจกรรม', to: '/admin/report' },
+    { text: 'จัดการภาคเรียน', to: '/admin/semester' }
 ]
 
 </script>

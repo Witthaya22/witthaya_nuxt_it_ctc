@@ -19,7 +19,7 @@ interface UserInput {
   UserFirstName: string;
   UserLastName: string;
   UserPassword?: string;
-  Role: 'USER' | 'ADMIN' | 'EXECUTIVE' | 'SUPADMIN';
+  Role: 'USER' | 'ADMIN' | 'EXECUTIVE' | 'SUPADMIN' | 'TEACHER';
   DepartmentID: string;
   UserImage?: File; // Add this line
 }
@@ -260,9 +260,10 @@ async function onSubmit() {
               </label>
               <select v-model="input.Role" class="select select-bordered">
                 <option value="USER">ผู้ใช้ทั่วไป</option>
-                <option value="ADMIN">ผู้ดูแลระบบ</option>
+                <!-- <option value="ADMIN">ผู้ดูแลระบบ</option> -->
                 <option value="SUPERADMIN">ผู้ช่วย</option>
                 <option value="EXECUTIVE">ผู้บริหาร</option>
+                <option value="TEACHER">อาจารย์</option>
               </select>
             </div>
           </div>

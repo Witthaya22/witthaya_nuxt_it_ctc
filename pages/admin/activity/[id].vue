@@ -21,6 +21,15 @@ interface Input {
   maxParticipants?: number;
 }
 
+interface Semester {
+  ID: number;
+  Year: number;
+  Term: number;
+  StartDate: string;
+  EndDate: string;
+  Status: string;
+}
+
 const input = reactive<Input>({
   title: '',
   description: '',
@@ -32,8 +41,9 @@ const input = reactive<Input>({
   type: 'GENERAL',
   maxParticipants: undefined
 });
-
-interface Activity {
+const semesters = ref<Semester[]>([]);
+  const selectedSemesterId = ref<number | null>(null);
+    interface Activity {
   ID: number;
   Title: string;
   Description: string;
@@ -46,6 +56,7 @@ interface Activity {
   MaxParticipants?: number;
   CreatedAt: string;
   UpdatedAt: string;
+  SemesterID: number;  // เพิ่ม field นี้
 }
 
 const id = ref(-1);
@@ -77,6 +88,7 @@ if (!isCreate) {
   input.type = activity.Type;
   input.location = activity.Location;
   input.maxParticipants = activity.MaxParticipants;
+  selectedSemesterId.value = activity.SemesterID;  // เพิ่มบรรทัดนี้
 
   // Load existing images for preview
   input.images.forEach(imageUrl => {
@@ -117,11 +129,32 @@ const removeImage = (index: number) => {
 import Swal from 'sweetalert2';
 const loading = ref(false);
 
+async function loadSemesters() {
+  try {
+    const response = await axios.get('/api/semesters');
+    semesters.value = response.data.semesters;
+
+    // ถ้าเป็นการสร้างใหม่ ให้เลือก semester ที่ active
+    if (isCreate) {
+      const activeSemester = semesters.value.find(s => s.Status === 'ACTIVE');
+      if (activeSemester) {
+        selectedSemesterId.value = activeSemester.ID;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading semesters:', error);
+  }
+}
+
 async function onUpsertActivity() {
   loading.value = true;
   try {
     if (!input.title || !input.description) {
       throw new Error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
+    }
+
+    if (!selectedSemesterId.value) {
+      throw new Error('กรุณาเลือกภาคเรียน');
     }
 
     const formData = new FormData();
@@ -132,8 +165,14 @@ async function onUpsertActivity() {
     formData.append('startDate', input.startDate);
     formData.append('endDate', input.endDate);
     formData.append('type', input.type);
+    formData.append('semesterId', selectedSemesterId.value.toString());
+
     if (input.maxParticipants !== undefined) {
       formData.append('maxParticipants', input.maxParticipants.toString());
+    }
+
+    if (id.value !== -1) {
+      formData.append('id', id.value.toString());  // เพิ่มการส่ง id สำหรับการแก้ไข
     }
 
     selectedFiles.value.forEach(file => {
@@ -171,6 +210,9 @@ async function onUpsertActivity() {
     loading.value = false;
   }
 }
+onMounted(() => {
+  loadSemesters();
+});
 </script>
 
 <template>
@@ -182,6 +224,27 @@ async function onUpsertActivity() {
         </h2>
 
         <form @submit.prevent="onUpsertActivity" class="space-y-6">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-bold">ภาคเรียน</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <select
+              v-model="selectedSemesterId"
+              class="select select-bordered"
+              required
+            >
+              <option value="" disabled selected>เลือกภาคเรียน</option>
+              <option
+                v-for="semester in semesters"
+                :key="semester.ID"
+                :value="semester.ID"
+              >
+                {{ `ภาคเรียนที่ ${semester.Term}/${semester.Year}` }}
+                {{ semester.Status === 'ACTIVE' ? '(ปัจจุบัน)' : '' }}
+              </option>
+            </select>
+          </div>
           <!-- ชื่อกิจกรรม -->
           <div class="form-control">
             <label class="label">

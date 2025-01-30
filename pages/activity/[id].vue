@@ -1,4 +1,4 @@
-<script setup lang="ts">
+# <script setup lang="ts">
 import Swal from "sweetalert2";
 import { useRouter, useRoute } from "vue-router";
 const { auth } = useAuth();
@@ -20,8 +20,40 @@ interface Activity {
 const axios = useAxios();
 const router = useRouter();
 const route = useRoute();
+const isExpired = ref(false);
+const hasReservation = ref(false);
 
 const { data } = await axios.get(`/api/activity/${route.params.id}`);
+
+// Check if activity is expired
+const calculateDaysLeft = (endDate: string) => {
+  const today = new Date();
+  const end = new Date(endDate);
+  const diffTime = end.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
+
+// Check activity expiration status
+const activityStatus = computed(() => {
+  const daysLeft = calculateDaysLeft(data.activity.EndDate);
+  if (daysLeft < 0) return { text: 'สิ้นสุดแล้ว', class: 'badge-error', expired: true };
+  if (daysLeft <= 7) return { text: 'ใกล้สิ้นสุด', class: 'badge-warning', expired: false };
+  return { text: 'เปิดรับสมัคร', class: 'badge-success', expired: false };
+});
+
+// Check if user has already reserved this activity
+async function checkReservation() {
+  if (!auth.value?.UserID) return;
+  try {
+    const response = await axios.get(`/api/activity/booked-activities/${auth.value.UserID}`);
+    hasReservation.value = response.data.some(
+      (reservation: any) => reservation.ActivityID === Number(route.params.id)
+    );
+  } catch (error) {
+    console.error('Error checking reservation:', error);
+  }
+}
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('th-TH', {
@@ -41,19 +73,41 @@ async function reserveActivity() {
     return;
   }
 
+  if (hasReservation.value) {
+    Swal.fire({
+      icon: "warning",
+      title: "คุณได้จองกิจกรรมนี้ไปแล้ว",
+      showConfirmButton: true,
+    });
+    return;
+  }
+
+  if (activityStatus.value.expired) {
+    Swal.fire({
+      icon: "error",
+      title: "กิจกรรมนี้สิ้นสุดแล้ว",
+      text: "ไม่สามารถจองกิจกรรมที่สิ้นสุดแล้วได้",
+      showConfirmButton: true,
+    });
+    return;
+  }
+
   try {
     await axios.post("/api/activity/reserve", {
       userID: auth.value.UserID,
       activityID: Number(route.params.id),
     });
 
-    Swal.fire({
+    await Swal.fire({
       icon: "success",
       title: "จองกิจกรรมสำเร็จ",
       showConfirmButton: false,
       timer: 1700,
     });
-  } catch (error) {
+
+    // Refresh reservation status
+    await checkReservation();
+  } catch (error: any) {
     Swal.fire({
       icon: "error",
       title: "เกิดข้อผิดพลาด",
@@ -65,6 +119,11 @@ async function reserveActivity() {
 function goBack() {
   router.back();
 }
+
+// Check reservation status when component mounts
+onMounted(() => {
+  checkReservation();
+});
 </script>
 
 <template>
@@ -76,10 +135,13 @@ function goBack() {
       ย้อนกลับ
     </button>
 
-    <div class="card bg-base-100 shadow-xl mt-8">
+    <div class="card bg-base-100 shadow-xl mt-8" :class="{ 'opacity-75 filter grayscale': activityStatus.expired }">
       <figure class="relative h-64">
         <img :src="`/api${data.activity.Images[0]}`" class="w-full h-full object-cover" alt="รูปภาพกิจกรรม" />
-        <div class="absolute top-4 right-4">
+        <div class="absolute top-4 right-4 flex gap-2">
+          <div :class="['badge badge-lg', activityStatus.class]">
+            {{ activityStatus.text }}
+          </div>
           <div class="badge badge-lg gap-2 bg-primary text-primary-content">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -109,8 +171,16 @@ function goBack() {
               </div>
             </div>
           </div>
-          <button @click="reserveActivity" class="btn btn-primary btn-lg">
-            จองกิจกรรม
+          <button
+            @click="reserveActivity"
+            class="btn btn-primary btn-lg"
+            :class="{
+              'btn-disabled': activityStatus.expired || hasReservation,
+              'opacity-50 cursor-not-allowed': activityStatus.expired || hasReservation
+            }"
+            :disabled="activityStatus.expired || hasReservation"
+          >
+            {{ hasReservation ? 'จองแล้ว' : 'จองกิจกรรม' }}
           </button>
         </div>
 

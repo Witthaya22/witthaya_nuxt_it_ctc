@@ -12,7 +12,25 @@ interface Activity {
   Score: number;
   createdAt: string;
   updatedAt: string;
+  StartDate: string;
+  EndDate: string;
+  Location: string; // Add this line to define the Location property
+  Type: string // add this property
 }
+
+interface Semester {
+  ID: number;
+  Year: number;
+  Term: number;
+  Status: string;
+}
+
+const selectedDepartment = ref('');
+const selectedRole = ref('');
+const selectedStatus = ref('');
+
+const semesters = ref<Semester[]>([]);
+const selectedSemester = ref<number | null>(null);
 
 interface User {
   UserID: string;
@@ -23,6 +41,8 @@ interface User {
   Department: {
     Name: string;
   };
+  CreatedAt: string;
+  UserImage?: string;
 }
 
 interface ActivityResult {
@@ -133,20 +153,100 @@ const avgScore = computed(() => {
 });
 
 const filteredUsers = computed(() => {
-  if (!searchQuery.value) return users.value;
-  const query = searchQuery.value.toLowerCase();
-  return users.value.filter(
-    (user) =>
-      user.UserFirstName.toLowerCase().includes(query) ||
-      user.UserLastName.toLowerCase().includes(query) ||
-      user.UserID.toLowerCase().includes(query) ||
-      (user.Department?.Name || "").toLowerCase().includes(query)
-  );
+  let filtered = users.value;
+
+  // กรองตามการค้นหา
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(
+      (user) =>
+        user.UserFirstName.toLowerCase().includes(query) ||
+        user.UserLastName.toLowerCase().includes(query) ||
+        user.UserID.toLowerCase().includes(query) ||
+        (user.Department?.Name || "").toLowerCase().includes(query)
+    );
+  }
+
+  // กรองตามแผนก
+  if (selectedDepartment.value) {
+    filtered = filtered.filter(user => user.DepartmentID === selectedDepartment.value);
+  }
+
+  // กรองตามบทบาท
+  if (selectedRole.value) {
+    filtered = filtered.filter(user => user.Role === selectedRole.value);
+  }
+
+  // กรองตามสถานะการเข้าร่วมกิจกรรม
+  if (selectedStatus.value) {
+    filtered = filtered.filter(user => {
+      const completedCount = activityResults.value.filter(
+        r => r.UserID === user.UserID && r.Status === 'completed'
+      ).length;
+
+      switch (selectedStatus.value) {
+        case 'completed':
+          return completedCount >= 3;
+        case 'incomplete':
+          return completedCount < 3;
+        default:
+          return true;
+      }
+    });
+  }
+
+  return filtered;
 });
+
+const availableDepartments = computed(() => {
+  const deps = new Set(users.value.map(u => u.DepartmentID));
+  return Array.from(deps);
+});
+interface DepartmentStats {
+  [dept: string]: {
+    total: number;
+    completed: number;
+  };
+}
+
+const departmentStats = computed<DepartmentStats>(() => {
+  const stats: DepartmentStats = {};
+  availableDepartments.value.forEach(dept => {
+    const deptUsers = users.value.filter(u => u.DepartmentID === dept);
+    stats[dept] = {
+      total: deptUsers.length,
+      completed: deptUsers.filter(u => {
+        const completedCount = activityResults.value.filter(
+          r => r.UserID === u.UserID && r.Status === 'completed'
+        ).length;
+        return completedCount >= 3;
+      }).length
+    };
+  });
+  return stats;
+});
+
+async function loadSemesters() {
+  try {
+    const response = await axios.get('/api/semesters');
+    semesters.value = response.data.semesters;
+
+    // เลือกภาคเรียนปัจจุบันเป็นค่าเริ่มต้น
+    const activeSemester = semesters.value.find(s => s.Status === 'ACTIVE');
+    if (activeSemester) {
+      selectedSemester.value = activeSemester.ID;
+    }
+  } catch (error) {
+    console.error('Error loading semesters:', error);
+  }
+}
 
 async function fetchActivities() {
   const res = await axios.get<{ activities: Activity[] }>("/api/activity", {
-    params: { page: page.value },
+    params: {
+      page: page.value,
+      semesterId: selectedSemester.value
+    },
   });
   activities.value = res.data.activities;
 }
@@ -395,6 +495,37 @@ const userActivityStatus = computed(() => {
   });
 });
 
+function getActivityStatusText(user: User) {
+  const completedCount = activityResults.value.filter(
+    r => r.UserID === user.UserID && r.Status === 'completed'
+  ).length;
+
+  if (completedCount >= 3) return `ผ่านแล้ว (${completedCount} กิจกรรม)`;
+  if (completedCount > 0) return `กำลังทำ (${completedCount}/3)`;
+  return 'ยังไม่เริ่ม';
+}
+
+function getActivityStatusBadgeClass(user: User) {
+  const completedCount = activityResults.value.filter(
+    r => r.UserID === user.UserID && r.Status === 'completed'
+  ).length;
+
+  return {
+    'badge-success': completedCount >= 3,
+    'badge-warning': completedCount > 0 && completedCount < 3,
+    'badge-error': completedCount === 0
+  };
+}
+
+const activityStats = computed(() => {
+  return {
+    total: activities.value.length,
+    ongoing: activities.value.filter(a => a.updatedAt && new Date(a.updatedAt) >= new Date()).length,
+    upcoming: activities.value.filter(a => a.createdAt && new Date(a.createdAt) > new Date()).length,
+    completed: activities.value.filter(a => a.updatedAt && new Date(a.updatedAt) < new Date()).length
+  };
+});
+
 async function requestCameraPermission() {
   try {
     console.log('Requesting camera permission...');
@@ -472,6 +603,8 @@ onMounted(async () => {
   await fetchUsers();
   await fetchActivityResults();
   await fetchRequests();
+  await loadSemesters();
+  await fetchActivities();
 });
 
 watch(showQRScanner, (newValue) => {
@@ -479,6 +612,10 @@ watch(showQRScanner, (newValue) => {
     closeQRScanner();
   }
 })
+watch(selectedSemester, () => {
+  page.value = 1;
+  fetchActivities();
+});
 </script>
 
 <template>
@@ -539,8 +676,10 @@ watch(showQRScanner, (newValue) => {
 </nuxt-link>
         </div>
 
+
+
         <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="stat bg-base-100 shadow rounded-box">
             <div class="stat-figure text-primary">
               <Icon name="mdi:calendar" class="w-8 h-8" />
@@ -566,10 +705,153 @@ watch(showQRScanner, (newValue) => {
               {{ new Date().toLocaleDateString("th-TH") }}
             </div>
           </div>
-        </div>
+        </div> -->
+        <!-- Semester Selection -->
+<div class="flex justify-between items-center gap-4 flex-wrap">
+  <div class="form-control flex-1">
+    <select
+      v-model="selectedSemester"
+      class="select select-bordered w-full max-w-xs"
+    >
+      <option value="" disabled>เลือกภาคเรียน</option>
+      <option
+        v-for="semester in semesters"
+        :key="semester.ID"
+        :value="semester.ID"
+      >
+        ภาคเรียนที่ {{ semester.Term }}/{{ semester.Year }}
+        {{ semester.Status === 'ACTIVE' ? '(ปัจจุบัน)' : '' }}
+      </option>
+    </select>
+  </div>
+</div>
+
+<!-- Extended Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+  <div class="stat bg-base-100 shadow rounded-box">
+    <div class="stat-figure text-primary">
+      <Icon name="mdi:calendar-blank-multiple" class="w-8 h-8" />
+    </div>
+    <div class="stat-title">กิจกรรมทั้งหมด</div>
+    <div class="stat-value text-primary">{{ activityStats.total }}</div>
+    <div class="stat-desc">ในภาคเรียนที่เลือก</div>
+  </div>
+
+  <div class="stat bg-base-100 shadow rounded-box">
+    <div class="stat-figure text-success">
+      <Icon name="mdi:calendar-clock" class="w-8 h-8" />
+    </div>
+    <div class="stat-title">กำลังดำเนินการ</div>
+    <div class="stat-value text-success">{{ activityStats.ongoing }}</div>
+    <div class="stat-desc">กิจกรรมที่กำลังจัด</div>
+  </div>
+
+  <div class="stat bg-base-100 shadow rounded-box">
+    <div class="stat-figure text-info">
+      <Icon name="mdi:calendar-start" class="w-8 h-8" />
+    </div>
+    <div class="stat-title">กำลังจะมาถึง</div>
+    <div class="stat-value text-info">{{ activityStats.upcoming }}</div>
+    <div class="stat-desc">กิจกรรมที่ยังไม่เริ่ม</div>
+  </div>
+
+  <div class="stat bg-base-100 shadow rounded-box">
+    <div class="stat-figure text-warning">
+      <Icon name="mdi:calendar-check" class="w-8 h-8" />
+    </div>
+    <div class="stat-title">เสร็จสิ้นแล้ว</div>
+    <div class="stat-value text-warning">{{ activityStats.completed }}</div>
+    <div class="stat-desc">กิจกรรมที่จบแล้ว</div>
+  </div>
+</div>
+
+<!-- Activities Table with Extended Information -->
+<div class="bg-base-100 rounded-box shadow-lg overflow-x-auto">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>ชื่อกิจกรรม</th>
+        <th>วันที่จัด</th>
+        <th>สถานที่</th>
+        <th>ประเภท</th>
+        <th class="text-center">คะแนน</th>
+        <th class="text-center">สถานะ</th>
+        <th class="text-end">จัดการ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="activity in activities" :key="activity.ID">
+        <td>{{ activity.ID }}</td>
+        <td>
+          <div class="font-bold">{{ activity.Title }}</div>
+          <div class="text-sm opacity-50 line-clamp-1">{{ activity.description }}</div>
+        </td>
+        <td>
+          <div>เริ่ม: {{ formatDate(activity.StartDate) }}</div>
+          <div>สิ้นสุด: {{ formatDate(activity.EndDate) }}</div>
+        </td>
+        <td>{{ activity.Location }}</td>
+        <td>
+          <div class="badge" :class="{
+            'badge-primary': activity.Type === 'GENERAL',
+            'badge-secondary': activity.Type === 'SPORT',
+            'badge-accent': activity.Type === 'ACADEMIC',
+            'badge-info': activity.Type === 'CULTURE'
+          }">
+            {{ activity.Type }}
+          </div>
+        </td>
+        <td class="text-center">
+          <div class="badge badge-lg badge-primary">{{ activity.Score }}</div>
+        </td>
+        <td class="text-center">
+          <div class="badge badge-lg" :class="{
+            'badge-success': new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date(),
+            'badge-warning': new Date(activity.StartDate) > new Date(),
+            'badge-error': new Date(activity.EndDate) < new Date()
+          }">
+            {{
+              new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date()
+                ? 'กำลังดำเนินการ'
+                : new Date(activity.StartDate) > new Date()
+                  ? 'ยังไม่เริ่ม'
+                  : 'สิ้นสุดแล้ว'
+            }}
+          </div>
+        </td>
+        <td>
+          <div class="flex justify-end gap-2">
+            <nuxt-link
+              :to="`/forSmallAdmin/activity/${activity.ID}`"
+              class="btn btn-sm btn-warning gap-2"
+            >
+              <Icon name="mdi:pencil" class="w-4 h-4" />
+              แก้ไข
+            </nuxt-link>
+            <nuxt-link
+              :to="`/forSmallAdmin/activity/participants/${activity.ID}`"
+              class="btn btn-sm btn-info gap-2"
+            >
+              <Icon name="mdi:account-group" class="w-4 h-4" />
+              ผู้เข้าร่วม
+            </nuxt-link>
+            <button
+              @click="deleteActivity(activity.ID)"
+              class="btn btn-sm btn-error gap-2"
+            >
+              <Icon name="mdi:delete" class="w-4 h-4" />
+              ลบ
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
         <!-- Activities Table -->
-        <div class="bg-base-100 rounded-box shadow-lg overflow-hidden">
+        <!-- <div class="bg-base-100 rounded-box shadow-lg overflow-hidden">
           <table class="table table-zebra w-full">
             <thead>
               <tr>
@@ -616,7 +898,7 @@ watch(showQRScanner, (newValue) => {
               </tr>
             </tbody>
           </table>
-        </div>
+        </div> -->
 
         <!-- Pagination -->
         <div class="flex justify-end gap-2">
@@ -632,185 +914,182 @@ watch(showQRScanner, (newValue) => {
 
       <!-- Users Management -->
       <div v-else class="space-y-6">
-        <!-- Search -->
-        <div class="form-control">
-          <div class="input-group">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="ค้นหาผู้ใช้..."
-              class="input input-bordered w-full"
-            />
-            <!-- <button class="btn btn-primary btn-square">
-             <Icon name="mdi:magnify" class="w-6 h-6" />
-           </button> -->
-          </div>
-        </div>
-        <div class="flex justify-between items-center">
-          <nuxt-link
-            to="/forSmallAdmin/users/create"
-            class="btn btn-primary gap-2"
-          >
-            <Icon name="mdi:account-plus" class="w-5 h-5" />
-            เพิ่มผู้ใช้งาน
-          </nuxt-link>
-          <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
-            <Icon name="mdi:qrcode" class="w-16 h-5" />
-            สแกน QR Code
-          </button>
-          <nuxt-link
-            to="/forSmallAdmin/adminRequest"
-            class="btn btn-primary gap-2"
-          >
-            <Icon name="mdi:message-alert" class="w-5 h-5" />
-            ส่งคำขอ
-          </nuxt-link>
-        </div>
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div class="stat bg-base-100 shadow rounded-box">
-              <div class="stat-figure text-primary">
-                <Icon name="mdi:account-group" class="w-8 h-8" />
-              </div>
-              <div class="stat-title">ผู้ใช้ทั้งหมด</div>
-              <div class="stat-value text-primary">{{ users.length }}</div>
-            </div>
+  <!-- ส่วน Header และ Controls -->
+  <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+    <h2 class="text-2xl font-bold">จัดการผู้ใช้งาน</h2>
+    <div class="flex gap-2">
+      <nuxt-link to="/forSmallAdmin/users/create" class="btn btn-primary gap-2">
+        <Icon name="mdi:account-plus" class="w-5 h-5" />
+        เพิ่มผู้ใช้งาน
+      </nuxt-link>
+      <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
+        <Icon name="mdi:qrcode" class="w-5 h-5" />
+        สแกน QR Code
+      </button>
+    </div>
+  </div>
 
-            <div class="stat bg-base-100 shadow rounded-box">
-              <div class="stat-figure text-success">
-                <Icon name="mdi:shield-account" class="w-8 h-8" />
-              </div>
-              <div class="stat-title">ผู้ดูแลระบบ</div>
-              <div class="stat-value text-success">
-                {{ users.filter((u) => u.Role === "ADMIN").length }}
-              </div>
-            </div>
+  <!-- ส่วนค้นหาและกรอง -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">ค้นหาผู้ใช้</span>
+      </label>
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="ค้นหาด้วยชื่อ, รหัส..."
+        class="input input-bordered"
+      />
+    </div>
 
-            <div class="stat bg-base-100 shadow rounded-box">
-              <div class="stat-figure text-warning">
-                <Icon name="mdi:shield-star" class="w-8 h-8" />
-              </div>
-              <div class="stat-title">ผู้ช่วยผู้ดูแลระบบ</div>
-              <div class="stat-value text-warning">
-                {{ users.filter((u) => u.Role === "SUPERADMIN").length }}
-              </div>
-            </div>
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">แผนก</span>
+      </label>
+      <select v-model="selectedDepartment" class="select select-bordered">
+        <option value="">ทั้งหมด</option>
+        <option v-for="dept in availableDepartments" :key="dept" :value="dept">
+          {{ dept }}
+        </option>
+      </select>
+    </div>
 
-            <div class="stat bg-base-100 shadow rounded-box">
-              <div class="stat-figure text-error">
-                <Icon name="mdi:account-tie" class="w-8 h-8" />
-              </div>
-              <div class="stat-title">ผู้บริหาร</div>
-              <div class="stat-value text-error">
-                {{ users.filter((u) => u.Role === "EXECUTIVE").length }}
-              </div>
-            </div>
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">บทบาท</span>
+      </label>
+      <select v-model="selectedRole" class="select select-bordered">
+        <option value="">ทั้งหมด</option>
+        <option value="USER">ผู้ใช้ทั่วไป</option>
+        <option value="EXECUTIVE">ผู้บริหาร</option>
+        <option value="SUPERADMIN">ผู้ช่วยผู้ดูแล</option>
+        <option value="TEACHER">ครู</option>
+      </select>
+    </div>
 
-            <div class="stat bg-base-100 shadow rounded-box">
-              <div class="stat-figure text-neutral">
-                <Icon name="mdi:account-circle" class="w-8 h-8" />
-              </div>
-              <div class="stat-title">ผู้ใช้ทั่วไป</div>
-              <div class="stat-value text-neutral">
-                {{ users.filter((u) => u.Role === "USER").length }}
-              </div>
-            </div>
-          </div>
-        </div>
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">สถานะกิจกรรม</span>
+      </label>
+      <select v-model="selectedStatus" class="select select-bordered">
+        <option value="">ทั้งหมด</option>
+        <option value="completed">ผ่านกิจกรรม</option>
+        <option value="incomplete">ยังไม่ผ่าน</option>
+      </select>
+    </div>
+  </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="stat bg-base-100 shadow rounded-box">
-              <div class="stat-figure text-success">
-                <Icon name="mdi:check-circle" class="w-8 h-8" />
-              </div>
-              <div class="stat-title">ผ่านกิจกรรม</div>
-              <div class="stat-value text-success">
-                {{ getCompletedActivities.completed }}
-              </div>
-            </div>
-
-            <div class="stat bg-base-100 shadow rounded-box">
-              <div class="stat-figure text-error">
-                <Icon name="mdi:alert-circle" class="w-8 h-8" />
-              </div>
-              <div class="stat-title">ไม่ผ่านกิจกรรม</div>
-              <div class="stat-value text-error">
-                {{ getCompletedActivities.incomplete }}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Users Table -->
-        <div class="bg-base-100 rounded-box shadow-lg overflow-hidden">
-          <table class="table table-zebra w-full">
-            <thead>
-              <tr>
-                <th>รหัสนักศึกษา</th>
-                <th>ชื่อ-นามสกุล</th>
-                <th>แผนก</th>
-                <th>สถานะ</th>
-                <th class="text-end">จัดการ</th>
-              </tr>
-            </thead>
-            <tbody v-for="user in filteredUsers" :key="user.UserID">
-              <tr v-show="user.Role !== 'ADMIN'">
-                <td>{{ user.UserID }}</td>
-                <td>{{ user.UserFirstName }} {{ user.UserLastName }}</td>
-                <td>{{ user.Department?.Name || "ไม่ระบุแผนก" }}</td>
-                <td>
-                  <div
-                    class="badge badge-lg"
-                    :class="
-                      user.Role === 'ADMIN'
-                        ? 'badge-primary'
-                        : 'badge-secondary'
-                    "
-                  >
-                    {{ user.Role }}
-                  </div>
-                </td>
-                <td>
-                  <div
-                    class="flex justify-end gap-2"
-                    v-if="user.Role !== 'ADMIN'"
-                  >
-                    <button
-                      class="btn btn-sm btn-warning gap-2"
-                      @click="
-                        router.push(`/forSmallAdmin/users/${user.UserID}`)
-                      "
-                    >
-                      <Icon name="mdi:pencil" class="w-4 h-4" />
-                      แก้ไข
-                    </button>
-                    <button
-                      class="btn btn-sm btn-info gap-2"
-                      @click="
-                        router.push(
-                          `/forSmallAdmin/users/details/${user.UserID}`
-                        )
-                      "
-                    >
-                      <Icon name="mdi:calendar-check" class="w-4 h-4" />
-                      กิจกรรม
-                    </button>
-                    <!-- <button
-                           @click="deleteUser(user.UserID)"
-                           class="btn btn-sm btn-error gap-2">
-                     <Icon name="mdi:delete" class="w-4 h-4" />
-                     ลบ
-                   </button> -->
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
+  <!-- สถิติแยกตามแผนก -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div
+      v-for="(dept, name) in departmentStats"
+      :key="name"
+      class="stat bg-base-100 shadow-lg rounded-xl"
+    >
+      <div class="stat-title">แผนก {{ name }}</div>
+      <div class="stat-value">{{ dept.total }}</div>
+      <div class="stat-desc">
+        ผ่านกิจกรรม {{ dept.completed }} คน
+        ({{ Math.round(dept.completed/dept.total * 100) || 0 }}%)
       </div>
+    </div>
+  </div>
+
+  <!-- ตารางผู้ใช้ -->
+  <div class="bg-base-100 rounded-xl shadow-lg overflow-hidden">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>รหัส</th>
+          <th>ชื่อ-นามสกุล</th>
+          <th>แผนก</th>
+          <th>บทบาท</th>
+          <th>สถานะกิจกรรม</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="user in filteredUsers" :key="user.UserID"
+            v-show="user.Role !== 'ADMIN'"
+            class="hover:bg-base-200 transition-colors">
+          <td>
+            <div>{{ user.UserID }}</div>
+            <div class="text-xs opacity-60">
+              สร้างเมื่อ {{ formatDate(user.CreatedAt) }}
+            </div>
+          </td>
+          <td>
+            <div class="flex items-center space-x-3">
+              <div class="avatar">
+                <!-- <div class="mask mask-squircle w-12 h-12">
+                  <img
+                    :src="user.UserImage ? `/api${user.UserImage}` : '/default-avatar.png'"
+                    alt="Avatar"
+                  />
+                </div> -->
+              </div>
+              <div>
+                <div class="font-bold">{{ user.UserFirstName }} {{ user.UserLastName }}</div>
+                <div class="text-sm opacity-50">{{ user.Department?.Name }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="badge badge-ghost">{{ user.DepartmentID }}</div>
+          </td>
+          <td>
+            <div
+              class="badge"
+              :class="{
+                'badge-primary': user.Role === 'ADMIN',
+                'badge-secondary': user.Role === 'USER',
+                'badge-accent': user.Role === 'SUPERADMIN',
+                'badge-info': user.Role === 'EXECUTIVE',
+                'badge-warning': user.Role === 'TEACHER'
+              }"
+            >
+              {{ user.Role }}
+            </div>
+          </td>
+          <td>
+            <div
+              class="badge badge-lg"
+              :class="getActivityStatusBadgeClass(user)"
+            >
+              {{ getActivityStatusText(user) }}
+            </div>
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <button
+                class="btn btn-sm btn-warning btn-square"
+                @click="router.push(`/forSmallAdmin/users/${user.UserID}`)"
+                title="แก้ไขข้อมูล"
+              >
+                <Icon name="mdi:pencil" class="w-4 h-4" />
+              </button>
+              <button
+                class="btn btn-sm btn-info btn-square"
+                @click="router.push(`/forSmallAdmin/users/details/${user.UserID}`)"
+                title="ดูกิจกรรม"
+              >
+                <Icon name="mdi:calendar-check" class="w-4 h-4" />
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ส่วนแสดงผลเมื่อไม่พบข้อมูล -->
+  <div v-if="filteredUsers.length === 0" class="text-center py-8">
+    <Icon name="mdi:account-search" class="w-16 h-16 mx-auto text-base-content/30" />
+    <h3 class="mt-4 text-lg font-semibold">ไม่พบข้อมูลผู้ใช้</h3>
+    <p class="text-base-content/70">ลองเปลี่ยนเงื่อนไขการค้นหาหรือตัวกรอง</p>
+  </div>
+</div>
 
 
     </div>

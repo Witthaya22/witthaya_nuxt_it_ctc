@@ -1,4 +1,4 @@
-<script setup lang="ts">
+# <script setup lang="ts">
 interface Activity {
   ID: number;
   Title: string;
@@ -44,6 +44,26 @@ const calculateDaysLeft = (endDate: string) => {
   const diffTime = end.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
+};
+
+// New function to get activity priority for sorting
+const getActivityPriority = (activity: Activity) => {
+  const daysLeft = calculateDaysLeft(activity.EndDate);
+  if (daysLeft < 0) return 3; // Expired activities - lowest priority
+  if (daysLeft <= 7) return 2; // Near expiration
+  return 1; // Active activities - highest priority
+};
+
+// Computed property for sorted activities
+const sortedActivities = computed(() => {
+  return [...activityRes.value.activities].sort((a, b) => {
+    return getActivityPriority(a) - getActivityPriority(b);
+  });
+});
+
+// Check if activity is expired
+const isActivityExpired = (activity: Activity) => {
+  return calculateDaysLeft(activity.EndDate) < 0;
 };
 
 async function fetchActivities() {
@@ -115,16 +135,22 @@ await fetchActivities();
       <!-- Activities Grid -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         <NuxtLink
-          v-for="activity in activityRes.activities"
+          v-for="activity in sortedActivities"
           :key="activity.ID"
-          :to="`/activity/${activity.ID}`"
-          class="card glass hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group"
+          :to="isActivityExpired(activity) ? undefined : `/activity/${activity.ID}`"
+          class="card glass transition-all duration-500 group"
+          :class="{
+            'hover:shadow-2xl hover:scale-[1.02]': !isActivityExpired(activity),
+            'opacity-75 cursor-not-allowed filter grayscale': isActivityExpired(activity)
+          }"
+          @click.prevent="isActivityExpired(activity) && $event.preventDefault()"
         >
           <!-- Image -->
           <figure class="relative h-56 overflow-hidden">
             <img
               :src="`/api${activity.Images[0]}`"
-              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              class="w-full h-full object-cover transition-transform duration-500"
+              :class="{ 'group-hover:scale-110': !isActivityExpired(activity) }"
               :alt="activity.Title"
             />
             <div class="absolute top-4 right-4 z-10">
@@ -135,7 +161,7 @@ await fetchActivities();
           </figure>
 
           <!-- Content -->
-          <div class="card-body">
+          <div class="card-body" :class="{ 'opacity-75': isActivityExpired(activity) }">
             <div class="flex justify-between items-start gap-2">
               <h2 class="card-title text-xl line-clamp-2 flex-1">
                 {{ activity.Title }}
