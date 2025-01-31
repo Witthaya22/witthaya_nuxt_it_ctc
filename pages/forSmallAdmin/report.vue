@@ -58,6 +58,41 @@ interface ActivityResult {
   UpdatedAt: string;
 }
 
+
+const activityResults = ref<ActivityResult[]>([]);
+
+function getStatusDisplay(result: ActivityResult, userId: string) {
+  const completedCount = activityResults.value.filter(
+    r => r.UserID === userId && r.Status === 'completed'
+  ).length;
+
+  if (completedCount >= 3) {
+    return { text: "ผ่านกิจกรรม", class: "badge-success" };
+  } else {
+    return { text: "ไม่ผ่านกิจกรรม", class: "badge-error" };
+  }
+}
+interface DepartmentMapping {
+  [key: string]: string;
+}
+
+const departmentMapping: DepartmentMapping = {
+  'IT': 'เทคโนโลยีสารสนเทศ',
+  'CS': 'วิทยาการคอมพิวเตอร์',
+  'EE': 'วิศวกรรมไฟฟ้า',
+  'ME': 'วิศวกรรมเครื่องกล',
+  'CV': 'วิศวกรรมโยธา',
+  'AR': 'สถาปัตยกรรม',
+  'MT': 'การตลาด',
+  'AC': 'การบัญชี',
+  'WD': 'งานเชื่อมโลหะ',
+  'ET': 'อิเล็กทรอนิกส์',
+};
+
+function getDepartmentFullName(code: string) {
+  return departmentMapping[code] || code;
+}
+
 // Computed properties for filtering and pagination
 const departments = computed(() => {
   const deps = new Set(results.value.map(r => r.DepartmentID));
@@ -71,20 +106,32 @@ const departments = computed(() => {
 const getFilteredDataForReport = () => {
   let reportData = [...results.value];
 
-  // ถ้าเป็น TEACHER ให้เห็นแค่แผนกตัวเอง
+  // กรองตามแผนกสำหรับครู
   if (isTeacher.value) {
-    reportData = reportData.filter(result => result.DepartmentID === userDepartment.value);
+    reportData = reportData.filter(result =>
+      result.DepartmentID === userDepartment.value
+    );
   }
 
   switch (reportType.value) {
     case 'department':
-      return reportData.filter(result => result.DepartmentID === selectedReportDepartment.value);
-    case 'completed':
-      return reportData.filter(result => result.Status === 'completed');
-    case 'failed':
-      return reportData.filter(result => result.Status === 'failed');
-    case 'status':
-      return reportData.filter(result => ['completed', 'failed'].includes(result.Status));
+      return reportData.filter(result =>
+        result.DepartmentID === selectedReportDepartment.value
+      );
+    case 'completed_pass':
+      return reportData.filter(result => {
+        const completedCount = activityResults.value.filter(
+          r => r.UserID === result.UserID && r.Status === 'completed'
+        ).length;
+        return completedCount >= 3;
+      });
+    case 'completed_not_pass':
+      return reportData.filter(result => {
+        const completedCount = activityResults.value.filter(
+          r => r.UserID === result.UserID && r.Status === 'completed'
+        ).length;
+        return completedCount < 3;
+      });
     default:
       return reportData;
   }
@@ -212,20 +259,17 @@ async function generateDetailedPDF() {
 
       // ปรับปรุงชื่อรายงานตามประเภท
       let reportTitle = "รายงานการเข้าร่วมกิจกรรม";
-    switch (reportType.value) {
-      case 'department':
-        reportTitle += ` - แผนก ${selectedReportDepartment.value}`;
-        break;
-      case 'completed':
-        reportTitle += " - ผ่านการเข้าร่วม";
-        break;
-      case 'failed':
-        reportTitle += " - ไม่ผ่านการเข้าร่วม";
-        break;
-      case 'status':
-        reportTitle += " - สรุปผลการเข้าร่วม";
-        break;
-    }
+switch (reportType.value) {
+  case 'department':
+    reportTitle += ` - แผนก${getDepartmentFullName(selectedReportDepartment.value)}`;
+    break;
+  case 'completed_pass':
+    reportTitle += " - ผู้ผ่านกิจกรรม (ครบ 3 กิจกรรม)";
+    break;
+  case 'completed_not_pass':
+    reportTitle += " - ผู้ไม่ผ่านกิจกรรม (ไม่ครบ 3 กิจกรรม)";
+    break;
+}
 
     // เพิ่มหัวกระดาษ
     doc.setFontSize(20);
@@ -257,18 +301,18 @@ async function generateDetailedPDF() {
 
     // สร้างตารางข้อมูล
     const tableData = reportData.map((result) => {
-      const activity = activities.value.find((a) => a.ID === result.ActivityID);
-      const user = users.value.find((u) => u.UserID === result.UserID);
+  const activity = activities.value.find((a) => a.ID === result.ActivityID);
+  const user = users.value.find((u) => u.UserID === result.UserID);
 
-      return [
-        activity?.Title || result.ActivityID,
-        `${user?.UserFirstName} ${user?.UserLastName}`,
-        result.DepartmentID,
-        result.Status === "completed" ? "เข้าร่วมแล้ว" : "รอเข้าร่วม",
-        dayjs(result.CreatedAt).locale("th").format("DD/MM/YYYY HH:mm"),
-        dayjs(result.UpdatedAt).locale("th").format("DD/MM/YYYY HH:mm"),
-      ];
-    });
+  return [
+    activity?.Title || result.ActivityID,
+    `${user?.UserFirstName} ${user?.UserLastName}`,
+    getDepartmentFullName(result.DepartmentID), // เปลี่ยนตรงนี้ จากเดิมที่เป็นแค่ result.DepartmentID
+    result.Status === "completed" ? "เข้าร่วมแล้ว" : "รอเข้าร่วม",
+    dayjs(result.CreatedAt).locale("th").format("DD/MM/YYYY HH:mm"),
+    dayjs(result.UpdatedAt).locale("th").format("DD/MM/YYYY HH:mm"),
+  ];
+});
 
     (doc as any).autoTable({
       startY: 80,
@@ -371,24 +415,24 @@ onMounted(loadData);
 
           <!-- Report Options -->
           <div class="flex items-center gap-4">
-          <select v-model="reportType" class="select select-bordered">
-            <option value="all">ทั้งหมด</option>
-            <option value="department">ตามแผนก</option>
-            <option value="completed">ผ่านการเข้าร่วม</option>
-            <option value="failed">ไม่ผ่านการเข้าร่วม</option>
-            <option value="status">สรุปผลการเข้าร่วม</option>
-          </select>
+            <select v-model="reportType" class="select select-bordered"
+        :disabled="isTeacher">
+  <option value="all" v-if="!isTeacher">ทั้งหมด</option>
+  <option value="department">ตามแผนก</option>
+  <option value="completed_pass">ผ่านกิจกรรม (ครบ 3 กิจกรรม)</option>
+  <option value="completed_not_pass">ไม่ผ่านกิจกรรม (ไม่ครบ 3 กิจกรรม)</option>
+</select>
 
-          <select
-            v-if="reportType === 'department'"
-            v-model="selectedReportDepartment"
-            class="select select-bordered"
-          >
-            <option value="" disabled>เลือกแผนก</option>
-            <option v-for="dept in departments" :key="dept" :value="dept">
-              {{ dept }}
-            </option>
-          </select>
+<select
+  v-if="reportType === 'department'"
+  v-model="selectedReportDepartment"
+  class="select select-bordered"
+>
+  <option value="" disabled>เลือกแผนก</option>
+  <option v-for="dept in departments.filter(d => d !== undefined)" :key="dept" :value="dept">
+    {{ getDepartmentFullName(dept) }}
+  </option>
+</select>
 
           <button
             @click="generateDetailedPDF"
@@ -396,10 +440,7 @@ onMounted(loadData);
             class="btn btn-primary gap-2"
           >
             <span v-if="loading" class="loading loading-spinner"></span>
-            <Icon
-              :name="loading ? 'mdi:loading' : 'mdi:file-pdf-box'"
-              class="w-5 h-5"
-            />
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="64" stroke-dashoffset="64" d="M13 3l6 6v12h-14v-18h8"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" stroke-width="1" d="M12.5 3v5.5h6.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="14;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M10 13l-2 2l2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" values="8;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M14 13l2 2l-2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.1s" dur="0.2s" values="8;0"/></path></g></svg>
             {{ loading ? "กำลังสร้างรายงาน..." : "ส่งออกรายงาน PDF" }}
           </button>
         </div>
@@ -473,14 +514,11 @@ onMounted(loadData);
             <label class="label">
               <span class="label-text">สถานะ</span>
             </label>
-            <select
-              v-model="selectedStatus"
-              class="select select-bordered w-full"
-            >
-              <option value="">ทั้งหมด</option>
-              <option value="completed">เข้าร่วมแล้ว</option>
-              <option value="RESERVED">รอเข้าร่วม</option>
-            </select>
+            <select v-model="selectedStatus" class="select select-bordered w-full">
+  <option value="">ทั้งหมด</option>
+  <option value="completed_pass">ผ่านกิจกรรม (ครบ 3 กิจกรรม)</option>
+  <option value="completed_not_pass">ไม่ผ่านกิจกรรม (ไม่ครบ 3 กิจกรรม)</option>
+</select>
           </div>
         </div>
       </div>
@@ -513,23 +551,12 @@ onMounted(loadData);
                   users.find((u) => u.UserID === result.UserID)?.UserLastName
                 }}
               </td>
-              <td>{{ result.DepartmentID }}</td>
-              <td>
-                <div
-                  class="badge"
-                  :class="
-                    result.Status === 'completed'
-                      ? 'badge-success'
-                      : 'badge-warning'
-                  "
-                >
-                  {{
-                    result.Status === "completed"
-                      ? "เข้าร่วมแล้ว"
-                      : "รอเข้าร่วม"
-                  }}
-                </div>
-              </td>
+              <td>{{ getDepartmentFullName(result.DepartmentID) }}</td>
+<td>
+  <div class="badge" :class="getStatusDisplay(result, result.UserID).class">
+    {{ getStatusDisplay(result, result.UserID).text }}
+  </div>
+</td>
               <td>
                 {{
                   dayjs(result.CreatedAt)

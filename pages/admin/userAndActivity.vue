@@ -6,6 +6,11 @@ import Swal from "sweetalert2";
 import { QrcodeStream } from 'vue-qrcode-reader'
 const { auth } = useAuth();
 
+definePageMeta({
+  layout: "admin",
+  // middleware: ["only-admin"],
+});
+
 
 interface Activity {
   ID: number;
@@ -662,7 +667,7 @@ watch(selectedSemester, () => {
           :class="{ 'tab-active': activeTab === 'activities' }"
           @click="switchTab('activities')"
         >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="14" height="0" x="5" y="5" fill="currentColor"><animate fill="freeze" attributeName="height" begin="0.6s" dur="0.2s" values="0;3"/></rect><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="64" stroke-dashoffset="64" d="M12 4h7c0.55 0 1 0.45 1 1v14c0 0.55 -0.45 1 -1 1h-14c-0.55 0 -1 -0.45 -1 -1v-14c0 -0.55 0.45 -1 1 -1Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="4" stroke-dashoffset="4" d="M7 4v-2M17 4v-2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="4;0"/></path><path stroke-dasharray="12" stroke-dashoffset="12" d="M7 11h10"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.8s" dur="0.2s" values="12;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M7 15h7"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1s" dur="0.2s" values="8;0"/></path></g></svg>
+          <Icon name="mdi:calendar" class="w-5 h-5" />
           จัดการกิจกรรม
         </button>
         <button
@@ -670,7 +675,7 @@ watch(selectedSemester, () => {
           :class="{ 'tab-active': activeTab === 'users' }"
           @click="switchTab('users')"
         >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-dasharray="28" stroke-dashoffset="28" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M4 21v-1c0 -3.31 2.69 -6 6 -6h4c3.31 0 6 2.69 6 6v1"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="28;0"/></path><path d="M12 11c-2.21 0 -4 -1.79 -4 -4c0 -2.21 1.79 -4 4 -4c2.21 0 4 1.79 4 4c0 2.21 -1.79 4 -4 4Z"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.4s" values="28;0"/></path></g></svg>
+          <Icon name="mdi:account-group" class="w-5 h-5" />
           จัดการผู้ใช้งาน
         </button>
         <!-- <button
@@ -685,7 +690,8 @@ watch(selectedSemester, () => {
 
       <!-- Activities Management -->
       <div v-if="activeTab === 'activities'" class="space-y-6">
-          <!-- <nuxt-link
+        <div class="flex justify-between items-center">
+          <nuxt-link
   v-if="!isTeacher || userDepartment"
   to="/forSmallAdmin/activity/create"
   class="btn btn-primary gap-2"
@@ -703,45 +709,12 @@ watch(selectedSemester, () => {
           >
             <Icon name="mdi:message-alert" class="w-5 h-5" />
             ส่งคำขอ
-          </nuxt-link> -->
-          <!-- <nuxt-link to="/forSmallAdmin/report" class="btn btn-secondary gap-2">
+          </nuxt-link>
+          <nuxt-link to="/forSmallAdmin/report" class="btn btn-secondary gap-2">
   <Icon name="mdi:file-pdf-box" class="w-5 h-5" />
   รายงานกิจกรรม
-</nuxt-link> -->
-
-
-        <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
-    <h2 class="text-2xl font-bold">จัดการกิจกรรม</h2>
-    <div class="flex gap-2">
-      <!-- <nuxt-link
-  v-if="!isTeacher || userDepartment"
-  to="/forSmallAdmin/activity/create"
-  class="btn btn-primary gap-2"
->
-  <Icon name="mdi:plus" class="w-5 h-5" />
-  เพิ่มกิจกรรม
-</nuxt-link> -->
-          <!-- <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
-            <Icon name="mdi:qrcode" class="w-16 h-5" />
-            สแกน QR Code
-          </button> -->
-          <nuxt-link
-            to="/forSmallAdmin/adminRequest"
-            class="btn btn-secondary gap-2"
-          >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="88" stroke-dashoffset="88" d="M15.5 21.5c-10.5 2.5 -12.5 -2.5 -12.5 -8.5v-3c0 -6 2.5 -7 7 -7h4c4.5 0 7 1.5 7 5.5v4c0 6.5 -10 4 -13.5 4c-1 0 -1.5 7 8 5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="88;0"/></path><path stroke-dasharray="32" stroke-dashoffset="32" d="M7 13.5l0 -5.5c0 0 0.5 -2 2.5 -2c2 0 2.5 2 2.5 2l0 2.5l0 -2.5c0 0 0.5 -2 2.5 -2c2 0 2.5 2 2.5 2l0 5.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.7s" values="32;0"/></path></g></svg>
-            ส่งคำขอ
-          </nuxt-link>
-          <nuxt-link to="/forSmallAdmin/report" class="btn btn-warning text-white gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="72" stroke-dashoffset="72" d="M12 3h7v18h-14v-18h7Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="72;0"/></path><path stroke-dasharray="12" stroke-dashoffset="12" stroke-width="1" d="M14.5 3.5v3h-5v-3"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="12;0"/></path><path stroke-dasharray="4" stroke-dashoffset="4" d="M9 10h3"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" values="4;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M9 13h5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.1s" dur="0.2s" values="6;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M9 16h6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.3s" dur="0.2s" values="8;0"/></path></g></svg>
-  สรุปผลกิจกรรม
 </nuxt-link>
-      <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="64" stroke-dashoffset="64" d="M13 3l6 6v12h-14v-18h8"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" stroke-width="1" d="M12.5 3v5.5h6.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="14;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M10 13l-2 2l2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" values="8;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M14 13l2 2l-2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.1s" dur="0.2s" values="8;0"/></path></g></svg>
-        สแกน QR Code
-      </button>
-    </div>
-  </div>
+        </div>
 
 
 
@@ -799,7 +772,7 @@ watch(selectedSemester, () => {
 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
   <div class="stat bg-base-100 shadow rounded-box">
     <div class="stat-figure text-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="14" height="0" x="5" y="5" fill="currentColor"><animate fill="freeze" attributeName="height" begin="0.6s" dur="0.2s" values="0;3"/></rect><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="64" stroke-dashoffset="64" d="M12 4h7c0.55 0 1 0.45 1 1v14c0 0.55 -0.45 1 -1 1h-14c-0.55 0 -1 -0.45 -1 -1v-14c0 -0.55 0.45 -1 1 -1Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="4" stroke-dashoffset="4" d="M7 4v-2M17 4v-2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="4;0"/></path><path stroke-dasharray="12" stroke-dashoffset="12" d="M7 11h10"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.8s" dur="0.2s" values="12;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M7 15h7"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1s" dur="0.2s" values="8;0"/></path></g></svg>
+      <Icon name="mdi:calendar-blank-multiple" class="w-8 h-8" />
     </div>
     <div class="stat-title">กิจกรรมทั้งหมด</div>
     <div class="stat-value text-primary">{{ activityStats.total }}</div>
@@ -826,7 +799,7 @@ watch(selectedSemester, () => {
 
   <div class="stat bg-base-100 shadow rounded-box">
     <div class="stat-figure text-warning">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="14" height="0" x="5" y="5" fill="currentColor"><animate fill="freeze" attributeName="height" begin="0.6s" dur="0.2s" values="0;3"/></rect><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="64" stroke-dashoffset="64" d="M12 4h7c0.55 0 1 0.45 1 1v14c0 0.55 -0.45 1 -1 1h-14c-0.55 0 -1 -0.45 -1 -1v-14c0 -0.55 0.45 -1 1 -1Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="4" stroke-dashoffset="4" d="M7 4v-2M17 4v-2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="4;0"/></path><path stroke-dasharray="12" stroke-dashoffset="12" d="M7 11h10"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.8s" dur="0.2s" values="12;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M7 15h7"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1s" dur="0.2s" values="8;0"/></path></g></svg>
+      <Icon name="mdi:calendar-check" class="w-8 h-8" />
     </div>
     <div class="stat-title">เสร็จสิ้นแล้ว</div>
     <div class="stat-value text-warning">{{ activityStats.completed }}</div>
@@ -891,22 +864,22 @@ watch(selectedSemester, () => {
         </td>
         <td>
     <div class="flex justify-end gap-2">
-      <!-- <nuxt-link
+      <nuxt-link
         v-if="canManageActivity(activity)"
         :to="`/forSmallAdmin/activity/${activity.ID}`"
         class="btn btn-sm btn-warning gap-2"
       >
         <Icon name="mdi:pencil" class="w-4 h-4" />
         แก้ไข
-      </nuxt-link> -->
-      <!-- <button
+      </nuxt-link>
+      <button
         v-if="canManageActivity(activity)"
         @click="deleteActivity(activity.ID)"
         class="btn btn-sm btn-error gap-2"
       >
         <Icon name="mdi:delete" class="w-4 h-4" />
         ลบ
-      </button> -->
+      </button>
       <!-- ปุ่มดูผู้เข้าร่วมแสดงเสมอ -->
       <nuxt-link
         :to="`/forSmallAdmin/activity/participants/${activity.ID}`"
@@ -995,11 +968,11 @@ watch(selectedSemester, () => {
   to="/forSmallAdmin/users/create"
   class="btn btn-primary gap-2"
 >
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-dasharray="16" stroke-dashoffset="16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 12h14"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="16;0"/></path><path d="M12 5v14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.4s" values="16;0"/></path></g></svg>
+  <Icon name="mdi:account-plus" class="w-5 h-5" />
   เพิ่มผู้ใช้งาน
 </nuxt-link>
       <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="64" stroke-dashoffset="64" d="M13 3l6 6v12h-14v-18h8"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" stroke-width="1" d="M12.5 3v5.5h6.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="14;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M10 13l-2 2l2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" values="8;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M14 13l2 2l-2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.1s" dur="0.2s" values="8;0"/></path></g></svg>
+        <Icon name="mdi:qrcode" class="w-5 h-5" />
         สแกน QR Code
       </button>
     </div>
@@ -1146,40 +1119,23 @@ watch(selectedSemester, () => {
           </td>
           <td>
     <div class="flex gap-2">
-      <!-- <button
+      <button
         v-if="canManageUser(user)"
         class="btn btn-sm btn-warning btn-square"
         @click="router.push(`/forSmallAdmin/users/${user.UserID}`)"
         title="แก้ไขข้อมูล"
       >
+        <Icon name="mdi:pencil" class="w-4 h-4" />
 
-        <Icon name="mdi:pencil" class="w-4 h-4" />
-        แก้ไข
-      </button> -->
-      <nuxt-link
-       v-if="canManageUser(user)"
-        :to="`/forSmallAdmin/users/${user.UserID}`"
-        class="btn btn-sm btn-warning gap-2"
-      >
-        <Icon name="mdi:pencil" class="w-4 h-4" />
-        แก้ไข
-      </nuxt-link>
-      <nuxt-link
-       v-if="canManageUser(user)"
-        :to="`/forSmallAdmin/users/details/${user.UserID}`"
-        class="btn btn-sm btn-info gap-2"
-      >
-        <Icon name="mdi:calendar-check" class="w-4 h-4" />
-        ดูกิจกรรม
-      </nuxt-link>
+      </button>
       <!-- ปุ่มดูกิจกรรมแสดงเสมอ -->
-      <!-- <button
+      <button
         class="btn btn-sm btn-info btn-square"
         @click="router.push(`/forSmallAdmin/users/details/${user.UserID}`)"
         title="ดูกิจกรรม"
       >
         <Icon name="mdi:calendar-check" class="w-4 h-4" />
-      </button> -->
+      </button>
     </div>
   </td>
         </tr>
