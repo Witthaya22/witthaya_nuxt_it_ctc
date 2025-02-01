@@ -115,6 +115,18 @@ async function fetchBookedActivities() {
    isLoading.value = false;
  }
 }
+const searchQuery = ref('');
+const filteredActivities = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim();
+
+  if (!query) return bookedActivities.value;
+
+  return bookedActivities.value.filter(activity =>
+    activity.name.toLowerCase().includes(query) ||
+    activity.location.toLowerCase().includes(query) ||
+    activity.date.toLowerCase().includes(query)
+  );
+});
 
 onMounted(() => {
  fetchBookedActivities();
@@ -125,13 +137,11 @@ onMounted(() => {
  <div class="min-h-screen ">
    <div class="container mx-auto px-4 py-8">
      <!-- Header -->
-     <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
-       <div class="flex items-center gap-4">
-         <button @click="goBack" class="btn btn-circle btn-ghost">
+     <div class="flex flex-col md:flex-row items-center justify-between   gap-4">
+         <!-- <button @click="goBack" class="btn btn-circle btn-ghost">
            <Icon name="ic:baseline-arrow-back" class="w-6 h-6" />
-         </button>
-         <h1 class="text-2xl font-bold text-primary">กิจกรรมของฉัน</h1>
-       </div>
+         </button> -->
+         <h1 class="text-4xl  font-bold text-primary">กิจกรรมของฉัน</h1>
        <div class="stats bg-base-100 shadow">
          <div class="stat place-items-center">
            <div class="stat-title">ความคืบหน้า</div>
@@ -141,14 +151,24 @@ onMounted(() => {
        </div>
      </div>
 
+     <div class="mb-6 flex justify-center">
+         <input
+           v-model="searchQuery"
+           type="text"
+           placeholder="ค้นหากิจกรรม..."
+           class="input input-bordered w-full max-w-md mx-auto"
+         />
+       </div>
+      <!-- Search Bar -->
+
      <!-- Loading -->
      <div v-if="isLoading" class="flex justify-center items-center min-h-[200px]">
        <span class="loading loading-spinner loading-lg text-primary"></span>
      </div>
 
      <!-- Activities List -->
-     <div v-else-if="bookedActivities.length > 0" class="grid grid-cols-1 gap-4">
-       <nuxt-link v-for="activity in bookedActivities"
+     <div v-else-if="filteredActivities .length > 0" class="grid grid-cols-1 gap-4">
+       <nuxt-link v-for="activity in filteredActivities "
                   :key="activity.id"
                   :to="`/profile/Activirty/${activity.id}`"
                   class="card bg-base-100 shadow-lg hover:shadow-xl transition-all">
@@ -200,14 +220,21 @@ onMounted(() => {
      </div>
 
      <!-- Empty State -->
+     <!-- Empty State - ปรับข้อความตามการค้นหา -->
      <div v-else class="card bg-base-100 shadow p-8 text-center">
-       <Icon name="ic:baseline-event-busy" class="w-12 h-12 mx-auto mb-4 text-base-content/30" />
-       <h2 class="text-xl font-bold mb-2">ไม่พบกิจกรรม</h2>
-       <p class="text-base-content/70 mb-6">คุณยังไม่มีกิจกรรมที่จองไว้</p>
-       <nuxt-link to="/activity" class="btn btn-primary">
-         ดูกิจกรรมที่เปิดรับ
-       </nuxt-link>
-     </div>
+        <Icon name="ic:baseline-event-busy" class="w-12 h-12 mx-auto mb-4 text-base-content/30" />
+        <h2 class="text-xl font-bold mb-2">
+          {{ searchQuery ? 'ไม่พบกิจกรรมที่ค้นหา' : 'ไม่พบกิจกรรม' }}
+        </h2>
+        <p class="text-base-content/70 mb-6">
+          {{ searchQuery
+            ? 'ลองค้นหาด้วยคำค้นอื่น หรือตรวจสอบการสะกดอีกครั้ง'
+            : 'คุณยังไม่มีกิจกรรมที่จองไว้' }}
+        </p>
+        <nuxt-link to="/activity" class="btn btn-primary">
+          ดูกิจกรรมที่เปิดรับ
+        </nuxt-link>
+      </div>
    </div>
  </div>
 </template>

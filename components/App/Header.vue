@@ -157,18 +157,18 @@ watch(() => useRoute().fullPath, () => {
           </NuxtLink>
         </li> -->
         <template v-if="auth" >
-          <div class="dropdown dropdown-end">
+          <div class="dropdown dropdown-end ">
             <summary
               tabindex="0"
               role="button"
-              class="text-lg font-bold btn mx-1 btn-ghost focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
+              class="text-lg w-28 font-bold btn mx-1 btn-ghost focus:border-b-4 focus:border-b-blue-500 focus:text-blue-500"
             >
-              {{ auth.UserID }}
+              {{ auth.UserFirstName }}
             </summary>
-            <ul tabindex="0" class="dropdown-content text-white" @click="toggleMobileMenu" v-if="!mobileMenuStore.isOpen"  >
+            <ul tabindex="0" class="dropdown-content text-white " @click="toggleMobileMenu" v-if="!mobileMenuStore.isOpen"  >
               <li>
                 <nuxt-link
-                  class="text-lg font-bold shadow-2xl my-1 bg-teal-700 hover:bg-teal-500 "
+                  class="text-sm font-bold shadow-2xl my-1 bg-teal-700 hover:bg-teal-500 "
                   to="/profile"
                 >
                   ดูรายระเอียด
@@ -177,7 +177,7 @@ watch(() => useRoute().fullPath, () => {
               <li>
                 <a
                   @click="logoutConfirm"
-                  class="text-lg font-bold shadow-2xl my-1 bg-red-700 hover:bg-red-500 "
+                  class="text-sm font-bold shadow-2xl my-1 bg-red-700 hover:bg-red-500 "
                 >
                   ออกจากระบบ
                 </a>

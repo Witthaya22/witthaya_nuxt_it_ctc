@@ -1,5 +1,8 @@
 <script setup lang="ts">
 useHead({ title: "เพิ่มกิจกรรม" });
+definePageMeta({
+  layout: 'admin',
+})
 
 
 const route = useRoute();
@@ -364,7 +367,7 @@ onMounted(() => {
           <!-- คำอธิบาย -->
           <div class="form-control">
             <label class="label">
-              <span class="label-text font-bold">รายละเอียดกิจกรรม</span>
+              <span class="label-text font-bold">รายละเอียดกิจกรรม เช่น ข้อบังคับต่างๆ </span>
               <span class="label-text-alt text-error">*</span>
             </label>
             <textarea

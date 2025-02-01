@@ -1,4 +1,4 @@
-# <script setup lang="ts">
+ <script setup lang="ts">
 interface Activity {
   ID: number;
   Title: string;
@@ -11,17 +11,64 @@ interface Activity {
   EndDate: string;
   Location: string;
   MaxParticipants: number;
+  SemesterID: number; // Add this line
 }
 
-import { debounce } from 'lodash';
+interface Semester {
+  ID: number;
+  Year: number;
+  Term: number;
+  StartDate: string;
+  EndDate: string;
+  Status: string;
+}
+
+interface ActivityUser {
+  ID: number;
+  ActivityID: number;
+  Status: string;
+  IsArchived: boolean; // Add this property to the type definition
+}
+const searchQuery = ref('');
+const filteredActivities = computed(() => {
+  // ถ้าไม่มี semester ให้ไม่แสดงกิจกรรมใดๆ
+  if (!currentSemester.value) {
+    return [];
+  }
+
+  // กรองกิจกรรมที่อยู่ในภาคเรียนปัจจุบัน
+  let activities = sortedActivities.value.filter(activity => {
+    // ถ้า semester มีสถานะ COMPLETED ไม่แสดงกิจกรรม
+    if (currentSemester.value?.Status === 'COMPLETED') {
+      return false;
+    }
+
+    // เช็คว่ากิจกรรมอยู่ใน semester ปัจจุบัน
+    return activity.SemesterID === currentSemester.value?.ID;
+  });
+
+  // กรองตามคำค้นหา
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase().trim();
+    activities = activities.filter(activity =>
+      activity.Title.toLowerCase().includes(query) ||
+      activity.Description.toLowerCase().includes(query) ||
+      activity.Location?.toLowerCase().includes(query)
+    );
+  }
+
+  return activities;
+});
+
+
 const axios = useAxios();
 const page = ref(1);
-const searchQuery = ref('');
 const activityRes = ref<{ activities: Activity[]; totalPages: number }>({
   activities: [],
   totalPages: 1
 });
 const isLoading = ref(false);
+const activityUsers = ref<ActivityUser[]>([]);
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('th-TH', {
@@ -30,10 +77,14 @@ function formatDate(date: string) {
     day: 'numeric'
   });
 }
+const currentSemester = ref<Semester | null>(null);
 
 const getStatusBadge = (activity: Activity) => {
   const daysLeft = calculateDaysLeft(activity.EndDate);
+  const spotsLeft = getSpotsLeft(activity);
+
   if (daysLeft < 0) return { text: 'สิ้นสุดแล้ว', class: 'badge-error' };
+  if (spotsLeft <= 0) return { text: 'เต็มแล้ว', class: 'badge-neutral' };
   if (daysLeft <= 7) return { text: 'ใกล้สิ้นสุด', class: 'badge-warning' };
   return { text: 'เปิดรับสมัคร', class: 'badge-success' };
 };
@@ -46,7 +97,35 @@ const calculateDaysLeft = (endDate: string) => {
   return diffDays;
 };
 
-// New function to get activity priority for sorting
+// คำนวณจำนวนผู้เข้าร่วมสำหรับแต่ละกิจกรรม
+const getParticipantCount = (activityId: number) => {
+  return activityUsers.value.filter(user =>
+    user.ActivityID === activityId &&
+    (user.Status === 'RESERVED' || user.Status === 'completed') &&
+    !user.IsArchived
+  ).length;
+};
+
+// คำนวณที่นั่งที่เหลือ
+const getSpotsLeft = (activity: Activity) => {
+  const participantCount = getParticipantCount(activity.ID);
+  return activity.MaxParticipants - participantCount;
+};
+
+// คำนวณเปอร์เซ็นต์ความคืบหน้า
+const getProgressPercent = (activity: Activity) => {
+  const participantCount = getParticipantCount(activity.ID);
+  return (participantCount / activity.MaxParticipants) * 100;
+};
+
+// กำหนดสีของ progress bar
+const getProgressColor = (activity: Activity) => {
+  const percent = getProgressPercent(activity);
+  if (percent >= 90) return 'bg-error';
+  if (percent >= 70) return 'bg-warning';
+  return 'bg-success';
+};
+
 const getActivityPriority = (activity: Activity) => {
   const daysLeft = calculateDaysLeft(activity.EndDate);
   if (daysLeft < 0) return 3; // Expired activities - lowest priority
@@ -54,29 +133,41 @@ const getActivityPriority = (activity: Activity) => {
   return 1; // Active activities - highest priority
 };
 
-// Computed property for sorted activities
 const sortedActivities = computed(() => {
   return [...activityRes.value.activities].sort((a, b) => {
     return getActivityPriority(a) - getActivityPriority(b);
   });
 });
 
-// Check if activity is expired
 const isActivityExpired = (activity: Activity) => {
   return calculateDaysLeft(activity.EndDate) < 0;
 };
 
+async function fetchActivityUsers() {
+  try {
+    const response = await axios.get('/api/getActivityResult');
+    activityUsers.value = response.data.users;
+  } catch (error) {
+    console.error('Error fetching activity users:', error);
+  }
+}
+
 async function fetchActivities() {
   isLoading.value = true;
   try {
-    const response = await axios.get<{ activities: Activity[]; totalPages: number }>('/api/activity', {
-      params: {
-        page: page.value,
-        search: searchQuery.value,
-        limit: 9
-      }
-    });
-    activityRes.value = response.data;
+    const [activitiesResponse, semesterResponse] = await Promise.all([
+      axios.get<{ activities: Activity[]; totalPages: number }>('/api/activity', {
+        params: {
+          page: page.value,
+          limit: 9
+        }
+      }),
+      axios.get<{ semester: Semester }>('/api/semester/active'), // เปลี่ยนเป็น endpoint ที่มีอยู่
+      fetchActivityUsers()
+    ]);
+
+    activityRes.value = activitiesResponse.data;
+    currentSemester.value = semesterResponse.data.semester; // แก้ไขการเข้าถึงข้อมูล
   } catch (error) {
     console.error('Error fetching activities:', error);
   } finally {
@@ -84,14 +175,8 @@ async function fetchActivities() {
   }
 }
 
-const debouncedSearch = debounce(() => {
-  page.value = 1;
-  fetchActivities();
-}, 300);
 
-watch(searchQuery, () => {
-  debouncedSearch();
-});
+
 
 watch(page, () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -110,99 +195,122 @@ await fetchActivities();
         <p class="text-xl text-base-content/80">ค้นหาและเข้าร่วมกิจกรรมที่คุณสนใจ</p>
       </div>
 
-      <!-- Search -->
-      <div class="flex justify-center mb-12">
-        <div class="join w-full max-w-2xl shadow-lg">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="ค้นหากิจกรรมที่คุณสนใจ..."
-            class="input input-bordered join-item w-full text-lg"
-          />
-          <button class="btn join-item btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-        </div>
-      </div>
+      <div class="mb-6 flex justify-center">
+  <input
+    v-model="searchQuery"
+    type="text"
+    placeholder="ค้นหากิจกรรม..."
+    class="input input-primary w-full max-w-md"
+  />
+</div>
 
       <!-- Loading -->
       <div v-if="isLoading" class="flex justify-center items-center min-h-[400px]">
         <div class="loading loading-spinner loading-lg text-primary"></div>
       </div>
 
-      <!-- Activities Grid -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        <NuxtLink
-          v-for="activity in sortedActivities"
-          :key="activity.ID"
-          :to="isActivityExpired(activity) ? undefined : `/activity/${activity.ID}`"
-          class="card glass transition-all duration-500 group"
-          :class="{
-            'hover:shadow-2xl hover:scale-[1.02]': !isActivityExpired(activity),
-            'opacity-75 cursor-not-allowed filter grayscale': isActivityExpired(activity)
-          }"
-          @click.prevent="isActivityExpired(activity) && $event.preventDefault()"
-        >
-          <!-- Image -->
-          <figure class="relative h-56 overflow-hidden">
-            <img
-              :src="`/api${activity.Images[0]}`"
-              class="w-full h-full object-cover transition-transform duration-500"
-              :class="{ 'group-hover:scale-110': !isActivityExpired(activity) }"
-              :alt="activity.Title"
-            />
-            <div class="absolute top-4 right-4 z-10">
-              <div :class="['badge badge-lg', getStatusBadge(activity).class]">
-                {{ getStatusBadge(activity).text }}
-              </div>
+       <!-- ส่วน Activities Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+    <NuxtLink
+      v-for="activity in filteredActivities"
+      :key="activity.ID"
+      :to="isActivityExpired(activity) || getSpotsLeft(activity) <= 0 ? undefined : `/activity/${activity.ID}`"
+      class="card bg-base-100 shadow-xl transition-all duration-300 group h-[32rem] overflow-hidden flex flex-col"
+      :class="{
+        'hover:shadow-2xl hover:-translate-y-1': !isActivityExpired(activity) && getSpotsLeft(activity) > 0,
+        'opacity-75 cursor-not-allowed filter grayscale': isActivityExpired(activity) || getSpotsLeft(activity) <= 0
+      }"
+    >
+      <!-- รูปภาพ -->
+      <figure class="relative w-full h-52">
+        <img
+          :src="`/api${activity.Images[0]}`"
+          class="w-full h-full object-cover transition-all duration-300"
+          :class="{ 'group-hover:scale-105': !isActivityExpired(activity) && getSpotsLeft(activity) > 0 }"
+          :alt="activity.Title"
+        />
+        <div class="absolute top-4 right-4 z-10">
+          <div :class="['badge badge-lg font-medium', getStatusBadge(activity).class]">
+            {{ getStatusBadge(activity).text }}
+          </div>
+        </div>
+      </figure>
+
+      <!-- เนื้อหา -->
+      <div class="card-body p-6 flex-1 flex flex-col">
+        <!-- หัวข้อและคะแนน -->
+        <div class="flex justify-between items-start gap-2 mb-4">
+          <h2 class="card-title text-lg line-clamp-2 flex-1">{{ activity.Title }}</h2>
+            <div class="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-lg shrink-0">
+              คะแนนที่ได้รับ
+            <span class="font-medium">{{ activity.Score }}</span>
+
+          </div>
+        </div>
+
+        <!-- คำอธิบาย -->
+        <p class="line-clamp-2 text-base-content/70 text-sm mb-6">{{ activity.Description }}</p>
+
+        <!-- ข้อมูลเพิ่มเติม -->
+        <div class="grid grid-cols-2 gap-3 mb-6">
+          <div class="bg-base-200/50 rounded-lg p-3">
+            <div class="flex items-center gap-2 text-xs text-base-content/70">
+              <Icon name="ic-baseline-location-on" class="w-4 h-4" />
+              <span>สถานที่</span>
             </div>
-          </figure>
-
-          <!-- Content -->
-          <div class="card-body" :class="{ 'opacity-75': isActivityExpired(activity) }">
-            <div class="flex justify-between items-start gap-2">
-              <h2 class="card-title text-xl line-clamp-2 flex-1">
-                {{ activity.Title }}
-              </h2>
-              <div class="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-lg">
-                <Icon name="ic-baseline-star" class="w-5 h-5 text-yellow-500" />
-                <span class="font-semibold">{{ activity.Score }}</span>
-              </div>
+            <p class="font-medium text-sm truncate mt-1">{{ activity.Location }}</p>
+          </div>
+          <div class="bg-base-200/50 rounded-lg p-3">
+            <div class="flex items-center gap-2 text-xs text-base-content/70">
+              <Icon name="ic-baseline-calendar-today" class="w-4 h-4" />
+              <span>วันที่เริ่มกิจกรรม</span>
             </div>
+            <p class="font-medium text-sm mt-1">{{ formatDate(activity.EndDate) }}</p>
+          </div>
+        </div>
 
-            <p class="line-clamp-3 text-base-content/70 mt-2">{{ activity.Description }}</p>
-
-            <div class="card-actions flex-wrap gap-2 mt-4">
-              <div class="badge badge-outline gap-1 p-3">
-                <Icon name="ic-baseline-location-on" class="w-4 h-4" />
-                {{ activity.Location }}
-              </div>
-              <div class="badge badge-primary gap-1 p-3">
-                <Icon name="ic-baseline-person-2" class="w-4 h-4" />
-                {{ activity.MaxParticipants }} คน
-              </div>
-              <div class="badge badge-secondary gap-1 p-3">
-                <Icon name="ic-baseline-calendar-today" class="w-4 h-4" />
-                {{ formatDate(activity.StartDate) }}
-              </div>
+        <!-- ส่วนแสดงความคืบหน้า -->
+        <div class="mt-auto space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-base-content/70">ผู้เข้าร่วม</span>
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-medium">
+                {{ getParticipantCount(activity.ID) }} / {{ activity.MaxParticipants }} คน
+              </span>
+              <span :class="[
+                'badge badge-sm',
+                getSpotsLeft(activity) === 0 ? 'badge-error' : 'badge-success'
+              ]">
+                {{ getSpotsLeft(activity) > 0 ? `เหลือ ${getSpotsLeft(activity)}` : 'เต็ม' }}
+              </span>
             </div>
           </div>
-        </NuxtLink>
+
+          <!-- Progress Bar -->
+          <div class="w-full h-2 bg-base-200 rounded-full overflow-hidden">
+            <div
+              :class="[getProgressColor(activity)]"
+              :style="{ width: `${getProgressPercent(activity)}%` }"
+              class="h-full transition-all duration-300"
+            />
+          </div>
+        </div>
       </div>
+    </NuxtLink>
+  </div>
 
       <!-- Empty State -->
       <div
-        v-if="!isLoading && activityRes.activities.length === 0"
-        class="flex flex-col items-center justify-center min-h-[400px] animate-fade-in"
-      >
+  v-if="!isLoading && filteredActivities.length === 0"
+  class="flex flex-col items-center justify-center min-h-[400px] animate-fade-in"
+>
+
         <Icon name="ic-baseline-search-off" class="w-24 h-24 text-base-content/30 mb-4" />
         <p class="text-2xl text-base-content/70">ไม่พบกิจกรรมที่คุณค้นหา</p>
       </div>
 
       <!-- Pagination -->
-      <div class="flex justify-center items-center gap-4 mt-12">
+      <!-- <div class="flex justify-center items-center gap-4 mt-12">
         <div class="join">
           <button
             v-if="page > 1"
@@ -222,7 +330,7 @@ await fetchActivities();
             <Icon name="ic-baseline-chevron-right" class="w-5 h-5" />
           </button>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -264,3 +372,4 @@ await fetchActivities();
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 </style>
+

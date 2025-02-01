@@ -200,7 +200,7 @@ onMounted(() => {
             </div>
 
             <div class="stat">
-              <div class="stat-title">ระยะเวลากิจกรรม</div>
+              <div class="stat-title">ระยะเวลากิจกรรมที่สามารถจองได้</div>
               <div class="stat-value text-primary">
                 {{ Math.ceil((new Date(data.activity.EndDate).getTime() - new Date(data.activity.StartDate).getTime()) / (1000 * 60 * 60 * 24)) }}
               </div>
