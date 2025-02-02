@@ -13,6 +13,7 @@ const userDepartment = computed(() => auth.value?.DepartmentID);
 // เพิ่ม state สำหรับการเลือกประเภทรายงาน
 const reportType = ref('all'); // all, department, completed, failed, status
 const selectedReportDepartment = ref('');
+const selectedActivityId = ref<number | null>(null);
 
 const axios = useAxios();
 const loading = ref(false);
@@ -52,7 +53,7 @@ interface ActivityResult {
   UserID: string;
   ActivityID: number;
   Reservation: boolean;
-  Status: "RESERVED" | "completed" | "failed";
+  Status: "RESERVED" | "active" | "completed" | "failed";
   IsArchived: boolean;
   CreatedAt: string;
   UpdatedAt: string;
@@ -61,17 +62,81 @@ interface ActivityResult {
 
 const activityResults = ref<ActivityResult[]>([]);
 
-function getStatusDisplay(result: ActivityResult, userId: string) {
-  const completedCount = activityResults.value.filter(
-    r => r.UserID === userId && r.Status === 'completed'
-  ).length;
-
-  if (completedCount >= 3) {
-    return { text: "ผ่านกิจกรรม", class: "badge-success" };
-  } else {
-    return { text: "ไม่ผ่านกิจกรรม", class: "badge-error" };
+const getStatusDisplay = (result: ActivityResult) => {
+  switch(result.Status) {
+    case 'RESERVED':
+      return { text: "รอยืนยัน", class: "badge-warning" };
+    case 'active':
+      return { text: "อยู่ระหว่างดำเนินการ", class: "badge-info" };
+    case 'completed':
+      return { text: "ผ่านกิจกรรม", class: "badge-success" };
+    case 'failed':
+      return { text: "ไม่ผ่านกิจกรรม", class: "badge-error" };
+    default:
+      return { text: "ไม่ทราบสถานะ", class: "badge-ghost" };
   }
+};
+function getFinalStatus(userId: string): string {
+  const userActivities = results.value.filter(r => r.UserID === userId);
+  const completedCount = userActivities.filter(r => r.Status === 'completed').length;
+  const failedCount = userActivities.filter(r => r.Status === 'failed').length;
+  const totalAttemptedCount = completedCount + failedCount;
+
+  if (totalAttemptedCount >= 3) {
+    if (completedCount >= 3) {
+      return "ผ่านกิจกรรม";
+    } else {
+      return "ไม่ผ่านกิจกรรม";
+    }
+  }
+  return "อยู่ระหว่างดำเนินการ";
 }
+
+const generatePDFStats = () => {
+  const totalUsers = new Set(results.value.map(r => r.UserID)).size;
+  const passedUsers = new Set(
+    results.value
+      .filter(r => {
+        const userActivities = results.value.filter(ua => ua.UserID === r.UserID);
+        const completedCount = userActivities.filter(ua => ua.Status === 'completed').length;
+        return completedCount >= 3;
+      })
+      .map(r => r.UserID)
+  ).size;
+  const failedUsers = new Set(
+    results.value
+      .filter(r => {
+        const userActivities = results.value.filter(ua => ua.UserID === r.UserID);
+        const completedCount = userActivities.filter(ua => ua.Status === 'completed').length;
+        const failedCount = userActivities.filter(ua => ua.Status === 'failed').length;
+        return (completedCount + failedCount) >= 3 && completedCount < 3;
+      })
+      .map(r => r.UserID)
+  ).size;
+
+  return {
+    totalUsers,
+    passedUsers,
+    failedUsers,
+    inProgressUsers: totalUsers - passedUsers - failedUsers
+  };
+};
+
+const generateTableData = (reportData: ActivityResult[]) => {
+  return reportData.map((result) => {
+    const activity = activities.value.find((a) => a.ID === result.ActivityID);
+    const user = users.value.find((u) => u.UserID === result.UserID);
+    const status = getStatusDisplay(result);
+
+    return [
+      activity?.Title || result.ActivityID,
+      `${user?.UserFirstName} ${user?.UserLastName}`,
+      getDepartmentFullName(result.DepartmentID),
+      status.text,
+      dayjs(result.CreatedAt).locale("th").format("DD/MM/YYYY HH:mm")
+    ];
+  });
+};
 interface DepartmentMapping {
   [key: string]: string;
 }
@@ -104,36 +169,50 @@ const departments = computed(() => {
 });
 
 const getFilteredDataForReport = () => {
-  let reportData = [...results.value];
+  let filteredData = [...results.value];
 
   // กรองตามแผนกสำหรับครู
   if (isTeacher.value) {
-    reportData = reportData.filter(result =>
+    filteredData = filteredData.filter(result =>
       result.DepartmentID === userDepartment.value
     );
   }
 
   switch (reportType.value) {
     case 'department':
-      return reportData.filter(result =>
+      return filteredData.filter(result =>
         result.DepartmentID === selectedReportDepartment.value
       );
+
+    case 'by_activity':
+      return filteredData.filter(result =>
+        result.ActivityID === selectedActivityId.value
+      );
+
+    case 'activity_department':
+      return filteredData.filter(result =>
+        result.ActivityID === selectedActivityId.value &&
+        result.DepartmentID === selectedReportDepartment.value
+      );
+
     case 'completed_pass':
-      return reportData.filter(result => {
+      return filteredData.filter(result => {
         const completedCount = activityResults.value.filter(
           r => r.UserID === result.UserID && r.Status === 'completed'
         ).length;
         return completedCount >= 3;
       });
+
     case 'completed_not_pass':
-      return reportData.filter(result => {
+      return filteredData.filter(result => {
         const completedCount = activityResults.value.filter(
           r => r.UserID === result.UserID && r.Status === 'completed'
         ).length;
         return completedCount < 3;
       });
+
     default:
-      return reportData;
+      return filteredData;
   }
 };
 
@@ -145,17 +224,35 @@ const filteredResults = computed(() => {
     filtered = filtered.filter(result => result.DepartmentID === userDepartment.value);
   }
 
-  return filtered.filter(result => {
+  // Filter based on search, department, and status
+  filtered = filtered.filter(result => {
     const activity = activities.value.find(a => a.ID === result.ActivityID);
     const user = users.value.find(u => u.UserID === result.UserID);
-    const searchString = `${activity?.Title} ${user?.UserFirstName} ${user?.UserLastName} ${result.DepartmentID}`.toLowerCase();
+    const searchString = `${activity?.Title || ''} ${user?.UserFirstName || ''} ${user?.UserLastName || ''} ${result.DepartmentID}`.toLowerCase();
 
     const matchesSearch = searchQuery.value === "" || searchString.includes(searchQuery.value.toLowerCase());
     const matchesDepartment = selectedDepartment.value === "" || result.DepartmentID === selectedDepartment.value;
-    const matchesStatus = selectedStatus.value === "" || result.Status === selectedStatus.value;
+
+    // Handle status filtering
+    let matchesStatus = true;
+    if (selectedStatus.value === 'completed_pass') {
+      const userCompletedCount = results.value.filter(
+        r => r.UserID === result.UserID && r.Status === 'completed'
+      ).length;
+      matchesStatus = userCompletedCount >= 3;
+    } else if (selectedStatus.value === 'completed_not_pass') {
+      const userCompletedCount = results.value.filter(
+        r => r.UserID === result.UserID && r.Status === 'completed'
+      ).length;
+      matchesStatus = userCompletedCount < 3;
+    } else if (selectedStatus.value) {
+      matchesStatus = result.Status === selectedStatus.value;
+    }
 
     return matchesSearch && matchesDepartment && matchesStatus;
   });
+
+  return filtered;
 });
 
 const paginatedResults = computed(() => {
@@ -228,9 +325,7 @@ async function generateDetailedPDF() {
       return;
     }
 
-    // Get filtered data based on report type
     const reportData = getFilteredDataForReport();
-
     if (reportData.length === 0) {
       await Swal.fire({
         icon: 'warning',
@@ -241,134 +336,87 @@ async function generateDetailedPDF() {
     }
 
     loading.value = true;
-    Swal.fire({
-      title: "กำลังสร้างรายงาน PDF",
-      html: "กรุณารอสักครู่...",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
-
     const doc = new jsPDF();
 
-     // เพิ่ม font ภาษาไทย
-     doc.addFileToVFS('THSarabunNew-normal.ttf', fonts.thSarabun);
+    // Set font
+    doc.addFileToVFS('THSarabunNew-normal.ttf', fonts.thSarabun);
     doc.addFont('THSarabunNew-normal.ttf', 'THSarabunNew', 'normal');
     doc.setFont('THSarabunNew');
 
-      // ปรับปรุงชื่อรายงานตามประเภท
-      let reportTitle = "รายงานการเข้าร่วมกิจกรรม";
-switch (reportType.value) {
-  case 'department':
-    reportTitle += ` - แผนก${getDepartmentFullName(selectedReportDepartment.value)}`;
-    break;
-  case 'completed_pass':
-    reportTitle += " - ผู้ผ่านกิจกรรม (ครบ 3 กิจกรรม)";
-    break;
-  case 'completed_not_pass':
-    reportTitle += " - ผู้ไม่ผ่านกิจกรรม (ไม่ครบ 3 กิจกรรม)";
-    break;
-}
+    // Report title based on type
+    let reportTitle = "รายงานการเข้าร่วมกิจกรรม";
+    switch (reportType.value) {
+      case 'department':
+        reportTitle += ` - แผนก${getDepartmentFullName(selectedReportDepartment.value)}`;
+        break;
+      case 'by_activity':
+        const activity = activities.value.find(a => a.ID === selectedActivityId.value);
+        reportTitle += ` - ${activity?.Title || 'ไม่ระบุกิจกรรม'}`;
+        break;
+      case 'activity_department':
+        const act = activities.value.find(a => a.ID === selectedActivityId.value);
+        reportTitle += ` - ${act?.Title || 'ไม่ระบุกิจกรรม'} (แผนก${getDepartmentFullName(selectedReportDepartment.value)})`;
+        break;
+    }
 
-    // เพิ่มหัวกระดาษ
+    // Add header
     doc.setFontSize(20);
-    doc.text("รายงานการเข้าร่วมกิจกรรม", 105, 25, { align: "center" });
+    doc.text(reportTitle, 105, 25, { align: "center" });
 
-    // ข้อมูลรายงาน
+    // Add date
     doc.setFontSize(12);
-    doc.text(
-      `วันที่ออกรายงาน: ${dayjs().locale("th").format("DD MMMM YYYY")}`,
-      105,
-      35,
-      { align: "center" }
-    );
+    doc.text(`วันที่ออกรายงาน: ${dayjs().locale("th").format("DD MMMM YYYY")}`, 105, 35, { align: "center" });
 
-    // สรุปภาพรวม
-    const completedCount = results.value.filter(
-      (r) => r.Status === "completed"
-    ).length;
-    const pendingCount = results.value.filter(
-      (r) => r.Status === "RESERVED"
-    ).length;
+    // Summary
+    const statusCounts = {
+      pending: reportData.filter(r => r.Status === 'RESERVED').length,
+      inProgress: reportData.filter(r => r.Status === 'active').length,
+      passed: reportData.filter(r => r.Status === 'completed').length,
+      failed: reportData.filter(r => r.Status === 'failed').length
+    };
 
     doc.setFillColor(240, 240, 240);
-    doc.rect(14, 45, 180, 25, "F");
+    doc.rect(14, 45, 180, 35, "F");
     doc.text("สรุปภาพรวม", 105, 55, { align: "center" });
-    doc.text(`จำนวนกิจกรรมทั้งหมด: ${activities.value.length} กิจกรรม`, 20, 63);
-    doc.text(`เข้าร่วมแล้ว: ${completedCount} รายการ`, 90, 63);
-    doc.text(`รอดำเนินการ: ${pendingCount} รายการ`, 160, 63);
+    doc.text(`จำนวนรายการทั้งหมด: ${reportData.length} รายการ`, 20, 63);
+    doc.text(`รอยืนยัน: ${statusCounts.pending} รายการ`, 120, 63);
+    doc.text(`อยู่ระหว่างดำเนินการ: ${statusCounts.inProgress} รายการ`, 20, 71);
+    doc.text(`ผ่านกิจกรรม: ${statusCounts.passed} รายการ`, 120, 71);
 
-    // สร้างตารางข้อมูล
-    const tableData = reportData.map((result) => {
-  const activity = activities.value.find((a) => a.ID === result.ActivityID);
-  const user = users.value.find((u) => u.UserID === result.UserID);
-
-  return [
-    activity?.Title || result.ActivityID,
-    `${user?.UserFirstName} ${user?.UserLastName}`,
-    getDepartmentFullName(result.DepartmentID), // เปลี่ยนตรงนี้ จากเดิมที่เป็นแค่ result.DepartmentID
-    result.Status === "completed" ? "เข้าร่วมแล้ว" : "รอเข้าร่วม",
-    dayjs(result.CreatedAt).locale("th").format("DD/MM/YYYY HH:mm"),
-    dayjs(result.UpdatedAt).locale("th").format("DD/MM/YYYY HH:mm"),
-  ];
-});
-
+    // Create table
     (doc as any).autoTable({
-      startY: 80,
-      head: [
-        [
-          "ชื่อกิจกรรม",
-          "ชื่อ-นามสกุล",
-          "แผนก",
-          "สถานะ",
-          "วันที่ลงทะเบียน",
-          "วันที่อัพเดท",
-        ],
-      ],
-      body: tableData,
+      startY: 90,
+      head: [["ชื่อกิจกรรม", "ชื่อ-นามสกุล", "แผนก", "สถานะ", "วันที่"]],
+      body: generateTableData(reportData),
       theme: "grid",
       headStyles: {
         fillColor: [71, 107, 107],
         textColor: 255,
         fontSize: 12,
         halign: "center",
-        font: 'THSarabunNew' // เพิ่มบรรทัดนี้
+        font: 'THSarabunNew'
       },
       styles: {
         fontSize: 10,
         cellPadding: 5,
-        font: 'THSarabunNew' // เพิ่มบรรทัดนี้
+        font: 'THSarabunNew'
       },
       columnStyles: {
-        0: { cellWidth: 40 },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 20 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 30 },
+        0: { cellWidth: 50 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 25 }
       },
     });
 
-    // เพิ่มท้ายกระดาษ
+    // Add footer
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      // เพิ่มเส้นคั่น
       doc.setDrawColor(71, 107, 107);
-      doc.line(
-        14,
-        doc.internal.pageSize.height - 20,
-        196,
-        doc.internal.pageSize.height - 20
-      );
-      // เพิ่มข้อความท้ายกระดาษ
+      doc.line(14, doc.internal.pageSize.height - 20, 196, doc.internal.pageSize.height - 20);
       doc.setFontSize(8);
-      doc.text(
-        "© ระบบบริหารจัดการกิจกรรม",
-        14,
-        doc.internal.pageSize.height - 10
-      );
       doc.text(
         `พิมพ์เมื่อ ${dayjs().locale("th").format("DD/MM/YYYY HH:mm")}`,
         105,
@@ -383,8 +431,9 @@ switch (reportType.value) {
       );
     }
 
-    // บันทึก PDF
+    // Save PDF
     doc.save(`activity-report-${reportType.value}-${dayjs().format("YYYYMMDD-HHmm")}.pdf`);
+
     await Swal.fire({
       icon: "success",
       title: "สร้างรายงานสำเร็จ",
@@ -392,12 +441,12 @@ switch (reportType.value) {
       timer: 2000,
     });
   } catch (error) {
+    console.error("Error generating PDF:", error);
     await Swal.fire({
       icon: "error",
       title: "เกิดข้อผิดพลาด",
-      text: "ไม่สามารถสร้างรายงาน PDF ได้",
+      text: "ไม่สามารถสร้างรายงาน PDF ได้"
     });
-    console.error("Error generating PDF:", error);
   } finally {
     loading.value = false;
   }
@@ -407,221 +456,68 @@ onMounted(loadData);
 </script>
 
 <template>
-  <div class="min-h-screen p-6 ">
-    <div class="max-w-7xl mx-auto space-y-6">
+  <div class="min-h-screen p-6">
+    <div class="max-w-4xl mx-auto space-y-6">
       <!-- Header -->
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold">รายงานการเข้าร่วมกิจกรรม</h1>
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold mb-6">รายงานการเข้าร่วมกิจกรรม</h1>
 
-          <!-- Report Options -->
-          <div class="flex items-center gap-4">
-            <select v-model="reportType" class="select select-bordered"
-        :disabled="isTeacher">
-  <option value="all" v-if="!isTeacher">ทั้งหมด</option>
-  <option value="department">ตามแผนก</option>
-  <option value="completed_pass">ผ่านกิจกรรม (ครบ 3 กิจกรรม)</option>
-  <option value="completed_not_pass">ไม่ผ่านกิจกรรม (ไม่ครบ 3 กิจกรรม)</option>
-</select>
+        <div class="grid gap-4">
+          <!-- Export Options -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Report Type -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">ประเภทรายงาน</span>
+              </label>
+              <select v-model="reportType" class="select select-bordered w-full">
+                <option value="all">ทั้งหมด</option>
+                <option value="department">ตามแผนก</option>
+                <option value="by_activity">ตามกิจกรรม</option>
+                <option value="activity_department">ตามกิจกรรมและแผนก</option>
+              </select>
+            </div>
 
-<select
-  v-if="reportType === 'department'"
-  v-model="selectedReportDepartment"
-  class="select select-bordered"
->
-  <option value="" disabled>เลือกแผนก</option>
-  <option v-for="dept in departments.filter(d => d !== undefined)" :key="dept" :value="dept">
-    {{ getDepartmentFullName(dept) }}
-  </option>
-</select>
+           <!-- Department Selection -->
+           <div class="form-control" v-if="['department', 'activity_department'].includes(reportType)">
+             <label class="label">
+               <span class="label-text">เลือกแผนก</span>
+             </label>
+             <select v-model="selectedReportDepartment" class="select select-bordered w-full">
+               <option value="" disabled>เลือกแผนก</option>
+               <option v-for="dept in departments" :key="dept" :value="dept ?? ''">
+                 {{ getDepartmentFullName(dept ?? '') }}
+               </option>
+             </select>
+           </div>
 
+            <!-- Activity Selection -->
+            <div class="form-control" v-if="['by_activity', 'activity_department'].includes(reportType)">
+              <label class="label">
+                <span class="label-text">เลือกกิจกรรม</span>
+              </label>
+              <select v-model="selectedActivityId" class="select select-bordered w-full">
+                <option value="" disabled>เลือกกิจกรรม</option>
+                <option v-for="activity in activities" :key="activity.ID" :value="activity.ID">
+                  {{ activity.Title }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Export Button -->
           <button
             @click="generateDetailedPDF"
-            :disabled="loading || (reportType === 'department' && !selectedReportDepartment)"
-            class="btn btn-primary gap-2"
+            :disabled="loading ||
+                      (reportType === 'department' && !selectedReportDepartment) ||
+                      (reportType === 'by_activity' && !selectedActivityId) ||
+                      (reportType === 'activity_department' && (!selectedReportDepartment || !selectedActivityId))"
+            class="btn btn-primary w-full md:w-auto md:ml-auto mt-4"
           >
             <span v-if="loading" class="loading loading-spinner"></span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="64" stroke-dashoffset="64" d="M13 3l6 6v12h-14v-18h8"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" stroke-width="1" d="M12.5 3v5.5h6.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="14;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M10 13l-2 2l2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" values="8;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M14 13l2 2l-2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.1s" dur="0.2s" values="8;0"/></path></g></svg>
+            <Icon name="ic:baseline-file-download" class="w-5 h-5 mr-2" />
             {{ loading ? "กำลังสร้างรายงาน..." : "ส่งออกรายงาน PDF" }}
           </button>
-        </div>
-      </div>
-
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="stat bg-white shadow-lg rounded-2xl">
-          <div class="stat-figure text-primary">
-            <Icon name="mdi:calendar-check" class="w-8 h-8" />
-          </div>
-          <div class="stat-title">กิจกรรมทั้งหมด</div>
-          <div class="stat-value text-primary">{{ activities.length }}</div>
-        </div>
-
-        <div class="stat bg-white shadow-lg rounded-2xl">
-          <div class="stat-figure text-success">
-            <Icon name="mdi:check-circle" class="w-8 h-8" />
-          </div>
-          <div class="stat-title">เข้าร่วมแล้ว</div>
-          <div class="stat-value text-success">
-            {{ results.filter((r) => r.Status === "completed").length }}
-          </div>
-        </div>
-
-        <div class="stat bg-white shadow-lg rounded-2xl">
-          <div class="stat-figure text-warning">
-            <Icon name="mdi:clock" class="w-8 h-8" />
-          </div>
-          <div class="stat-title">รอดำเนินการ</div>
-          <div class="stat-value text-warning">
-            {{ results.filter((r) => r.Status === "RESERVED").length }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="bg-white shadow-lg rounded-2xl p-6 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Search -->
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">ค้นหา</span>
-            </label>
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="ค้นหาชื่อกิจกรรม, ชื่อผู้เข้าร่วม..."
-              class="input input-bordered w-full"
-            />
-          </div>
-
-          <!-- Department Filter -->
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">แผนก</span>
-            </label>
-            <select
-              v-model="selectedDepartment"
-              class="select select-bordered w-full"
-            >
-              <option value="">ทั้งหมด</option>
-              <option v-for="dept in departments" :key="dept" :value="dept">
-                {{ dept }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Status Filter -->
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">สถานะ</span>
-            </label>
-            <select v-model="selectedStatus" class="select select-bordered w-full">
-  <option value="">ทั้งหมด</option>
-  <option value="completed_pass">ผ่านกิจกรรม (ครบ 3 กิจกรรม)</option>
-  <option value="completed_not_pass">ไม่ผ่านกิจกรรม (ไม่ครบ 3 กิจกรรม)</option>
-</select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Data Table -->
-      <div class="bg-white shadow-lg rounded-2xl p-6 overflow-x-auto">
-        <table class="table table-zebra w-full">
-          <thead>
-            <tr>
-              <th>ชื่อกิจกรรม</th>
-              <th>ชื่อ-นามสกุล</th>
-              <th>แผนก</th>
-              <th>สถานะ</th>
-              <th>วันที่ลงทะเบียน</th>
-              <th>วันที่อัพเดท</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="result in paginatedResults" :key="result.ID">
-              <td>
-                {{
-                  activities.find((a) => a.ID === result.ActivityID)?.Title ||
-                  result.ActivityID
-                }}
-              </td>
-              <td>
-                {{
-                  users.find((u) => u.UserID === result.UserID)?.UserFirstName +
-                  " " +
-                  users.find((u) => u.UserID === result.UserID)?.UserLastName
-                }}
-              </td>
-              <td>{{ getDepartmentFullName(result.DepartmentID) }}</td>
-<td>
-  <div class="badge" :class="getStatusDisplay(result, result.UserID).class">
-    {{ getStatusDisplay(result, result.UserID).text }}
-  </div>
-</td>
-              <td>
-                {{
-                  dayjs(result.CreatedAt)
-                    .locale("th")
-                    .format("DD/MM/YYYY HH:mm")
-                }}
-              </td>
-              <td>
-                {{
-                  dayjs(result.UpdatedAt)
-                    .locale("th")
-                    .format("DD/MM/YYYY HH:mm")
-                }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Pagination -->
-        <div class="flex justify-center items-center gap-2 mt-4">
-          <button
-            class="btn btn-sm"
-            :disabled="currentPage === 1"
-            @click="prevPage"
-          >
-            <Icon name="mdi:chevron-left" class="w-5 h-5" />
-          </button>
-
-          <template v-for="page in totalPages" :key="page">
-            <button
-              v-if="
-                page === 1 ||
-                page === totalPages ||
-                (page >= currentPage - 1 && page <= currentPage + 1)
-              "
-              class="btn btn-sm"
-              :class="{ 'btn-primary': currentPage === page }"
-              @click="goToPage(page)"
-            >
-              {{ page }}
-            </button>
-            <span
-              v-else-if="
-                page === currentPage - 2 || page === currentPage + 2
-              "
-              class="px-2"
-            >
-              ...
-            </span>
-          </template>
-
-          <button
-            class="btn btn-sm"
-            :disabled="currentPage === totalPages"
-            @click="nextPage"
-          >
-            <Icon name="mdi:chevron-right" class="w-5 h-5" />
-          </button>
-        </div>
-
-        <!-- Results count -->
-        <div class="text-sm text-gray-600 text-center mt-2">
-          แสดง {{ (currentPage - 1) * itemsPerPage + 1 }} ถึง
-          {{ Math.min(currentPage * itemsPerPage, filteredResults.length) }}
-          จากทั้งหมด {{ filteredResults.length }} รายการ
         </div>
       </div>
     </div>
