@@ -31,6 +31,7 @@ interface Semester {
 const selectedDepartment = ref('');
 const selectedRole = ref('');
 const selectedStatus = ref('');
+const selectedType = ref('');
 
 const semesters = ref<Semester[]>([]);
 const selectedSemester = ref<number | null>(null);
@@ -74,24 +75,45 @@ const activityResults = ref<ActivityResult[]>([]);
   const showQRScanner = ref(false);
 
 
-  const filteredActivities = computed(() => {
-  let filtered = activities.value;
+const filteredActivities = computed(() => {
+  let filteredActivitiesList = activities.value;
 
-  if (isTeacher.value && userDepartment.value) {
-    // ถ้าเป็นครูให้เห็นเฉพาะแผนกตัวเอง
-    filtered = filtered.filter(activity => {
-      const result = activityResults.value.find(r => r.ActivityID === activity.ID);
-      return result?.DepartmentID === userDepartment.value;
-    });
-  } else if (selectedDepartment.value) {
-    // ถ้าเป็น admin และเลือกแผนก
-    filtered = filtered.filter(activity => {
-      const results = activityResults.value.filter(r => r.ActivityID === activity.ID);
-      return results.some(r => r.DepartmentID === selectedDepartment.value);
+  // กรองตามการค้นหา
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase().trim();
+    filteredActivitiesList = filteredActivitiesList.filter(activity =>
+      activity.Title.toLowerCase().includes(query) ||
+      activity.Description.toLowerCase().includes(query) ||
+      activity.Location?.toLowerCase().includes(query)
+    );
+  }
+
+  // กรองตามประเภท
+  if (selectedType.value) {
+    filteredActivitiesList = filteredActivitiesList.filter(activity => activity.Type === selectedType.value);
+  }
+
+  // กรองตามสถานะ
+  if (selectedStatus.value) {
+    const now = new Date();
+    filteredActivitiesList = filteredActivitiesList.filter(activity => {
+      const start = new Date(activity.StartDate);
+      const end = new Date(activity.EndDate);
+
+      switch (selectedStatus.value) {
+        case 'active':
+          return now >= start && now <= end;
+        case 'upcoming':
+          return now < start;
+        case 'completed':
+          return now > end;
+        default:
+          return true;
+      }
     });
   }
 
-  return filtered;
+  return filteredActivitiesList;
 });
 
 
@@ -791,7 +813,48 @@ watch(selectedSemester, () => {
         {{ semester.Status === 'ACTIVE' ? '(ปัจจุบัน)' : '' }}
       </option>
     </select>
+    <!-- เพิ่มส่วนค้นหาและกรอง -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 mt-3">
+  <!-- ช่องค้นหา -->
+  <div class="form-control">
+    <div class="input-group">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="ค้นหากิจกรรม..."
+        class="input input-bordered w-full"
+      />
+      <!-- <button class="btn btn-square btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </button> -->
+    </div>
   </div>
+
+  <!-- กรองตามประเภท -->
+  <!-- <div class="form-control">
+    <select v-model="selectedType" class="select select-bordered w-full">
+      <option value="">ประเภทกิจกรรมทั้งหมด</option>
+      <option value="GENERAL">ทั่วไป</option>
+      <option value="SPORT">กีฬา</option>
+      <option value="ACADEMIC">วิชาการ</option>
+      <option value="CULTURE">วัฒนธรรม</option>
+    </select>
+  </div> -->
+
+  <!-- กรองตามสถานะ -->
+  <div class="form-control">
+    <select v-model="selectedStatus" class="select select-bordered w-full">
+      <option value="">สถานะทั้งหมด</option>
+      <option value="active">กำลังดำเนินการ</option>
+      <option value="upcoming">ยังไม่เริ่ม</option>
+      <option value="completed">สิ้นสุดแล้ว</option>
+    </select>
+  </div>
+</div>
+  </div>
+
 
 </div>
 

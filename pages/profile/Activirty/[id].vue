@@ -1,107 +1,132 @@
+// Script Section
 <script setup lang="ts">
-// นำเข้าส่วนประกอบที่จำเป็น
 import { ref, onMounted, computed } from 'vue'
-const router = useRouter()  // สำหรับการนำทาง
-const axios = useAxios()    // สำหรับเรียก API
-const { auth } = useAuth()  // สำหรับจัดการการยืนยันตัวตน
-const route = useRoute()    // สำหรับอ่านค่าพารามิเตอร์จาก URL
-import QRCodeVue3 from 'qrcode-vue3'
+const router = useRouter()
+const axios = useAxios()
+const { auth } = useAuth()
+const route = useRoute()
 
-// กำหนดโครงสร้างข้อมูลผู้ใช้
+import Swal from 'sweetalert2'
+
 interface User {
-  UserID: string           // รหัสผู้ใช้
-  UserFirstName: string    // ชื่อจริง
-  UserLastName: string     // นามสกุล
-  UserImage: string | null // รูปโปรไฟล์
+  UserID: string
+  UserFirstName: string
+  UserLastName: string
+  UserImage: string | null
 }
 
-// กำหนดโครงสร้างข้อมูลกิจกรรม
 interface Activity {
   id: number
-  name: string            // ชื่อกิจกรรม
-  date: string           // วันที่จัดกิจกรรม
-  location: string       // สถานที่จัดกิจกรรม
-  status: 'RESERVED' | 'completed' | 'failed'  // สถานะกิจกรรม
-  score: number | null   // คะแนน
-  images?: string[]      // รูปภาพกิจกรรม
-  description?: string   // รายละเอียด
-  startTime?: string     // เวลาเริ่ม
-  endTime?: string       // เวลาสิ้นสุด
-  capacity?: number      // จำนวนที่รับได้
-  registeredCount?: number // จำนวนที่ลงทะเบียนแล้ว
-}
-
-// ตัวแปรสำหรับเก็บข้อมูล
-const user = ref<User | null>(null)           // ข้อมูลผู้ใช้
-const activity = ref<Activity | null>(null)   // ข้อมูลกิจกรรม
-const loading = ref(true)                     // สถานะการโหลด
-const error = ref<string | null>(null)        // ข้อความแสดงข้อผิดพลาด
-const showQRCode = ref(false)                 // สถานะการแสดง QR Code
-
-// สร้างข้อมูลสำหรับ QR Code
-const qrCodeData = computed(() => {
-  console.log('Loading:', loading.value);
-  console.log('Activity:', activity.value);
-  console.log('User:', user.value);
-
-  if (!activity.value || !user.value) {
-    console.warn('ไม่สามารถสร้าง QR code: ไม่พบข้อมูลกิจกรรมหรือผู้ใช้');
-    return '';
+  name: string
+  date: string
+  location: string
+  status: 'RESERVED' | 'active' | 'completed' | 'failed'
+  score: number | null
+  images?: string[]
+  description?: string
+  startTime?: string
+  endTime?: string
+  capacity?: number
+  registeredCount?: number
+  details?: {
+    id: number
+    details: string
+    isApproved: boolean | null
+    reviewNote?: string
+    proofImage?: string
   }
-
-  const data = {
-    activityId: activity.value.id,
-    userId: user.value.UserID,
-    checkInCode: generateCheckInCode(
-      activity.value.id,
-      user.value.UserID,
-      activity.value.date
-    ),
-    timestamp: new Date().toISOString()
-  };
-
-  console.log('Generated QR Data:', data);
-  return JSON.stringify(data);
-});
-
-// ฟังก์ชันสร้างรหัสเช็คอิน
-function generateCheckInCode(activityId: number, userId: string, date: string) {
-  return btoa(`${activityId}-${userId}-${date}`)
 }
 
-// ฟังก์ชันแปลงที่อยู่รูปภาพ
+const user = ref<User | null>(null)
+const activity = ref<Activity | null>(null)
+const loading = ref(true)
+const error = ref<string | null>(null)
+const uploadedImage = ref<File | null>(null)
+const imagePreview = ref<string | null>(null)
+
 const getImageUrl = (image: string | undefined) => {
   if (!image) return '/placeholder.jpg'
   if (image.startsWith('data:')) return image
-  // แก้เป็น
   return `${image.startsWith('/') ? 'http://localhost:4000' : ''}${image}`
 }
 
-// คำนวณที่อยู่รูปโปรไฟล์
 const profileImage = computed(() => {
   return user.value?.UserImage ? getImageUrl(user.value.UserImage) : '/default-avatar.png'
 })
 
-// ฟังก์ชันโหลดข้อมูล
+async function handleImageUpload(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+
+  if (!file) return;
+
+  // Validate file type and size
+  if (!file.type.startsWith('image/')) {
+    error.value = 'กรุณาอัพโหลดไฟล์รูปภาพเท่านั้น';
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    error.value = 'ขนาดไฟล์ต้องไม่เกิน 5MB';
+    return;
+  }
+
+  uploadedImage.value = file;
+  imagePreview.value = URL.createObjectURL(file);
+}
+
+async function submitProof() {
+  if (!uploadedImage.value || !activity.value) return;
+
+  try {
+    const formData = new FormData();
+    formData.append('proofImage', uploadedImage.value);
+    formData.append('activityId', activity.value.id.toString());
+    formData.append('userId', user.value?.UserID || '');
+
+    await axios.post('/api/activity-details/proof', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    Swal.fire({
+      icon: 'success',
+      title: 'อัพโหลดหลักฐานสำเร็จ',
+      text: 'ระบบได้บันทึกหลักฐานการเข้าร่วมกิจกรรมแล้ว',
+      showConfirmButton: false,
+      timer: 1500
+    });
+
+    await loadData(); // Refresh data
+  } catch (err) {
+    console.error('Error:', err);
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาด',
+      text: 'ไม่สามารถอัพโหลดหลักฐานได้ กรุณาลองใหม่อีกครั้ง'
+    });
+  }
+}
+
 async function loadData() {
   try {
     const [userRes, activityRes] = await Promise.all([
       axios.get(`/api/user/${auth.value?.UserID}`),
       axios.get(`/api/activity/booked-activities/${auth.value?.UserID}`)
-    ])
+    ]);
 
     user.value = userRes.data.user;
-    console.log('Activity Response:', activityRes.data);
-    console.log('Activity Images:', activityRes.data.find(
-      (act: Activity) => act.id === parseInt(route.params.id as string)
-    )?.images);
 
     if (activityRes.data && Array.isArray(activityRes.data)) {
       const foundActivity = activityRes.data.find(
         (act: Activity) => act.id === parseInt(route.params.id as string)
-      )
+      );
       if (foundActivity) {
         activity.value = foundActivity;
+        if (foundActivity.details?.proofImage) {
+          imagePreview.value = getImageUrl(foundActivity.details.proofImage);
+        }
       } else {
         error.value = 'ไม่พบข้อมูลกิจกรรม';
       }
@@ -110,68 +135,52 @@ async function loadData() {
     console.error('Error:', err);
     error.value = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
   } finally {
-    loading.value = false  // ต้องแน่ใจว่าบรรทัดนี้ทำงาน
-  }
-}
-// ฟังก์ชันกำหนดคลาสสถานะ
-const getStatusClass = (status: Activity['status']): string => {
-  switch(status) {
-    case 'RESERVED': return 'badge-warning'    // กำลังจอง
-    case 'completed': return 'badge-success'  // เสร็จสมบูรณ์
-    case 'failed': return 'badge-error'       // ล้มเหลว
-    default: return 'badge-ghost'             // ไม่ทราบสถานะ
+    loading.value = false;
   }
 }
 
-// ฟังก์ชันแปลงข้อความสถานะเป็นภาษาไทย
+const getStatusClass = (status: Activity['status']): string => {
+  switch(status) {
+    case 'RESERVED': return 'badge-warning'
+    case 'active': return 'badge-info'
+    case 'completed': return 'badge-success'
+    case 'failed': return 'badge-error'
+    default: return 'badge-ghost'
+  }
+}
+
 const getStatusText = (status: Activity['status']): string => {
   switch(status) {
-    case 'RESERVED': return 'กำลังจอง'
+    case 'RESERVED': return 'รอการยืนยัน'
+    case 'active': return 'รอการอนุมัติ'
     case 'completed': return 'เข้าร่วมสำเร็จ'
-    case 'failed': return 'เข้าร่วมไม่สำเร็จ'
+    case 'failed': return 'ไม่ผ่าน'
     default: return 'ไม่ทราบสถานะ'
   }
 }
 
-const activityImage = computed(() => {
-  return activity.value?.images?.[0] ? getImageUrl(activity.value.images[0]) : '/placeholder.jpg'
-})
-
 function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement;
-  img.src = '/placeholder.jpg';  // รูปภาพสำรอง
+  img.src = '/placeholder.jpg';
 }
 
-console.log('Activity Image URL:', activity.value?.images?.[0]);
-console.log('Processed Image URL:', getImageUrl(activity.value?.images?.[0]));
-// ฟังก์ชันย้อนกลับ
 function goBack() {
-  router.back()
+  router.back();
 }
 
-// ฟังก์ชันสลับการแสดง QR Code
-function toggleQRCode() {
-  if (!activity.value || !user.value) {
-    console.warn('ไม่สามารถแสดง QR Code: ข้อมูลไม่พร้อม');
-    return;
-  }
-  showQRCode.value = !showQRCode.value;
-}
-
-// เรียกโหลดข้อมูลเมื่อคอมโพเนนต์ถูกโหลด
 onMounted(() => {
-  loadData()
-})
+  loadData();
+});
 </script>
 
+
 <template>
-  <div class="min-h-screen animate-fade-in">
+  <div class="min-h-screen animate-fade-in ">
     <!-- Back Button -->
     <button @click="goBack"
-      class="fixed top-4 left-4 btn btn-circle btn-ghost bg-base-100/50 backdrop-blur-sm hover:bg-base-100">
+            class="fixed top-4 left-4 btn btn-circle btn-ghost bg-base-100/50 backdrop-blur-sm hover:bg-base-100 z-10">
       <Icon name="ic:baseline-arrow-back" class="w-6 h-6" />
     </button>
-
 
     <!-- Content -->
     <div class="container mx-auto px-4 py-8">
@@ -189,16 +198,15 @@ onMounted(() => {
       </div>
 
       <!-- Activity Content -->
-      <div v-else-if="activity" class="max-w-4xl mx-auto mt-8">
-        <div class="card bg-base-100 shadow-xl overflow-hidden backdrop-blur-sm">
+      <div v-else-if="activity" class="max-w-4xl mx-auto mt-8 space-y-6">
+        <!-- Main Activity Card -->
+        <div class="card bg-base-100 shadow-xl overflow-hidden">
           <!-- Hero Image Section -->
-          <figure class="relative h-72">
-            <img
-  :src="getImageUrl(activity.images?.[0])"
-  :alt="activity.name"
-  class="w-full h-full object-cover"
-  @error="handleImageError"
-/>
+          <figure class="relative h-80">
+            <img :src="getImageUrl(activity.images?.[0])"
+                 :alt="activity.name"
+                 class="w-full h-full object-cover"
+                 @error="handleImageError" />
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
             <div class="absolute bottom-6 left-6 right-6">
               <h1 class="text-3xl font-bold text-white mb-3">{{ activity.name }}</h1>
@@ -218,7 +226,7 @@ onMounted(() => {
               </div>
               <div>
                 <h2 class="text-xl font-bold">{{ user?.UserFirstName }} {{ user?.UserLastName }}</h2>
-                <p class="text-gray-500">{{ user?.UserID }}</p>
+                <p class="text-base-content/60">{{ user?.UserID }}</p>
               </div>
             </div>
 
@@ -254,90 +262,73 @@ onMounted(() => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- QR Code Button -->
-            <div class="card-actions justify-center">
-              <button @click="toggleQRCode"
-                      class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all">
-                <Icon name="ic:baseline-qr-code-2" class="w-6 h-6" />
-                แสดง QR Code เช็คชื่อ
+        <!-- Proof Upload Card -->
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title flex items-center gap-2 mb-6">
+              <Icon name="ic:baseline-upload-file" class="w-6 h-6 text-primary" />
+              หลักฐานการเข้าร่วมกิจกรรม
+            </h2>
+
+            <!-- Image Preview -->
+            <div v-if="imagePreview" class="mb-6">
+              <div class="relative w-full aspect-video rounded-xl overflow-hidden">
+                <img :src="imagePreview"
+                     alt="หลักฐานการเข้าร่วม"
+                     class="w-full h-full object-cover" />
+              </div>
+            </div>
+
+            <!-- Upload Area -->
+            <div v-if="!activity.details?.proofImage"
+                 class="border-2 border-dashed border-base-300 rounded-xl p-8 text-center">
+              <input type="file"
+                     accept="image/*"
+                     @change="handleImageUpload"
+                     class="hidden"
+                     id="proofUpload" />
+              <label for="proofUpload"
+                     class="flex flex-col items-center gap-4 cursor-pointer">
+                     <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                    </svg>
+                    <p class="mb-2 text-sm text-gray-500">
+                      <span class="font-semibold">คลิกเพื่อเลือกรูปภาพ</span>
+                    </p>
+                    <p class="text-xs text-gray-500">PNG, JPG หรือ JPEG (สูงสุด 5MB)</p>
+              </label>
+            </div>
+
+            <!-- Upload Button -->
+            <div v-if="uploadedImage && !activity.details?.proofImage"
+                 class="card-actions justify-end mt-6">
+              <button @click="submitProof"
+                      class="btn btn-primary gap-2">
+                <Icon name="ic:baseline-check" class="w-5 h-5" />
+                ยืนยันการอัพโหลด
               </button>
+            </div>
+
+            <!-- Status Message -->
+            <div v-if="activity.details?.proofImage"
+                 class="alert alert-success">
+              <Icon name="ic:baseline-check-circle" class="w-6 h-6" />
+              <span>คุณได้อัพโหลดหลักฐานการเข้าร่วมกิจกรรมแล้ว</span>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- QR Code Modal -->
-    <dialog :class="{ 'modal': true, 'modal-open': showQRCode }">
-      <div class="modal-box relative bg-white max-w-sm p-6">
-        <h3 class="text-2xl font-bold text-center mb-8">QR Code สำหรับเช็คชื่อ</h3>
-
-       <!-- QR Code Modal Content -->
-<div v-if="qrCodeData" class="text-center">
-  <QRCodeVue3
-    :value="qrCodeData"
-    :size="250"
-    :level="'H'"
-    :background="'#ffffff'"
-    :foreground="'#9333ea'"
-    class="mx-auto"
-  />
-</div>
-<div v-else-if="loading" class="flex justify-center">
-  <span class="loading loading-spinner loading-lg text-primary"></span>
-</div>
-<div v-else class="text-center text-error">
-  <p>ไม่สามารถสร้าง QR Code ได้</p>
-</div>
-
-        <!-- Activity Info -->
-        <div class="text-center space-y-4 mb-6">
-          <h4 class="text-xl font-bold">{{ activity?.name }}</h4>
-          <div class="bg-base-100/50 p-4 rounded-xl space-y-2">
-            <p class="text-base">
-              <Icon name="ic:baseline-calendar-today" class="w-5 h-5 inline-block mr-2" />
-              วันที่: {{ activity?.date }}
-            </p>
-            <p class="text-base">
-              <Icon name="ic:baseline-location-on" class="w-5 h-5 inline-block mr-2" />
-              สถานที่: {{ activity?.location }}
-            </p>
-          </div>
-        </div>
-
-        <!-- Instructions Box -->
-        <div class="bg-[#00A3FF]/10 text-[#00A3FF] p-4 rounded-xl mb-6">
-          <div class="flex gap-3">
-            <Icon name="ic:baseline-info" class="w-6 h-6 flex-shrink-0" />
-            <div class="text-sm">
-              ใช้สำหรับเช็คชื่อเข้าร่วมกิจกรรม<br/>
-              แสดง QR Code นี้ให้เจ้าหน้าที่สแกนเพื่อบันทึกการเข้าร่วม
-            </div>
-          </div>
-        </div>
-
-        <!-- Close Button -->
-        <button class="btn btn-primary w-full" @click="toggleQRCode">ปิด</button>
-      </div>
-      <form method="dialog" class="modal-backdrop" @click="toggleQRCode">
-        <button>ปิด</button>
-      </form>
-    </dialog>
   </div>
 </template>
 
+# Style Section
 <style scoped>
 .stats {
   @apply rounded-xl border border-base-300;
-}
-
-.modal-box {
-  @apply border-0;
-}
-
-.modal-backdrop {
-  @apply bg-black/60 backdrop-blur-sm;
 }
 
 .animate-fade-in {
@@ -353,5 +344,9 @@ onMounted(() => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.card {
+  @apply backdrop-blur-sm;
 }
 </style>

@@ -63,22 +63,62 @@ function formatDate(dateString: string) {
   });
 }
 
+
+async function handleConfirmation(participant: Participant) {
+  try {
+    const result = await Swal.fire({
+      title: 'ยืนยันการเข้าร่วมกิจกรรม',
+      text: `ยืนยันการเข้าร่วมกิจกรรมสำหรับ ${participant.name}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยัน',
+      confirmButtonColor: '#4CAF50',
+      cancelButtonText: 'ยกเลิก',
+    });
+
+    if (result.isConfirmed) {
+      const response = await axios.put(`/api/activity-check-status/${activityId}/${participant.userId}`, {
+        status: 'active'
+      });
+
+      if (response.data) {
+        await fetchParticipants();
+        Swal.fire({
+          icon: 'success',
+          title: 'ยืนยันการเข้าร่วมสำเร็จ',
+          showConfirmButton: false,
+          timer: 1500
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาด',
+      text: 'ไม่สามารถอัพเดทสถานะได้'
+    });
+  }
+}
+
 function getStatusClass(status: string): string {
- switch(status) {
-   case 'RESERVED': return 'badge-warning';
-   case 'completed': return 'badge-success';
-   case 'failed': return 'badge-error';
-   default: return 'badge-ghost';
- }
+  switch(status) {
+    case 'RESERVED': return 'badge-warning';
+    case 'active': return 'badge-info';
+    case 'completed': return 'badge-success';
+    case 'failed': return 'badge-error';
+    default: return 'badge-ghost';
+  }
 }
 
 function getStatusText(status: string): string {
- switch(status) {
-   case 'RESERVED': return 'รอการอนุมัติ';
-   case 'completed': return 'เข้าร่วมสำเร็จ';
-   case 'failed': return 'ไม่ผ่าน';
-   default: return status;
- }
+  switch(status) {
+    case 'RESERVED': return 'รอการยืนยัน';
+    case 'active': return 'รอการอนุมัติ';
+    case 'completed': return 'เข้าร่วมสำเร็จ';
+    case 'failed': return 'ไม่ผ่าน';
+    default: return status;
+  }
 }
 
 function getActivityTypeText(type: string): string {
@@ -287,19 +327,24 @@ onMounted(() => {
 
         <!-- Status Legend -->
         <div class="mt-4 flex flex-wrap gap-2">
-          <div class="badge badge-lg badge-success gap-1">
-            <Icon name="mdi:check-circle" class="w-4 h-4" />
-            ผ่าน
-          </div>
-          <div class="badge badge-lg badge-error gap-1">
-            <Icon name="mdi:close-circle" class="w-4 h-4" />
-            ไม่ผ่าน
-          </div>
-          <div class="badge badge-lg badge-warning gap-1">
-            <Icon name="mdi:clock" class="w-4 h-4" />
-            รอตรวจสอบ
-          </div>
-        </div>
+  <div class="badge badge-lg badge-success gap-1">
+    <Icon name="mdi:check-circle" class="w-4 h-4" />
+    เข้าร่วมสำเร็จ
+  </div>
+  <div class="badge badge-lg badge-error gap-1">
+    <Icon name="mdi:close-circle" class="w-4 h-4" />
+    ไม่ผ่าน
+  </div>
+  <div class="badge badge-lg badge-warning gap-1">
+    <Icon name="mdi:clock" class="w-4 h-4" />
+    รอการยืนยัน
+  </div>
+  <div class="badge badge-lg badge-info gap-1">
+    <Icon name="mdi:account-clock" class="w-4 h-4" />
+    รอการอนุมัติ
+  </div>
+</div>
+
       </div>
 
       <!-- Loading State -->
@@ -314,59 +359,66 @@ onMounted(() => {
       <div v-else class="card bg-white shadow overflow-hidden">
         <div class="overflow-x-auto">
           <table class="table table-zebra">
-            <thead>
-              <tr>
-                <th>รหัส</th>
-                <th>ชื่อ-นามสกุล</th>
-                <th>ภาควิชา</th>
-                <th class="text-center">สถานะ</th>
-                <th class="text-center">จัดการ</th>
-                <th>วันที่จอง</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="participant in filteredParticipants"
-                  :key="participant.id">
-                <td>{{ participant.id }}</td>
-                <td class="font-medium">{{ participant.name }}</td>
-                <td>{{ participant.department }}</td>
-                <td class="text-center">
-                  <div :class="['badge badge-lg', getStatusClass(participant.status)]">
-                    {{ getStatusText(participant.status) }}
-                  </div>
-                </td>
-                <td>
-                  <div class="flex justify-center gap-2">
-                    <template v-if="participant.details?.isApproved === undefined">
-                      <button @click="handleApproval(participant, true)"
-                              class="btn btn-success btn-sm">
-                        <Icon name="mdi:check" class="w-4 h-4" />
-                        ผ่าน
-                      </button>
-                      <button @click="handleApproval(participant, false)"
-                              class="btn btn-error btn-sm">
-                        <Icon name="mdi:close" class="w-4 h-4" />
-                        ไม่ผ่าน
-                      </button>
-                    </template>
-                    <button v-if="participant.details?.reviewNote"
-                            @click="Swal.fire({
-                              title: 'หมายเหตุ',
-                              text: participant.details.reviewNote,
-                              icon: 'info'
-                            })"
-                            class="btn btn-info btn-sm">
-                      <Icon name="mdi:note" class="w-4 h-4" />
-                      หมายเหตุ
-                    </button>
-                  </div>
-                </td>
-                <td class="text-sm">
-                  {{ formatDate(participant.reservationDate) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+  <thead>
+    <tr>
+      <th>รหัส</th>
+      <th>ชื่อ-นามสกุล</th>
+      <th>ภาควิชา</th>
+      <th class="text-center">สถานะ</th>
+      <th class="text-center">จัดการ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="participant in filteredParticipants" :key="participant.id">
+      <td>{{ participant.id }}</td>
+      <td class="font-medium">{{ participant.name }}</td>
+      <td>{{ participant.department }}</td>
+      <td class="text-center">
+        <div :class="['badge badge-lg', getStatusClass(participant.status)]">
+          {{ getStatusText(participant.status) }}
+        </div>
+      </td>
+      <td>
+        <div class="flex justify-center gap-2">
+          <!-- Show Confirm button for RESERVED status -->
+          <template v-if="participant.status === 'RESERVED'">
+            <button @click="handleConfirmation(participant)"
+                    class="btn btn-info btn-sm">
+              <Icon name="mdi:check-circle" class="w-4 h-4" />
+              ยืนยัน
+            </button>
+          </template>
+
+          <!-- Show Approve/Reject buttons for active status -->
+          <template v-if="participant.status === 'active'">
+            <button @click="handleApproval(participant, true)"
+                    class="btn btn-success btn-sm">
+              <Icon name="mdi:check" class="w-4 h-4" />
+              ผ่าน
+            </button>
+            <button @click="handleApproval(participant, false)"
+                    class="btn btn-error btn-sm">
+              <Icon name="mdi:close" class="w-4 h-4" />
+              ไม่ผ่าน
+            </button>
+          </template>
+
+          <!-- Show Note button if there's a review note -->
+          <button v-if="participant.details?.reviewNote"
+                  @click="Swal.fire({
+                    title: 'หมายเหตุ',
+                    text: participant.details.reviewNote,
+                    icon: 'info'
+                  })"
+                  class="btn btn-info btn-sm">
+            <Icon name="mdi:note" class="w-4 h-4" />
+            หมายเหตุ
+          </button>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
           <!-- Empty State -->
           <div v-if="filteredParticipants.length === 0"
