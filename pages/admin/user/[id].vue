@@ -267,6 +267,7 @@ async function onSubmit() {
                 <option value="SUPERADMIN">ผู้ช่วย</option>
                 <option value="EXECUTIVE">ผู้บริหาร</option>
                 <option value="TEACHER">อาจารย์</option>
+                <option value="BIGTEACHER">หัวหน้าแผนก</option>
               </select>
             </div>
           </div>

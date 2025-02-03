@@ -139,7 +139,7 @@ async function onSubmit() {
       userData.UserPassword = input.UserPassword;
     }
 
-    const response = await axios.post('/api/admin/user', userData, {
+    const response = await axios.post('/api/forSmallAdmin', userData, {
       params: isCreate ? {} : { id: userID },
     });
 
@@ -199,7 +199,7 @@ async function onSubmit() {
 
           <!-- User Information -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="form-control">
+            <div v-if="isCreate" class="form-control">
               <label class="label">
                 <span class="label-text">รหัสนักศึกษา</span>
                 <span class="label-text-alt text-error">*</span>
@@ -264,6 +264,7 @@ async function onSubmit() {
                 <option value="SUPERADMIN">ผู้ช่วย</option>
                 <option value="EXECUTIVE">ผู้บริหาร</option>
                 <option value="TEACHER">อาจารย์</option>
+                <option value="BIGTEACHER">หัวหน้าแผนก</option>
               </select>
             </div>
           </div>

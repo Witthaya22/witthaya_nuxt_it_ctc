@@ -1,32 +1,34 @@
 <script lang="ts" setup>
 useHead({ title: "กิจกรรมวิทยาลัยเทคนิคชัยภูมิ" });
 
-import Typewriter from 'typewriter-effect/dist/core';
-import { Swiper, SwiperSlide } from 'swiper/vue';
-import { Autoplay, Pagination, Navigation, EffectCards } from 'swiper/modules';
-import 'swiper/swiper-bundle.css';
+import Typewriter from "typewriter-effect/dist/core";
+import { Swiper, SwiperSlide } from "swiper/vue";
+import {
+  Autoplay,
+  Pagination,
+  Navigation,
+  EffectCards,
+  EffectFade,
+  EffectCube,
+} from "swiper/modules";
+import "swiper/swiper-bundle.css";
 
 const images = [
-  '/index/1.jpg',
+  "/index/1.jpg",
   // '/index/2.jpg',
-  '/index/3.jpg',
-  '/index/4.jpg',
-  '/index/5.jpg',
-  '/index/6.jpg',
-  '/index/7.jpg',
-  '/index/8.jpg',
-  '/index/9.jpg',
-  '/index/10.jpg',
+  "/index/3.jpg",
+  "/index/4.jpg",
+  "/index/5.jpg",
+  "/index/6.jpg",
+  "/index/7.jpg",
+  "/index/8.jpg",
+  "/index/9.jpg",
+  "/index/10.jpg",
 ];
 
-import { ref, onMounted } from 'vue';
+import { ref, onMounted } from "vue";
 
-const phrases = [
-  'เพื่อชาติ!',
-  'เพื่อวิทยาลัย!',
-  'เพื่อตัวเอง!',
-  'เพื่อเธอ!'
-];
+const phrases = ["เพื่อชาติ!", "เพื่อวิทยาลัย!", "เพื่อตัวเอง!", "เพื่อเธอ!"];
 
 const typewriterElement = ref<HTMLElement | null>(null);
 
@@ -39,15 +41,12 @@ onMounted(() => {
     });
 
     phrases.forEach((phrase) => {
-      typewriter
-        .typeString(phrase)
-        .pauseFor(2000)
-        .deleteAll();
+      typewriter.typeString(phrase).pauseFor(2000).deleteAll();
     });
 
     typewriter.start();
   } else {
-    console.error('typewriterElement is null');
+    console.error("typewriterElement is null");
   }
 });
 </script>
@@ -57,28 +56,31 @@ onMounted(() => {
     <div class="hero-content flex-col lg:flex-row-reverse">
       <div class="max-w-md mx-auto">
         <swiper
-          :modules="[Autoplay, Pagination, Navigation, EffectCards]"
+          :modules="[Autoplay, Pagination, Navigation, EffectCube]"
           :slides-per-view="1"
           :loop="true"
           :autoplay="{
-            delay: 2500,
+            delay: 2100,
             disableOnInteraction: false,
           }"
-
-          :effect="'cards'"
+          :effect="'cube'"
+          :cubeEffect="{
+            shadow: true,
+            slideShadows: true,
+            shadowOffset: 20,
+            shadowScale: 0.94,
+          }"
           class="h-full w-full"
         >
           <swiper-slide v-for="(image, index) in images" :key="index">
             <div class="card bg-base-100 shadow-xl">
               <figure>
-                <img :src="image" alt="กิจกรรม" class="object-cover h-96 w-full rounded-t-lg" />
+                <img
+                  :src="image"
+                  alt="กิจกรรม"
+                  class="object-cover h-96 w-full rounded-t-lg"
+                />
               </figure>
-              <!-- <div class="card-body">
-                <h2 class="card-title">กิจกรรม {{ index + 1 }}</h2>
-                <p>รายละเอียดเกี่ยวกับกิจกรรมที่ {{ index + 1 }}.</p>
-                <div class="card-actions justify-end">
-                </div>
-              </div> -->
             </div>
           </swiper-slide>
         </swiper>

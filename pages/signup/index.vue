@@ -74,6 +74,28 @@
                 </select>
               </div>
 
+              <!-- Class Info -->
+              <div class="form-control">
+  <select v-model="input.classAt" required class="select select-bordered w-full bg-white/70">
+    <option value="" disabled selected>เลือกระดับการศึกษา</option>
+    <option value="ปวช.1">ปวช.1</option>
+    <option value="ปวช.2">ปวช.2</option>
+    <option value="ปวช.3">ปวช.3</option>
+    <option value="ปวส.1">ปวส.1</option>
+    <option value="ปวส.2">ปวส.2</option>
+  </select>
+</div>
+
+<div class="form-control">
+  <input
+    v-model="input.classRoom"
+    required
+    type="text"
+    class="input input-bordered w-full bg-white/70"
+    placeholder="ห้องเรียนตัวพิมพ์เล็ก"
+  />
+</div>
+
               <!-- Password -->
               <div class="form-control col-span-2">
                 <div class="relative">
@@ -160,6 +182,8 @@ const input = reactive({
   lastName: "",
   password: "",
   departmentId: "",
+  classAt: "",    // เพิ่มส่วนนี้
+  classRoom: "",  // เพิ่มส่วนนี้
 });
 
 const loading = ref(false);

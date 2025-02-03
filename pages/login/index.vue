@@ -157,12 +157,12 @@ function togglePassword() {
             </div>
 
             <!-- Forgot Password Link -->
-            <div class="flex items-center justify-between mt-2">
+            <!-- <div class="flex items-center justify-between mt-2">
               <nuxt-link to="/FGpassword"
                 class="text-sm text-blue-600 hover:text-blue-800 hover:underline">
                 ลืมรหัสผ่าน?
               </nuxt-link>
-            </div>
+            </div> -->
 
             <!-- Login Button -->
             <button type="submit"
