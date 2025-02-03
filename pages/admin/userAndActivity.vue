@@ -931,7 +931,7 @@ watch(selectedSemester, () => {
         <td class="text-center">
           <div class="badge badge-lg badge-primary">{{ activity.Score }}</div>
         </td>
-        <td class="text-center">
+        <td class="text-center w-auto">
           <div class="badge badge-lg" :class="{
             'badge-success': new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date(),
             'badge-warning': new Date(activity.StartDate) > new Date(),
@@ -939,7 +939,7 @@ watch(selectedSemester, () => {
           }">
             {{
               new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date()
-                ? 'กำลังดำเนินการ'
+                ? 'ดำเนินการ'
                 : new Date(activity.StartDate) > new Date()
                   ? 'ยังไม่เริ่ม'
                   : 'สิ้นสุดแล้ว'
@@ -966,7 +966,7 @@ watch(selectedSemester, () => {
       </button>
       <!-- ปุ่มดูผู้เข้าร่วมแสดงเสมอ -->
       <nuxt-link
-        :to="`/forSmallAdmin/activity/participants/${activity.ID}`"
+        :to="`/admin/activity/participants/${activity.ID}`"
         class="btn btn-sm btn-info gap-2"
       >
         <Icon name="mdi:account-group" class="w-4 h-4" />
@@ -1203,23 +1203,40 @@ watch(selectedSemester, () => {
           </td>
           <td>
     <div class="flex gap-2">
-      <button
+      <nuxt-link
         v-if="canManageUser(user)"
-        class="btn btn-sm btn-warning btn-square"
-        @click="router.push(`/forSmallAdmin/users/${user.UserID}`)"
-        title="แก้ไขข้อมูล"
+        :to="`/forSmallAdmin/users/${user.UserID}`"
+        class="btn btn-sm btn-warning gap-2"
       >
         <Icon name="mdi:pencil" class="w-4 h-4" />
+        แก้ไข
+      </nuxt-link>
+      <!-- <button
+      v-if="canManageUser(user)"
+      class="btn btn-sm btn-warning btn-square"
+      @click="router.push(`/forSmallAdmin/users/${user.UserID}`)"
+      title="แก้ไขข้อมูล"
+      >
 
-      </button>
+      แก้ไขข้อมูล
+      <Icon name="mdi:pencil" class="w-4 h-4" />
+
+      </button> -->
       <!-- ปุ่มดูกิจกรรมแสดงเสมอ -->
-      <button
+      <!-- <button
         class="btn btn-sm btn-info btn-square"
         @click="router.push(`/forSmallAdmin/users/details/${user.UserID}`)"
         title="ดูกิจกรรม"
       >
         <Icon name="mdi:calendar-check" class="w-4 h-4" />
-      </button>
+      </button> -->
+      <nuxt-link
+        :to="`/admin/user/details/${user.UserID}`"
+        class="btn btn-sm btn-info gap-2"
+      >
+        <Icon name="mdi:account-group" class="w-4 h-4" />
+        ดูกิจกรรม
+      </nuxt-link>
     </div>
   </td>
         </tr>

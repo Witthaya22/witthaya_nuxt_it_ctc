@@ -1,6 +1,10 @@
 <script setup lang="ts">
 useHead({ title: "รายละเอียดผู้ใช้ (Admin)" });
-definePageMeta({ layout: "admin" });
+
+definePageMeta({
+  layout: "admin",
+  // middleware: ["only-admin"],
+});
 
 const route = useRoute();
 const router = useRouter();
@@ -21,6 +25,10 @@ interface BookedActivity {
     isApproved: boolean | null;
     reviewNote?: string;
   } | null;
+  activityResults?: {
+    id: number;
+    status: string;
+  };
 }
 
 interface User {
@@ -76,6 +84,7 @@ async function loadData() {
 function getStatusClass(status: string): string {
   switch(status) {
     case 'RESERVED': return 'badge-warning';
+    case 'active': return 'badge-info';
     case 'completed': return 'badge-success';
     case 'failed': return 'badge-error';
     default: return 'badge-ghost';
@@ -84,13 +93,55 @@ function getStatusClass(status: string): string {
 
 function getStatusText(status: string): string {
   switch(status) {
-    case 'RESERVED': return 'กำลังจอง';
+    case 'RESERVED': return 'รอการยืนยัน';
+    case 'active': return 'รอการอนุมัติ';
     case 'completed': return 'เข้าร่วมสำเร็จ';
-    case 'failed': return 'เข้าร่วมไม่สำเร็จ';
+    case 'failed': return 'ไม่ผ่าน';
     default: return 'ไม่ทราบสถานะ';
   }
 }
 
+async function handleConfirmation(activityId: number) {
+  try {
+    const activity = bookedActivities.value.find(a => a.id === activityId);
+    if (!activity) {
+      throw new Error('ไม่พบข้อมูลกิจกรรม');
+    }
+
+    const result = await Swal.fire({
+      title: 'ยืนยันการเข้าร่วมกิจกรรม',
+      text: `ยืนยันการเข้าร่วมกิจกรรม ${activity.name}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยัน',
+      confirmButtonColor: '#3085d6',
+      cancelButtonText: 'ยกเลิก',
+    });
+
+    if (result.isConfirmed) {
+      const response = await axios.put(`/api/activity-check-status/${activityId}/${user.value?.UserID}`, {
+        status: 'active'
+      });
+
+      if (response.data) {
+        await fetchActivities();
+        Swal.fire({
+          icon: 'success',
+          title: 'ยืนยันการเข้าร่วมสำเร็จ',
+          showConfirmButton: false,
+          timer: 1500
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาด',
+      text: 'ไม่สามารถยืนยันการเข้าร่วมได้'
+    });
+  }
+}
 async function handleApproval(activityId: number, approve: boolean) {
   try {
     const activity = bookedActivities.value.find(a => a.id === activityId);
@@ -201,90 +252,126 @@ onMounted(() => {
         </div>
 
         <!-- Activities Section -->
-        <div class="card bg-base-100 shadow">
-          <div class="card-body">
-            <h2 class="card-title mb-6">กิจกรรมที่เข้าร่วม</h2>
+        # รายการกิจกรรม Section
+<div class="card bg-base-100 shadow">
+  <div class="card-body">
+    <h2 class="card-title mb-6">กิจกรรมที่เข้าร่วม</h2>
 
-            <div class="overflow-x-auto">
-              <table class="table">
-                <thead class="bg-base-200">
-                  <tr>
-                    <th>กิจกรรม</th>
-                    <th>วันที่</th>
-                    <th class="text-center">สถานะการเข้าร่วม</th>
-                    <th class="text-center">การจัดการ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="activity in bookedActivities"
-                      :key="activity.id"
-                      class="hover">
-                    <td>
-                      <div class="flex items-center gap-4">
-                        <div class="avatar">
-                          <div class="w-16 h-16 rounded-lg">
-                            <img
-                              :src="getImageUrl(activity.images[0])"
-                              :alt="activity.name"
-                              class="object-cover"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <div class="font-bold">{{ activity.name }}</div>
-                          <div class="text-sm opacity-70">{{ activity.location }}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{{ activity.date }}</td>
-                    <td class="text-center">
-                      <div :class="['badge badge-lg', getStatusClass(activity.status)]">
-                        {{ getStatusText(activity.status) }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="flex justify-center gap-2">
-                        <button
-                          @click="handleApproval(activity.id, true)"
-                          class="btn btn-success btn-sm gap-1"
-                          :disabled="activity.details?.isApproved === true">
-                          <Icon name="mdi:check" class="w-4 h-4" />
-                          ผ่าน
-                        </button>
-                        <button
-                          @click="handleApproval(activity.id, false)"
-                          class="btn btn-error btn-sm gap-1"
-                          :disabled="activity.details?.isApproved === false">
-                          <Icon name="mdi:close" class="w-4 h-4" />
-                          ไม่ผ่าน
-                        </button>
-                        <button
-                          v-if="activity.details?.reviewNote"
-                          @click="Swal.fire({
-                            title: 'หมายเหตุ',
-                            text: activity.details.reviewNote,
-                            icon: 'info'
-                          })"
-                          class="btn btn-info btn-sm gap-1">
-                          <Icon name="mdi:note" class="w-4 h-4" />
-                          หมายเหตุ
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+    <!-- Status Legend -->
+    <div class="mb-4 flex flex-wrap gap-2">
+      <div class="badge badge-lg badge-warning gap-1">
+        <Icon name="mdi:clock" class="w-4 h-4" />
+        รอการยืนยัน
+      </div>
+      <div class="badge badge-lg badge-info gap-1">
+        <Icon name="mdi:account-clock" class="w-4 h-4" />
+        รอการอนุมัติ
+      </div>
+      <div class="badge badge-lg badge-success gap-1">
+        <Icon name="mdi:check-circle" class="w-4 h-4" />
+        เข้าร่วมสำเร็จ
+      </div>
+      <div class="badge badge-lg badge-error gap-1">
+        <Icon name="mdi:close-circle" class="w-4 h-4" />
+        ไม่ผ่าน
+      </div>
+    </div>
 
-              <!-- Empty State -->
-              <div v-if="bookedActivities.length === 0"
-                   class="text-center py-12">
-                <Icon name="mdi:calendar-blank"
-                      class="w-16 h-16 mx-auto text-base-content/30" />
-                <h3 class="mt-4 font-medium">ไม่พบข้อมูลการเข้าร่วมกิจกรรม</h3>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead class="bg-base-200">
+          <tr>
+            <th>กิจกรรม</th>
+            <th>วันที่</th>
+            <th class="text-center">สถานะการเข้าร่วม</th>
+            <th class="text-center">การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="activity in bookedActivities"
+              :key="activity.id"
+              class="hover">
+            <td>
+              <div class="flex items-center gap-4">
+                <div class="avatar">
+                  <div class="w-16 h-16 rounded-lg">
+                    <img
+                      :src="getImageUrl(activity.images[0])"
+                      :alt="activity.name"
+                      class="object-cover"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div class="font-bold">{{ activity.name }}</div>
+                  <div class="text-sm opacity-70">{{ activity.location }}</div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
+            </td>
+            <td>{{ activity.date }}</td>
+            <td class="text-center">
+              <div :class="['badge badge-lg', getStatusClass(activity.status)]">
+                {{ getStatusText(activity.status) }}
+              </div>
+            </td>
+            <td>
+              <div class="flex justify-center gap-2">
+                <!-- Show Confirm button for RESERVED status -->
+                <template v-if="activity.status === 'RESERVED'">
+                  <button
+                    @click="handleConfirmation(activity.id)"
+                    class="btn btn-info btn-sm gap-1">
+                    <Icon name="mdi:check-circle" class="w-4 h-4" />
+                    ยืนยัน
+                  </button>
+                </template>
+
+                <!-- Show Approve/Reject buttons for active status -->
+                <template v-if="activity.status === 'active'">
+                  <button
+                    @click="handleApproval(activity.id, true)"
+                    class="btn btn-success btn-sm gap-1"
+                    :disabled="activity.details?.isApproved === true">
+                    <Icon name="mdi:check" class="w-4 h-4" />
+                    ผ่าน
+                  </button>
+                  <button
+                    @click="handleApproval(activity.id, false)"
+                    class="btn btn-error btn-sm gap-1"
+                    :disabled="activity.details?.isApproved === false">
+                    <Icon name="mdi:close" class="w-4 h-4" />
+                    ไม่ผ่าน
+                  </button>
+                </template>
+
+                <!-- Show Note button if there's a review note -->
+                <button
+                  v-if="activity.details?.reviewNote"
+                  @click="Swal.fire({
+                    title: 'หมายเหตุ',
+                    text: activity.details.reviewNote,
+                    icon: 'info'
+                  })"
+                  class="btn btn-info btn-sm gap-1">
+                  <Icon name="mdi:note" class="w-4 h-4" />
+                  หมายเหตุ
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div v-if="bookedActivities.length === 0"
+           class="text-center py-12">
+        <Icon name="mdi:calendar-blank"
+              class="w-16 h-16 mx-auto text-base-content/30" />
+        <h3 class="mt-4 font-medium">ไม่พบข้อมูลการเข้าร่วมกิจกรรม</h3>
+      </div>
+    </div>
+  </div>
+</div>
       </template>
     </div>
   </div>
