@@ -4,6 +4,8 @@ definePageMeta({
   layout: "admin",
   // middleware: ["only-admin"],
 });
+
+
 import { ref, reactive, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Swal from "sweetalert2";
@@ -22,7 +24,7 @@ interface UserInput {
   UserFirstName: string;
   UserLastName: string;
   UserPassword?: string;
-  Role: 'USER' | 'ADMIN' | 'EXECUTIVE' | 'SUPADMIN' | 'TEACHER';
+  Role: 'USER' | 'ADMIN' | 'EXECUTIVE' | 'SUPADMIN' | 'TEACHER' | 'BIGTEACHER';
   DepartmentID: string;
   UserImage?: File; // Add this line
 }
@@ -153,7 +155,7 @@ async function onSubmit() {
       timer: 1500
     });
 
-    router.push('/admin/user');
+    router.push('/forSmallAdmin');
   } catch (error: any) {
     Swal.fire({
       icon: 'error',
@@ -202,7 +204,7 @@ async function onSubmit() {
 
           <!-- User Information -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="form-control">
+            <div v-if="isCreate" class="form-control">
               <label class="label">
                 <span class="label-text">รหัสนักศึกษา</span>
                 <span class="label-text-alt text-error">*</span>

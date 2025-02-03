@@ -7,6 +7,42 @@ import { QrcodeStream } from 'vue-qrcode-reader'
 const { auth } = useAuth();
 
 
+const selectedClass = ref('');
+const selectedClassRoom = ref('');
+const AVAILABLE_CLASSES_CONFIG = ['ปวช.1', 'ปวช.2', 'ปวช.3', 'ปวส.1', 'ปวส.2'];
+// const availableClasses = computed(() => {
+//   // กรองเอาเฉพาะชั้นเรียนที่มีในข้อมูลและอยู่ใน AVAILABLE_CLASSES
+//   const existingClasses = new Set(users.value
+//     .filter(u => u.classAt)
+//     .map(u => u.classAt));
+
+//   // คืนค่าเฉพาะชั้นเรียนที่มีในข้อมูลจริง
+//   return AVAILABLE_CLASSES.filter(cls => existingClasses.has(cls));
+// });
+
+const availableClasses = computed(() => {
+  // เรียกใช้จาก config โดยตรง
+  return AVAILABLE_CLASSES_CONFIG;
+});
+
+const availableClassRooms = computed(() => {
+  // กรองผู้ใช้ตามชั้นที่เลือก
+  let filteredUsers = users.value;
+  if (selectedClass.value) {
+    filteredUsers = filteredUsers.filter(u => u.classAt === selectedClass.value);
+  }
+
+  // ดึงห้องเรียนที่มีอยู่จริง
+  const rooms = new Set(
+    filteredUsers
+      .filter(u => u.classRoom)
+      .map(u => u.classRoom)
+  );
+
+  // แปลงเป็น array และเรียงลำดับ
+  return Array.from(rooms).sort();
+});
+
 interface Activity {
   ID: number;
   Title: string;
@@ -39,18 +75,18 @@ const selectedSemester = ref<number | null>(null);
 const isTeacher = computed(() => auth.value?.Role === 'TEACHER');
 const userDepartment = computed(() => auth.value?.DepartmentID);
 
-interface User {
-  UserID: string;
-  UserFirstName: string;
-  UserLastName: string;
-  DepartmentID: string;
-  Role: string;
-  Department: {
-    Name: string;
-  };
-  CreatedAt: string;
-  UserImage?: string;
-}
+// interface User {
+//   UserID: string;
+//   UserFirstName: string;
+//   UserLastName: string;
+//   DepartmentID: string;
+//   Role: string;
+//   Department: {
+//     Name: string;
+//   };
+//   CreatedAt: string;
+//   UserImage?: string;
+// }
 
 interface ActivityResult {
   ID: number;
@@ -202,17 +238,34 @@ const avgScore = computed(() => {
   return avg.toFixed(1);
 });
 
+interface User {
+  UserID: string;
+  UserFirstName: string;
+  UserLastName: string;
+  DepartmentID: string;
+  Role: string;
+  Department: {
+    Name: string;
+  };
+  CreatedAt: string;
+  UserImage?: string | undefined;
+  classAt?: string;
+  classRoom?: string; // Add this line
+}
 // ปรับปรุง filteredUsers computed property
 const filteredUsers = computed(() => {
   let filtered = users.value;
 
-  // ถ้าเป็นครู ให้เห็นเฉพาะผู้ใช้ในแผนกตัวเอง
-  if (isTeacher.value && userDepartment.value) {
-    filtered = filtered.filter(user => user.DepartmentID === userDepartment.value);
-  }
-  // ถ้าเป็น admin และมีการเลือกแผนก
-  else if (auth.value?.Role === 'ADMIN' && selectedDepartment.value) {
-    filtered = filtered.filter(user => user.DepartmentID === selectedDepartment.value);
+  // กรองตามสิทธิ์การเข้าถึง
+  if (auth.value?.Role === 'TEACHER') {
+    filtered = filtered.filter(user =>
+      user.DepartmentID === auth.value?.DepartmentID &&
+      user.classRoom === auth.value?.classRoom
+    );
+  } else if (auth.value?.Role === 'BIGTEACHER') {
+    filtered = filtered.filter(user =>
+      user.DepartmentID === auth.value?.DepartmentID
+    );
   }
 
   // กรองตามการค้นหา
@@ -225,19 +278,24 @@ const filteredUsers = computed(() => {
     );
   }
 
+  // กรองตามแผนก
+  if (selectedDepartment.value) {
+    filtered = filtered.filter(user => user.DepartmentID === selectedDepartment.value);
+  }
+
+  // กรองตามระดับชั้น
+  if (selectedClass.value) {
+    filtered = filtered.filter(user => user.classAt === selectedClass.value);
+  }
+
+  // กรองตามห้องเรียน
+  if (selectedClassRoom.value) {
+    filtered = filtered.filter(user => user.classRoom === selectedClassRoom.value);
+  }
+
   // กรองตามบทบาท
   if (selectedRole.value) {
     filtered = filtered.filter(user => user.Role === selectedRole.value);
-  }
-
-  // กรองตามสถานะกิจกรรม
-  if (selectedStatus.value) {
-    filtered = filtered.filter(user => {
-      const completedCount = activityResults.value.filter(
-        r => r.UserID === user.UserID && r.Status === 'completed'
-      ).length;
-      return selectedStatus.value === 'completed' ? completedCount >= 3 : completedCount < 3;
-    });
   }
 
   return filtered;
@@ -372,6 +430,8 @@ interface ScanData {
   checkInCode: string
   timestamp: string
 }
+
+const AVAILABLE_CLASSES = ['ปวช.1', 'ปวช.2', 'ปวช.3', 'ปวส.1', 'ปวส.2'];
 
 async function onScan(result: string) {
   try {
@@ -747,13 +807,13 @@ watch(selectedSemester, () => {
             <Icon name="mdi:qrcode" class="w-16 h-5" />
             สแกน QR Code
           </button> -->
-          <nuxt-link
+          <!-- <nuxt-link
             to="/forSmallAdmin/adminRequest"
             class="btn btn-secondary gap-2"
           >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="88" stroke-dashoffset="88" d="M15.5 21.5c-10.5 2.5 -12.5 -2.5 -12.5 -8.5v-3c0 -6 2.5 -7 7 -7h4c4.5 0 7 1.5 7 5.5v4c0 6.5 -10 4 -13.5 4c-1 0 -1.5 7 8 5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="88;0"/></path><path stroke-dasharray="32" stroke-dashoffset="32" d="M7 13.5l0 -5.5c0 0 0.5 -2 2.5 -2c2 0 2.5 2 2.5 2l0 2.5l0 -2.5c0 0 0.5 -2 2.5 -2c2 0 2.5 2 2.5 2l0 5.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.7s" values="32;0"/></path></g></svg>
             ส่งคำขอ
-          </nuxt-link>
+          </nuxt-link> -->
           <nuxt-link to="/forSmallAdmin/report" class="btn btn-warning text-white gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="72" stroke-dashoffset="72" d="M12 3h7v18h-14v-18h7Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="72;0"/></path><path stroke-dasharray="12" stroke-dashoffset="12" stroke-width="1" d="M14.5 3.5v3h-5v-3"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="12;0"/></path><path stroke-dasharray="4" stroke-dashoffset="4" d="M9 10h3"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" values="4;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M9 13h5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.1s" dur="0.2s" values="6;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M9 16h6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.3s" dur="0.2s" values="8;0"/></path></g></svg>
   สรุปผลกิจกรรม
@@ -1091,11 +1151,45 @@ watch(selectedSemester, () => {
     <select
       v-model="selectedDepartment"
       class="select select-bordered"
-      :disabled="isTeacher"
+      :disabled="auth?.Role === 'TEACHER' || auth?.Role === 'BIGTEACHER'"
     >
       <option value="">ทั้งหมด</option>
       <option v-for="dept in availableDepartments" :key="dept" :value="dept">
         {{ dept }}
+      </option>
+    </select>
+  </div>
+
+   <!-- เพิ่มตัวกรองชั้นเรียน -->
+   <div class="form-control">
+    <label class="label">
+      <span class="label-text">ระดับชั้น</span>
+    </label>
+    <select
+      v-model="selectedClass"
+      class="select select-bordered"
+      :disabled="auth?.Role === 'TEACHER'"
+    >
+      <option value="">ทั้งหมด</option>
+      <option v-for="classAt in availableClasses" :key="classAt" :value="classAt">
+        {{ classAt }}
+      </option>
+    </select>
+  </div>
+
+  <!-- เพิ่มตัวกรองห้องเรียน -->
+  <div class="form-control">
+    <label class="label">
+      <span class="label-text">ห้องเรียน</span>
+    </label>
+    <select
+      v-model="selectedClassRoom"
+      class="select select-bordered"
+      :disabled="auth?.Role === 'TEACHER'"
+    >
+      <option value="">ทั้งหมด</option>
+      <option v-for="room in availableClassRooms" :key="room" :value="room">
+        {{ room }}
       </option>
     </select>
   </div>
@@ -1146,80 +1240,61 @@ watch(selectedSemester, () => {
   <!-- ตารางผู้ใช้ -->
   <div class="bg-base-100 rounded-xl shadow-lg overflow-hidden">
     <table class="table table-zebra w-full">
-      <thead>
-        <tr>
-          <th>รหัส</th>
-          <th>ชื่อ-นามสกุล</th>
-          <th>แผนก</th>
-          <th>บทบาท</th>
-          <th>สถานะกิจกรรม</th>
-          <th>จัดการ</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="user in filteredUsers" :key="user.UserID"
-            v-show="user.Role !== 'ADMIN'"
-            class="hover:bg-base-200 transition-colors">
-          <td>
-            <div>{{ user.UserID }}</div>
-            <div class="text-xs opacity-60">
-              สร้างเมื่อ {{ formatDate(user.CreatedAt) }}
-            </div>
-          </td>
-          <td>
-            <div class="flex items-center space-x-3">
-              <div class="avatar">
-                <!-- <div class="mask mask-squircle w-12 h-12">
-                  <img
-                    :src="user.UserImage ? `/api${user.UserImage}` : '/default-avatar.png'"
-                    alt="Avatar"
-                  />
-                </div> -->
-              </div>
-              <div>
-                <div class="font-bold">{{ user.UserFirstName }} {{ user.UserLastName }}</div>
-                <div class="text-sm opacity-50">{{ user.Department?.Name }}</div>
-              </div>
-            </div>
-          </td>
-          <td>
-            <div class="badge badge-ghost">{{ user.DepartmentID }}</div>
-          </td>
-          <td>
-            <div
-              class="badge"
-              :class="{
-                'badge-primary': user.Role === 'ADMIN',
-                'badge-secondary': user.Role === 'USER',
-                'badge-accent': user.Role === 'SUPERADMIN',
-                'badge-info': user.Role === 'EXECUTIVE',
-                'badge-warning': user.Role === 'TEACHER'
-              }"
-            >
-              {{ user.Role }}
-            </div>
-          </td>
-          <td>
-            <div
-              class="badge badge-lg"
-              :class="getActivityStatusBadgeClass(user)"
-            >
-              {{ getActivityStatusText(user) }}
-            </div>
-          </td>
-          <td>
-    <div class="flex gap-2">
-      <!-- <button
-        v-if="canManageUser(user)"
-        class="btn btn-sm btn-warning btn-square"
-        @click="router.push(`/forSmallAdmin/users/${user.UserID}`)"
-        title="แก้ไขข้อมูล"
-      >
-
-        <Icon name="mdi:pencil" class="w-4 h-4" />
-        แก้ไข
-      </button> -->
-      <nuxt-link
+  <thead>
+    <tr>
+      <th>รหัส</th>
+      <th>ชื่อ-นามสกุล</th>
+      <th>แผนก</th>
+      <th>ระดับชั้น</th>
+      <th>ห้องเรียน</th>
+      <th>บทบาท</th>
+      <th>สถานะกิจกรรม</th>
+      <th>จัดการ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="user in filteredUsers" :key="user.UserID">
+      <!-- คอลัมน์ที่มีอยู่เดิม -->
+      <td>{{ user.UserID }}</td>
+      <td>
+        <div class="flex items-center space-x-3">
+          <div>
+            <div class="font-bold">{{ user.UserFirstName }} {{ user.UserLastName }}</div>
+            <div class="text-sm opacity-50">{{ user.Department?.Name }}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="badge badge-ghost">{{ user.DepartmentID }}</div>
+      </td>
+      <!-- เพิ่มคอลัมน์ระดับชั้นและห้องเรียน -->
+      <td>
+        <div class="badge badge-primary">{{ user.classAt }}</div>
+      </td>
+      <td>
+        <div class="badge badge-secondary">{{ user.classRoom }}</div>
+      </td>
+      <!-- คอลัมน์ที่เหลือ -->
+      <td>
+        <div class="badge" :class="{
+          'badge-primary': user.Role === 'ADMIN',
+          'badge-secondary': user.Role === 'USER',
+          'badge-accent': user.Role === 'SUPERADMIN',
+          'badge-info': user.Role === 'EXECUTIVE',
+          'badge-warning': user.Role === 'TEACHER',
+          'badge-error': user.Role === 'BIGTEACHER'
+        }">
+          {{ user.Role }}
+        </div>
+      </td>
+      <td>
+        <div class="badge badge-lg" :class="getActivityStatusBadgeClass(user)">
+          {{ getActivityStatusText(user) }}
+        </div>
+      </td>
+      <td>
+        <div class="flex gap-2">
+          <nuxt-link
        v-if="canManageUser(user)"
         :to="`/forSmallAdmin/users/${user.UserID}`"
         class="btn btn-sm btn-warning gap-2"
@@ -1235,19 +1310,11 @@ watch(selectedSemester, () => {
         <Icon name="mdi:calendar-check" class="w-4 h-4" />
         ดูกิจกรรม
       </nuxt-link>
-      <!-- ปุ่มดูกิจกรรมแสดงเสมอ -->
-      <!-- <button
-        class="btn btn-sm btn-info btn-square"
-        @click="router.push(`/forSmallAdmin/users/details/${user.UserID}`)"
-        title="ดูกิจกรรม"
-      >
-        <Icon name="mdi:calendar-check" class="w-4 h-4" />
-      </button> -->
-    </div>
-  </td>
-        </tr>
-      </tbody>
-    </table>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
   </div>
 
   <!-- ส่วนแสดงผลเมื่อไม่พบข้อมูล -->

@@ -19,19 +19,23 @@ interface UserInput {
   UserFirstName: string;
   UserLastName: string;
   UserPassword?: string;
-  Role: 'USER' | 'ADMIN' | 'EXECUTIVE' | 'SUPADMIN' | 'TEACHER';
+  Role: 'USER' | 'ADMIN' | 'EXECUTIVE' | 'SUPADMIN' | 'TEACHER' | 'BIGTEACHER';
   DepartmentID: string;
-  UserImage?: File; // Add this line
+  UserImage?: File;
+  classAt: string;    // เพิ่มฟิลด์ระดับชั้น
+  classRoom: string;  // เพิ่มฟิลด์ห้องเรียน
 }
 
 const departments = ref<Department[]>([]);
   const input = reactive<UserInput>({
-  UserID: "",  // เพิ่ม field
+  UserID: "",
   UserFirstName: "",
   UserLastName: "",
   UserPassword: "",
   Role: "USER",
   DepartmentID: "",
+  classAt: "",       // เพิ่มค่าเริ่มต้น
+  classRoom: "",     // เพิ่มค่าเริ่มต้น
 });
 
 const userID = route.params.id;
@@ -62,6 +66,8 @@ async function fetchUser() {
     input.UserLastName = user.UserLastName;
     input.Role = user.Role;
     input.DepartmentID = user.DepartmentID;
+    input.classAt = user.classAt || '';
+    input.classRoom = user.classRoom || '';
     if (user.UserImage) {
       previewImage.value = user.UserImage;
     }
@@ -74,6 +80,7 @@ async function fetchUser() {
     router.push('/admin/users');
   }
 }
+
 
 onMounted(async () => {
   await fetchDepartments();
@@ -103,7 +110,7 @@ async function onSubmit() {
   loading.value = true;
   try {
     // Validation พื้นฐาน
-    if (!input.UserFirstName || !input.UserLastName || !input.DepartmentID) {
+    if (!input.UserFirstName || !input.UserLastName || !input.DepartmentID || !input.classAt || !input.classRoom) {
       throw new Error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
     }
 
@@ -129,6 +136,8 @@ async function onSubmit() {
       UserLastName: input.UserLastName,
       Role: input.Role,
       DepartmentID: input.DepartmentID,
+      classAt: input.classAt,
+      classRoom: input.classRoom,
     };
 
     // เพิ่มข้อมูลเฉพาะกรณีสร้างใหม่หรือมีการแก้ไข
@@ -139,7 +148,7 @@ async function onSubmit() {
       userData.UserPassword = input.UserPassword;
     }
 
-    const response = await axios.post('/api/forSmallAdmin', userData, {
+    const response = await axios.post('/api/admin/user', userData, {
       params: isCreate ? {} : { id: userID },
     });
 
@@ -150,7 +159,7 @@ async function onSubmit() {
       timer: 1500
     });
 
-    router.push('/admin/user');
+    router.push('/forSmallAdmin');
   } catch (error: any) {
     Swal.fire({
       icon: 'error',
@@ -267,7 +276,38 @@ async function onSubmit() {
                 <option value="BIGTEACHER">หัวหน้าแผนก</option>
               </select>
             </div>
+            <div class="form-control">
+    <label class="label">
+      <span class="label-text">ระดับชั้น</span>
+      <span class="label-text-alt text-error">*</span>
+    </label>
+    <select v-model="input.classAt" class="select select-bordered" required>
+      <option value="">เลือกระดับชั้น</option>
+      <option value="ปวช.1">ปวช.1</option>
+      <option value="ปวช.2">ปวช.2</option>
+      <option value="ปวช.3">ปวช.3</option>
+      <option value="ปวส.1">ปวส.1</option>
+      <option value="ปวส.2">ปวส.2</option>
+    </select>
+  </div>
+
+  <div class="form-control">
+    <label class="label">
+      <span class="label-text">ห้องเรียน</span>
+      <span class="label-text-alt text-error">*</span>
+    </label>
+    <input
+      v-model="input.classRoom"
+      type="text"
+      class="input input-bordered"
+      required
+      placeholder="ระบุห้องเรียน"
+      maxlength="10"
+    />
+  </div>
           </div>
+
+
 
           <!-- Action Buttons -->
           <div class="flex justify-end gap-4 mt-8">

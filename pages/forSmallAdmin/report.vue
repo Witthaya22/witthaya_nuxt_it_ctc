@@ -45,6 +45,8 @@ interface User {
   DepartmentID: string;
   Role: string;
   UserImage?: string | null;
+  classAt?: string; // Add this line
+  classRoom?: string; // Add this line
 }
 
 interface ActivityResult {
@@ -122,6 +124,84 @@ const generatePDFStats = () => {
   };
 };
 
+function generateSeparatedTableData(reportData: ActivityResult[]) {
+  const departmentGroups = new Map<string, {
+    results: ActivityResult[];
+    userStats: {
+      total: number;
+      completed: number;
+      inProgress: number;
+      failed: number;
+      pending: number;
+    }
+  }>();
+
+  // จัดกลุ่มข้อมูลตามแผนก
+  reportData.forEach(result => {
+    if (!departmentGroups.has(result.DepartmentID)) {
+      departmentGroups.set(result.DepartmentID, {
+        results: [],
+        userStats: {
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          failed: 0,
+          pending: 0
+        }
+      });
+    }
+
+    const deptGroup = departmentGroups.get(result.DepartmentID)!;
+    deptGroup.results.push(result);
+
+    // คำนวณสถิติผู้ใช้
+    const user = users.value.find(u => u.UserID === result.UserID);
+    if (user) {
+      const userResults = reportData.filter(r => r.UserID === user.UserID);
+      const completedCount = userResults.filter(r => r.Status === 'completed').length;
+
+      if (completedCount >= 3) {
+        deptGroup.userStats.completed++;
+      } else if (result.Status === 'failed') {
+        deptGroup.userStats.failed++;
+      } else if (result.Status === 'active') {
+        deptGroup.userStats.inProgress++;
+      } else if (result.Status === 'RESERVED') {
+        deptGroup.userStats.pending++;
+      }
+    }
+  });
+
+  const tables = [];
+  for (const [deptId, deptData] of departmentGroups) {
+    const tableData = deptData.results.map(result => {
+      const activity = activities.value.find(a => a.ID === result.ActivityID);
+      const user = users.value.find(u => u.UserID === result.UserID);
+      const status = getStatusDisplay(result);
+
+      return [
+        activity?.Title || `กิจกรรม ${result.ActivityID}`,
+        `${user?.UserFirstName || ''} ${user?.UserLastName || ''}`,
+        status.text,
+        user?.classAt || '',
+        user?.classRoom || '',
+        dayjs(result.CreatedAt).locale("th").format("DD/MM/YYYY HH:mm")
+      ];
+    });
+
+    tables.push({
+      departmentName: getDepartmentFullName(deptId),
+      departmentId: deptId,
+      summary: {
+        total: deptData.results.length,
+        ...deptData.userStats
+      },
+      data: tableData
+    });
+  }
+
+  return tables;
+}
 const generateTableData = (reportData: ActivityResult[]) => {
   return reportData.map((result) => {
     const activity = activities.value.find((a) => a.ID === result.ActivityID);
@@ -359,13 +439,34 @@ async function generateDetailedPDF() {
         break;
     }
 
-    // Add header
     doc.setFontSize(20);
-    doc.text(reportTitle, 105, 25, { align: "center" });
-
-    // Add date
+    doc.text("รายงานการเข้าร่วมกิจกรรม", 105, 15, { align: "center" });
     doc.setFontSize(12);
-    doc.text(`วันที่ออกรายงาน: ${dayjs().locale("th").format("DD MMMM YYYY")}`, 105, 35, { align: "center" });
+    doc.text(`วันที่ออกรายงาน: ${dayjs().locale("th").format("DD MMMM YYYY")}`, 105, 25, { align: "center" });
+    let yPosition = 35;
+    const tables = generateSeparatedTableData(reportData);
+    for (const table of tables) {
+      // Check if need new page
+      if (yPosition > doc.internal.pageSize.height - 100) {
+        doc.addPage();
+        yPosition = 15;
+      }
+
+      // Department header
+      doc.setFillColor(240, 240, 240);
+    doc.rect(14, yPosition, 180, 35, "F");
+    doc.setFontSize(16);
+    doc.text(`แผนก${table.departmentName}`, 20, yPosition + 10);
+
+      // Department summary
+      doc.setFontSize(12);
+      doc.text([
+      `จำนวนนักศึกษาทั้งหมด: ${table.summary.total} คน`,
+      `ผ่านกิจกรรม: ${table.summary.completed} คน`,
+      `ไม่ผ่าน: ${table.summary.failed} คน`,
+      `กำลังดำเนินการ: ${table.summary.inProgress} คน`,
+      `รอยืนยัน: ${table.summary.pending} คน`,
+    ].join(' | '), 20, yPosition + 25);
 
     // Summary
     const statusCounts = {
@@ -385,9 +486,9 @@ async function generateDetailedPDF() {
 
     // Create table
     (doc as any).autoTable({
-      startY: 90,
-      head: [["ชื่อกิจกรรม", "ชื่อ-นามสกุล", "แผนก", "สถานะ", "วันที่"]],
-      body: generateTableData(reportData),
+      startY: yPosition + 40,
+      head: [["ชื่อกิจกรรม", "ชื่อ-นามสกุล", "สถานะ", "ระดับชั้น", "ห้องเรียน", "วันที่"]],
+      body: table.data,
       theme: "grid",
       headStyles: {
         fillColor: [71, 107, 107],
@@ -402,13 +503,17 @@ async function generateDetailedPDF() {
         font: 'THSarabunNew'
       },
       columnStyles: {
-        0: { cellWidth: 50 },
-        1: { cellWidth: 45 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 25 }
-      },
+        0: { cellWidth: 40 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 30 }
+      }
     });
+
+    yPosition = (doc as any).lastAutoTable.finalY + 20;
+  }
 
     // Add footer
     const pageCount = (doc as any).internal.getNumberOfPages();
@@ -480,16 +585,16 @@ onMounted(loadData);
 
            <!-- Department Selection -->
            <div class="form-control" v-if="['department', 'activity_department'].includes(reportType)">
-             <label class="label">
-               <span class="label-text">เลือกแผนก</span>
-             </label>
-             <select v-model="selectedReportDepartment" class="select select-bordered w-full">
-               <option value="" disabled>เลือกแผนก</option>
-               <option v-for="dept in departments" :key="dept" :value="dept ?? ''">
-                 {{ getDepartmentFullName(dept ?? '') }}
-               </option>
-             </select>
-           </div>
+  <label class="label">
+    <span class="label-text">เลือกแผนก</span>
+  </label>
+  <select v-model="selectedReportDepartment" class="select select-bordered w-full">
+    <option value="" disabled>เลือกแผนก</option>
+    <option v-for="dept in departments" :key="dept" :value="dept">
+      {{ getDepartmentFullName(dept ?? '') }}
+    </option>
+  </select>
+</div>
 
             <!-- Activity Selection -->
             <div class="form-control" v-if="['by_activity', 'activity_department'].includes(reportType)">
