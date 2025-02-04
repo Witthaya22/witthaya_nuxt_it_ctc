@@ -78,7 +78,7 @@ onMounted(() => {
             <button @click="router.back()" class="btn btn-circle btn-ghost">
               <Icon name="mdi:arrow-left" class="w-5 h-5" />
             </button>
-            <h2 class="card-title text-2xl">ส่งคำขอถึงผู้ดูแลระบบ</h2>
+            <h2 class="card-title text-2xl">ส่งข้อเสนอแนะถึงผู้ดูแลระบบ</h2>
           </div>
 
           <!-- ข้อมูลผู้ขอและกิจกรรม -->
@@ -102,7 +102,7 @@ onMounted(() => {
             <!-- หัวข้อคำขอ -->
             <div class="form-control">
               <label class="label">
-                <span class="label-text font-medium">หัวข้อคำขอ</span>
+                <span class="label-text font-medium">หัวข้อข้อเสนอแนะ</span>
               </label>
               <input
                 v-model="form.title"
@@ -116,12 +116,12 @@ onMounted(() => {
             <!-- รายละเอียดคำขอ -->
             <div class="form-control">
               <label class="label">
-                <span class="label-text font-medium">รายละเอียดคำขอ</span>
+                <span class="label-text font-medium">รายละเอียดข้อเสนอแนะ</span>
               </label>
               <textarea
                 v-model="form.message"
                 class="textarea textarea-bordered h-40"
-                placeholder="ระบุรายละเอียดคำขอของท่าน"
+                placeholder="ระบุรายละเอียดข้อเสนอแนะของท่าน"
                 required
               ></textarea>
             </div>

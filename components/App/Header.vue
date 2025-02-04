@@ -59,7 +59,7 @@ watch(() => useRoute().fullPath, () => {
 </script>
 
 <template>
-  <div class="navbar ">
+  <div class="navbar  ">
 
     <div class="w-14 ms-4 rounded-full ">
       <img alt="วิทยาลัยเทคนิคชัยภูมิ" src="@/assets/images/logo.png" />
@@ -157,7 +157,7 @@ watch(() => useRoute().fullPath, () => {
           </NuxtLink>
         </li> -->
         <template v-if="auth" >
-          <div class="dropdown dropdown-end ">
+          <div class="dropdown dropdown-end z-50">
             <summary
               tabindex="0"
               role="button"

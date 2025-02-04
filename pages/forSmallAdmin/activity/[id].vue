@@ -200,7 +200,7 @@ async function onUpsertActivity() {
       showConfirmButton: false,
       timer: 1700,
     });
-    router.push('/admin/activity');
+    router.push('/admin/userAndActivity');
   } catch (error: any) {
     Swal.fire({
       icon: "error",
@@ -285,7 +285,7 @@ onMounted(() => {
                 <span class="label-text font-bold">คะแนนกิจกรรม</span>
                 <span class="label-text-alt text-error">*</span>
               </label>
-              <input v-model="input.score" class="input input-bordered" type="number" min="0" required />
+              <input v-model="input.score" class="input input-bordered" type="number" min="0" step="0.5" required />
             </div>
             <div class="form-control">
               <label class="label">

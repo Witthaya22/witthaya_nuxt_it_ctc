@@ -83,7 +83,7 @@ onMounted(fetchRequests)
     <div class="max-w-7xl mx-auto">
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
-          <h2 class="card-title text-2xl mb-6">จัดการคำขอ</h2>
+          <h2 class="card-title text-2xl mb-6">จัดการข้อเสนอแนะ</h2>
 
           <div v-if="loading" class="flex justify-center py-8">
             <span class="loading loading-spinner loading-lg"></span>
@@ -100,13 +100,13 @@ onMounted(fetchRequests)
                       โดย {{ request.SenderName }} ({{ request.SenderRole }})
                     </p>
                   </div>
-                  <div :class="['badge', {
+                  <!-- <div :class="['badge', {
                     'badge-warning': request.Status === 'PENDING',
                     'badge-success': request.Status === 'APPROVED',
                     'badge-error': request.Status === 'REJECTED'
                   }]">
                     {{ request.Status }}
-                  </div>
+                  </div> -->
                 </div>
 
                 <p class="mt-4">{{ request.Message }}</p>
@@ -121,7 +121,7 @@ onMounted(fetchRequests)
                   <p class="mt-2">{{ request.ResponseMessage }}</p>
                 </div>
 
-                <div v-if="request.Status === 'PENDING'" class="card-actions justify-end mt-4">
+                <!-- <div v-if="request.Status === 'PENDING'" class="card-actions justify-end mt-4">
                   <button @click="handleRequest(request.ID, false)"
                           class="btn btn-error">
                     ปฏิเสธ
@@ -130,7 +130,7 @@ onMounted(fetchRequests)
                           class="btn btn-success">
                     อนุมัติ
                   </button>
-                </div>
+                </div> -->
               </div>
             </div>
 

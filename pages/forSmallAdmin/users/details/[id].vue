@@ -56,20 +56,24 @@ const bookedActivities = ref<BookedActivity[]>([]);
 const loading = ref(true);
 
 function getImageUrl(image: string | null | undefined) {
-  if (!image) return 'https://placehold.co/100x100?text=No+Image';
-  if (image.startsWith('data:')) return image;
+  if (!image) {
+    console.log('No image provided');
+    return 'https://placehold.co/100x100?text=No+Image';
+  }
+
+  if (image.startsWith('data:')) {
+    console.log('Data URL image:', image.substring(0, 30) + '...');
+    return image;
+  }
 
   // แก้ไขให้รองรับทั้ง path จากกิจกรรมและหลักฐาน
   const baseUrl = 'http://localhost:4000';
   const normalizedPath = image.startsWith('/') ? image : `/${image}`;
 
-  console.log('Processing image path:', {
-    original: image,
-    normalized: normalizedPath,
-    full: `${baseUrl}${normalizedPath}`
-  });
+  const fullUrl = `${baseUrl}${normalizedPath}`;
+  console.log('Full image URL:', fullUrl);
 
-  return `${baseUrl}${normalizedPath}`;
+  return fullUrl;
 }
 
 async function fetchUser() {
@@ -78,9 +82,28 @@ async function fetchUser() {
 }
 
 async function fetchActivities() {
-  const response = await axios.get(`/api/activity/booked-activities/${route.params.id}`);
-  if (!response.data) throw new Error('No data received from activities API');
-  bookedActivities.value = response.data;
+  try {
+    const response = await axios.get(`/api/activity/booked-activities/${route.params.id}`);
+    if (!response.data) throw new Error('No data received from activities API');
+
+    // เพิ่ม log เพื่อดูข้อมูลที่ได้รับ
+    console.log('API Response:', response.data);
+
+    // แปลงข้อมูลและตรวจสอบ activityResults
+    bookedActivities.value = response.data.map((activity: BookedActivity) => {
+      console.log('Activity Results:', activity.activityResults);
+      return {
+        ...activity,
+        activityResults: activity.activityResults ? {
+          ...activity.activityResults,
+          imageActivity: activity.activityResults.imageActivity || null
+        } : null
+      };
+    });
+  } catch (error) {
+    console.error('Fetch Activities Error:', error);
+    throw error;
+  }
 }
 
 async function loadData() {
@@ -271,7 +294,7 @@ onMounted(() => {
         </div>
 
         <!-- Activities Section -->
-        # รายการกิจกรรม Section
+        <!-- # รายการกิจกรรม Section -->
 <div class="card bg-base-100 shadow">
   <div class="card-body">
     <h2 class="card-title mb-6">กิจกรรมที่เข้าร่วม</h2>
@@ -330,22 +353,28 @@ onMounted(() => {
       </td>
       <td>{{ activity.date }}</td>
       <td class="text-center">
-        <!-- Proof Image Column -->
-        <div v-if="activity.activityResults?.imageActivity" class="flex justify-center">
-          <div class="relative group cursor-pointer"
-               @click="openProofModal(getImageUrl(activity.activityResults.imageActivity), activity.name)">
-            <img :src="getImageUrl(activity.activityResults.imageActivity)"
-                 :alt="`หลักฐานของ ${activity.name}`"
-                 class="w-16 h-16 object-cover rounded-lg shadow-sm transition-transform group-hover:scale-105" />
-            <div class="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Icon name="mdi:magnify" class="w-5 h-5 text-white" />
-            </div>
-          </div>
-        </div>
-        <div v-else class="text-base-content/50 text-sm">
-          ยังไม่มีหลักฐาน
-        </div>
-      </td>
+  <!-- Debug info -->
+  <!-- <div class="text-xs text-gray-500 mb-1">
+    {{ activity.activityResults?.imageActivity ? 'มีรูป' : 'ไม่มีรูป' }}
+  </div> -->
+
+  <!-- Proof Image Column -->
+  <div v-if="activity.activityResults?.imageActivity" class="flex justify-center">
+    <div class="relative group cursor-pointer"
+         @click="openProofModal(getImageUrl(activity.activityResults.imageActivity), activity.name)">
+      <img :src="getImageUrl(activity.activityResults.imageActivity)"
+           :alt="`หลักฐานของ ${activity.name}`"
+           @error="(e) => { console.error('Image load error:', e); e.target.src = 'https://placehold.co/100x100?text=Error' }"
+           class="w-16 h-16 object-cover rounded-lg shadow-sm transition-transform group-hover:scale-105" />
+      <div class="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <Icon name="mdi:magnify" class="w-5 h-5 text-white" />
+      </div>
+    </div>
+  </div>
+  <div v-else class="text-base-content/50 text-sm">
+    ยังไม่มีหลักฐาน
+  </div>
+</td>
       <td class="text-center">
         <div :class="['badge badge-lg', getStatusClass(activity.status)]">
           {{ getStatusText(activity.status) }}

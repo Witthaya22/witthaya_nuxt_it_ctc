@@ -14,7 +14,7 @@ interface Activity {
   date: string;
   location: string;
   status: 'RESERVED' | 'active' | 'completed' | 'failed';
-  score: number | null;
+  score: string | null; // เปลี่ยนเป็น string เพื่อรองรับทศนิยม
   images: string[];
   details?: {
     isApproved: boolean | null;
@@ -56,85 +56,92 @@ const getStatusIcon = (status: Activity['status']): string => {
 };
 
 const getImageUrl = (image: string) => {
- if (image.startsWith('data:')) return image;
- return `http://localhost:4000${image}`;
+  if (image.startsWith('data:')) return image;
+  return `http://localhost:4000${image}`;
 };
 
 const completedActivities = computed(() =>
-  bookedActivities.value.filter(activity => activity.status === 'completed').length
+  bookedActivities.value
+    .filter(activity => activity.status === 'completed')
+    .reduce((total, activity) => total + (activity.score ? parseFloat(activity.score) : 0), 0)
 );
 
 const progressPercentage = computed(() =>
   (completedActivities.value / totalRequiredActivities) * 100
 );
 
-const totalRequiredActivities = 3;
+const totalRequiredActivities = 6;
 
 function goBack() {
- router.back();
+  router.back();
 }
 
 const cancelActivityBooking = async (activityId: number, event: Event) => {
- event.preventDefault(); // Prevent navigation when clicking cancel
- try {
-   const result = await Swal.fire({
-     title: 'ยืนยันการยกเลิก?',
-     text: "คุณต้องการยกเลิกการจองกิจกรรมนี้ใช่หรือไม่?",
-     icon: 'warning',
-     showCancelButton: true,
-     confirmButtonColor: '#d33',
-     cancelButtonColor: '#3085d6',
-     confirmButtonText: 'ยืนยัน',
-     cancelButtonText: 'ยกเลิก'
-   });
+  event.preventDefault();
+  try {
+    const result = await Swal.fire({
+      title: 'ยืนยันการยกเลิก?',
+      text: "คุณต้องการยกเลิกการจองกิจกรรมนี้ใช่หรือไม่?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'ยืนยัน',
+      cancelButtonText: 'ยกเลิก'
+    });
 
-   if (result.isConfirmed) {
-     await axios.post('/api/activity/cancel', {
-       userID,
-       activityID: activityId
-     });
+    if (result.isConfirmed) {
+      await axios.post('/api/activity/cancel', {
+        userID,
+        activityID: activityId
+      });
 
-     await Swal.fire({
-       icon: 'success',
-       title: 'ยกเลิกการจองสำเร็จ',
-       showConfirmButton: false,
-       timer: 1500
-     });
+      await Swal.fire({
+        icon: 'success',
+        title: 'ยกเลิกการจองสำเร็จ',
+        showConfirmButton: false,
+        timer: 1500
+      });
 
-     fetchBookedActivities();
-   }
- } catch (error) {
-   console.error('Error:', error);
-   Swal.fire({
-     icon: 'error',
-     title: 'เกิดข้อผิดพลาดในการยกเลิกการจอง',
-   });
- }
+      fetchBookedActivities();
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาดในการยกเลิกการจอง',
+    });
+  }
 };
 
 async function fetchBookedActivities() {
- if (!userID) {
-   Swal.fire({
-     icon: 'warning',
-     title: 'กรุณาล็อกอินก่อนดูข้อมูลกิจกรรม',
-   });
-   return;
- }
+  if (!userID) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'กรุณาล็อกอินก่อนดูข้อมูลกิจกรรม',
+    });
+    return;
+  }
 
- try {
-   isLoading.value = true;
-   const response = await axios.get(`/api/activity/booked-activities/${userID}`);
-   bookedActivities.value = response.data;
- } catch (error) {
-   console.error('Error:', error);
-   Swal.fire({
-     icon: 'error',
-     title: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
-   });
- } finally {
-   isLoading.value = false;
- }
+  try {
+    isLoading.value = true;
+    const response = await axios.get(`/api/activity/booked-activities/${userID}`);
+    // แปลงค่า score เป็น string ก่อนเก็บใน state
+    bookedActivities.value = response.data.map((activity: any) => ({
+      ...activity,
+      score: activity.score !== null ? activity.score.toString() : null
+    }));
+  } catch (error) {
+    console.error('Error:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
+    });
+  } finally {
+    isLoading.value = false;
+  }
 }
+
 const searchQuery = ref('');
 const filteredActivities = computed(() => {
   const query = searchQuery.value.toLowerCase().trim();
@@ -152,7 +159,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen ">
+  <div class="min-h-screen">
     <div class="container mx-auto px-4 py-8">
       <!-- Header with Progress -->
       <div class="mb-8">
@@ -237,14 +244,8 @@ onMounted(() => {
               </div>
 
               <div class="grid grid-cols-2 gap-3 text-sm text-base-content/70 mb-3">
-                <!-- <div class="flex items-center gap-2">
-                  <Icon name="ic:baseline-calendar-today" class="w-4 h-4 text-primary" />
-                  {{ activity.date }}
-                </div> -->
-
                 <div class="flex items-center gap-2">
                   สถานที่:
-                  <!-- <Icon name="ic:baseline-location-on" class="w-4 h-4 text-secondary" /> -->
                   {{ activity.location }}
                 </div>
               </div>
@@ -307,7 +308,6 @@ onMounted(() => {
   </div>
 </template>
 
-# Style Section
 <style scoped>
 .card {
   @apply rounded-xl border border-base-200;

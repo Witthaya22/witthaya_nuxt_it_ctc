@@ -15,6 +15,24 @@ interface Activity {
 }
 const router = useRouter();
 
+const userTotalScore = computed(() => {
+  if (!auth.value?.UserID) return 0;
+
+  return activityUsers.value
+    .filter(
+      (user) =>
+        user.Status === "completed" &&
+        !user.IsArchived &&
+        user.UserID === auth.value?.UserID
+    )
+    .reduce((total, userActivity) => {
+      const activity = activityRes.value.activities.find(
+        (a) => a.ID === userActivity.ActivityID
+      );
+      return total + (activity?.Score || 0);
+    }, 0);
+});
+
 const userCompletedActivities = computed(() => {
   if (!auth.value?.UserID) return 0; // ถ้าไม่มี UserID ให้ return 0
 
@@ -33,7 +51,7 @@ const handleRequestMoreParticipants = (activity: Activity) => {
   const formData = {
     type: 'EDIT_ACTIVITY',
     activityId: activity.ID,
-    title: `คำขอเกี่ยวกับกิจกรรม: ${activity.Title}`, // ปรับหัวข้อให้เป็นแบบทั่วไป
+    title: `ข้อเสนอแนะเกี่ยวกับกิจกรรม: ${activity.Title}`, // ปรับหัวข้อให้เป็นแบบทั่วไป
     message: '' // ให้ผู้ใช้ใส่รายละเอียดเอง
   };
 
@@ -49,7 +67,7 @@ const showRequestButton = computed(() => {
 });
 
 const hasReachedActivityLimit = computed(() => {
-  return userCompletedActivities.value >= 3;
+  return userTotalScore.value >= 6;
 });
 
 interface Semester {
@@ -130,7 +148,7 @@ const currentSemester = ref<Semester | null>(null);
 
 const getStatusBadge = (activity: Activity) => {
   if (hasReachedActivityLimit.value) {
-    return { text: "ครบ 3 กิจกรรมแล้ว", class: "badge-error" };
+    return { text: `ครบ ${userTotalScore.value} คะแนนแล้ว`, class: "badge-error" };
   }
 
   const daysLeft = calculateDaysLeft(activity.EndDate);
@@ -261,8 +279,11 @@ await fetchActivities();
           ค้นหาและเข้าร่วมกิจกรรมที่คุณสนใจ
         </p>
         <div v-if="hasReachedActivityLimit" class="mt-4 text-error font-medium">
-          คุณได้เข้าร่วมครบ 3 กิจกรรมแล้ว ไม่สามารถลงทะเบียนเพิ่มได้
-        </div>
+  คุณมีคะแนนรวม {{ userTotalScore }} คะแนน ครบตามที่กำหนด ไม่สามารถลงทะเบียนเพิ่มได้
+</div>
+<div v-else class="mt-4 text-success font-medium">
+  คะแนนรวมปัจจุบัน: {{ userTotalScore }}/6 คะแนน
+</div>
       </div>
 
       <div class="mb-6 flex justify-center">
@@ -417,7 +438,7 @@ await fetchActivities();
                   class="btn btn-outline btn-primary btn-sm w-full"
                 >
                   <Icon name="mdi:account-plus" class="w-4 h-4 mr-2" />
-                  ส่งคำขอ
+                  ส่งข้อเสนอแนะ
                 </button>
               </div>
             </div>

@@ -271,6 +271,26 @@ const filteredUsers = computed(() => {
       user.DepartmentID === auth.value?.DepartmentID
     );
   }
+  if (selectedStatus.value) {
+    filtered = filtered.filter(user => {
+      // คำนวณคะแนนรวมของผู้ใช้
+      const userActivities = activityResults.value.filter(
+        r => r.UserID === user.UserID && r.Status === 'completed'
+      );
+
+      const totalScore = userActivities.reduce((sum, result) => {
+        const activity = activities.value.find(a => a.ID === result.ActivityID);
+        return sum + (activity?.Score || 0);
+      }, 0);
+
+      if (selectedStatus.value === 'completed') {
+        return totalScore >= 6;  // ผ่านแล้ว
+      } else if (selectedStatus.value === 'incomplete') {
+        return totalScore < 6;  // ยังไม่ผ่าน
+      }
+      return true;
+    });
+  }
 
   // กรองตามการค้นหา
   if (searchQuery.value) {
@@ -334,10 +354,15 @@ const departmentStats = computed<DepartmentStats>(() => {
     stats[dept] = {
       total: deptUsers.length,
       completed: deptUsers.filter(u => {
-        const completedCount = activityResults.value.filter(
+        // คำนวณคะแนนรวมของแต่ละผู้ใช้
+        const userResults = activityResults.value.filter(
           r => r.UserID === u.UserID && r.Status === 'completed'
-        ).length;
-        return completedCount >= 3;
+        );
+        const totalScore = userResults.reduce((sum, result) => {
+          const activity = activities.value.find(a => a.ID === result.ActivityID);
+          return sum + (activity?.Score || 0);
+        }, 0);
+        return totalScore >= 6;
       }).length
     };
   });
@@ -565,7 +590,7 @@ async function deleteUser(userId: string) {
   try {
     const result = await Swal.fire({
       title: "ยืนยันการลบผู้ใช้",
-      text: "คุณต้องการลบผู้ใช้นี้หรือไม่?",
+      text: "คุณต้องการลบผู้ใช้นี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
@@ -575,16 +600,19 @@ async function deleteUser(userId: string) {
     });
 
     if (result.isConfirmed) {
-      await axios.delete(`/api/users/${userId}`);
+      await axios.delete(`/api/user/${userId}`);
       users.value = users.value.filter((user) => user.UserID !== userId);
+
       await Swal.fire({
         icon: "success",
         title: "ลบผู้ใช้สำเร็จ",
+        text: "ผู้ใช้ถูกลบออกจากระบบแล้ว",
         timer: 1500,
         showConfirmButton: false,
       });
     }
   } catch (error: any) {
+    console.error('Error deleting user:', error);
     Swal.fire({
       icon: "error",
       title: "เกิดข้อผิดพลาด",
@@ -616,24 +644,35 @@ const userActivityStatus = computed(() => {
 });
 
 function getActivityStatusText(user: User) {
-  const completedCount = activityResults.value.filter(
+  const userActivities = activityResults.value.filter(
     r => r.UserID === user.UserID && r.Status === 'completed'
-  ).length;
+  );
 
-  if (completedCount >= 3) return `ผ่านแล้ว (${completedCount} กิจกรรม)`;
-  if (completedCount > 0) return `กำลังทำ (${completedCount}/3)`;
+  // คำนวณคะแนนรวม
+  const totalScore = userActivities.reduce((sum, result) => {
+    const activity = activities.value.find(a => a.ID === result.ActivityID);
+    return sum + (activity?.Score || 0);
+  }, 0);
+
+  if (totalScore >= 6) return `ผ่านแล้ว (${totalScore} คะแนน)`;
+  if (totalScore > 0) return `กำลังทำ (${totalScore}/6)`;
   return 'ยังไม่เริ่ม';
 }
 
 function getActivityStatusBadgeClass(user: User) {
-  const completedCount = activityResults.value.filter(
+  const userActivities = activityResults.value.filter(
     r => r.UserID === user.UserID && r.Status === 'completed'
-  ).length;
+  );
+
+  const totalScore = userActivities.reduce((sum, result) => {
+    const activity = activities.value.find(a => a.ID === result.ActivityID);
+    return sum + (activity?.Score || 0);
+  }, 0);
 
   return {
-    'badge-success': completedCount >= 3,
-    'badge-warning': completedCount > 0 && completedCount < 3,
-    'badge-error': completedCount === 0
+    'badge-success': totalScore >= 6,
+    'badge-warning': totalScore > 0 && totalScore < 6,
+    'badge-error': totalScore === 0
   };
 }
 
@@ -911,7 +950,7 @@ watch(selectedSemester, () => {
   <div class="form-control">
     <select v-model="selectedStatus" class="select select-bordered w-full">
       <option value="">สถานะทั้งหมด</option>
-      <option value="active">กำลังดำเนินการ</option>
+      <option value="active">ดำเนินการ</option>
       <option value="upcoming">ยังไม่เริ่ม</option>
       <option value="completed">สิ้นสุดแล้ว</option>
     </select>
@@ -1009,7 +1048,7 @@ watch(selectedSemester, () => {
           }">
             {{
               new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date()
-                ? 'กำลังดำเนินการ'
+                ? 'ดำเนินการ'
                 : new Date(activity.StartDate) > new Date()
                   ? 'ยังไม่เริ่ม'
                   : 'สิ้นสุดแล้ว'
@@ -1314,6 +1353,14 @@ watch(selectedSemester, () => {
         <Icon name="mdi:calendar-check" class="w-4 h-4" />
         ดูกิจกรรม
       </nuxt-link>
+      <button
+      v-if="canManageUser(user)"
+      @click="deleteUser(user.UserID)"
+      class="btn btn-sm btn-error gap-2"
+    >
+      <Icon name="mdi:delete" class="w-4 h-4" />
+      ลบ
+    </button>
         </div>
       </td>
     </tr>

@@ -10,6 +10,16 @@ interface StatusDisplayConfig {
   textColor: string;
   icon: string;
 }
+
+const totalScore = computed(() => {
+  return bookedActivities.value
+    .filter(activity => activity.status === 'completed' && activity.score !== null)
+    .reduce((sum, activity) => sum + activity.score!, 0)
+});
+
+const isAllActivitiesCompleted = computed(() =>
+  totalScore.value >= 6
+)
 const getStatusConfig = (status: Activity['status']) => {
   switch(status) {
     case 'booking':
@@ -151,11 +161,11 @@ const completedActivities = computed(() =>
   bookedActivities.value.filter(activity => activity.status === 'completed').length
 )
 
-const totalRequiredActivities = 3
+const totalRequiredActivities = 4
 
-const isAllActivitiesCompleted = computed(() =>
-  completedActivities.value >= totalRequiredActivities
-)
+// const isAllActivitiesCompleted = computed(() =>
+//   completedActivities.value >= totalRequiredActivities
+// )
 </script>
 
 <template>
@@ -202,16 +212,16 @@ const isAllActivitiesCompleted = computed(() =>
 
             <!-- Activity Score Card -->
             <div class="bg-white shadow-lg rounded-xl p-4">
-              <div class="text-center">
-                <div class="text-2xl font-bold text-primary">
-                  {{ completedActivities }}/{{ totalRequiredActivities }}
-                </div>
-                <div class="text-sm text-gray-500">กิจกรรมที่เข้าร่วม</div>
-                <div :class="['mt-2 text-sm', isAllActivitiesCompleted ? 'text-green-500' : 'text-amber-500']">
-                  {{ isAllActivitiesCompleted ? 'ผ่านกิจกรรม' : 'ยังไม่ผ่านกิจกรรม' }}
-                </div>
-              </div>
-            </div>
+  <div class="text-center">
+    <div class="text-2xl font-bold text-primary">
+      {{ totalScore }}/6
+    </div>
+    <div class="text-sm text-gray-500">คะแนนรวม</div>
+    <div :class="['mt-2 text-sm', isAllActivitiesCompleted ? 'text-green-500' : 'text-amber-500']">
+      {{ isAllActivitiesCompleted ? 'ผ่านเกณฑ์' : 'ยังไม่ผ่านเกณฑ์' }}
+    </div>
+  </div>
+</div>
           </div>
 
           <!-- Profile Details -->
@@ -286,7 +296,7 @@ const isAllActivitiesCompleted = computed(() =>
         <div class="stat-figure text-primary">
           <div class="relative">
             <!-- Progress Circle -->
-            <svg class="w-14 h-14" viewBox="0 0 36 36">
+            <!-- <svg class="w-14 h-14" viewBox="0 0 36 36">
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
@@ -300,21 +310,21 @@ const isAllActivitiesCompleted = computed(() =>
                 stroke-width="3"
                 :stroke-dasharray="`${(completedActivities / totalRequiredActivities) * 100}, 100`"
               />
-            </svg>
-            <div class="absolute inset-0 flex items-center justify-center text-sm font-medium">
+            </svg> -->
+            <!-- <div class="absolute inset-0 flex items-center justify-center text-sm font-medium">
               {{ Math.round((completedActivities / totalRequiredActivities) * 100) }}%
-            </div>
+            </div> -->
           </div>
         </div>
         <div class="stat-title">ความคืบหน้า</div>
-        <div class="stat-value text-primary">{{ completedActivities }}/{{ totalRequiredActivities }}</div>
-        <div class="stat-desc">
-          <div :class="[
-            'badge badge-sm',
-            isAllActivitiesCompleted ? 'badge-success' : 'badge-warning'
-          ]">
-            {{ isAllActivitiesCompleted ? 'ผ่านแล้ว' : 'ยังไม่ผ่าน' }}
-          </div>
+    <div class="stat-value text-primary">{{ totalScore }}/6</div>
+    <div class="stat-desc">
+      <div :class="[
+        'badge badge-sm',
+        isAllActivitiesCompleted ? 'badge-success' : 'badge-warning'
+      ]">
+        {{ isAllActivitiesCompleted ? 'ผ่านเกณฑ์' : 'ยังไม่ผ่านเกณฑ์' }}
+      </div>
         </div>
       </div>
     </div>

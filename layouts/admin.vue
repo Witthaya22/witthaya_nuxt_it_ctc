@@ -13,7 +13,7 @@ const linkList: Link[] = [
     // { text: 'รายละเอียดนักศึกษา', to: '/admin/user' },
     // { text: 'รายละเอียดกิจกรรม', to: '/admin/activity' },
     { text: 'รายละเอียด', to: '/admin/userAndActivity' },
-    { text: 'คำขอร้อง', to: '/admin/Request' },
+    { text: 'ข้อเสนอแนะ', to: '/admin/Request' },
     { text: 'สรุปผลกิจกรรม', to: '/admin/report' },
     { text: 'จัดการภาคเรียน', to: '/admin/semester' }
 ]

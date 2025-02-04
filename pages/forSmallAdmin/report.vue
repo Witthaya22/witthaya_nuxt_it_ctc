@@ -418,110 +418,163 @@ async function generateDetailedPDF() {
     loading.value = true;
     const doc = new jsPDF();
 
-    // Set font
+    // ตั้งค่าฟอนต์
     doc.addFileToVFS('THSarabunNew-normal.ttf', fonts.thSarabun);
     doc.addFont('THSarabunNew-normal.ttf', 'THSarabunNew', 'normal');
     doc.setFont('THSarabunNew');
 
-    // Report title based on type
-    let reportTitle = "รายงานการเข้าร่วมกิจกรรม";
-    switch (reportType.value) {
-      case 'department':
-        reportTitle += ` - แผนก${getDepartmentFullName(selectedReportDepartment.value)}`;
-        break;
-      case 'by_activity':
-        const activity = activities.value.find(a => a.ID === selectedActivityId.value);
-        reportTitle += ` - ${activity?.Title || 'ไม่ระบุกิจกรรม'}`;
-        break;
-      case 'activity_department':
-        const act = activities.value.find(a => a.ID === selectedActivityId.value);
-        reportTitle += ` - ${act?.Title || 'ไม่ระบุกิจกรรม'} (แผนก${getDepartmentFullName(selectedReportDepartment.value)})`;
-        break;
-    }
+    // สร้างส่วนหัวรายงาน (Header)
+    doc.setFillColor(246, 248, 250);
+    doc.rect(0, 0, doc.internal.pageSize.width, 45, 'F');
 
-    doc.setFontSize(20);
-    doc.text("รายงานการเข้าร่วมกิจกรรม", 105, 15, { align: "center" });
+    // เส้นตกแต่งด้านบน
+    doc.setDrawColor(71, 107, 107);
+    doc.setLineWidth(0.5);
+    doc.line(0, 0, doc.internal.pageSize.width, 0);
+    doc.line(0, 45, doc.internal.pageSize.width, 45);
+
+    // หัวข้อรายงาน
+    doc.setTextColor(71, 107, 107);
+    doc.setFontSize(26);
+    doc.text("รายงานการเข้าร่วมกิจกรรม", 105, 20, { align: "center" });
+
+    // วันที่รายงาน
+    doc.setTextColor(108, 117, 125);
     doc.setFontSize(12);
-    doc.text(`วันที่ออกรายงาน: ${dayjs().locale("th").format("DD MMMM YYYY")}`, 105, 25, { align: "center" });
-    let yPosition = 35;
-    const tables = generateSeparatedTableData(reportData);
-    for (const table of tables) {
-      // Check if need new page
-      if (yPosition > doc.internal.pageSize.height - 100) {
-        doc.addPage();
-        yPosition = 15;
-      }
+    doc.text(`วันที่ออกรายงาน: ${dayjs().locale("th").format("DD MMMM YYYY")}`, 105, 35, { align: "center" });
 
-      // Department header
-      doc.setFillColor(240, 240, 240);
-    doc.rect(14, yPosition, 180, 35, "F");
-    doc.setFontSize(16);
-    doc.text(`แผนก${table.departmentName}`, 20, yPosition + 10);
+    let yPosition = 60;
 
-      // Department summary
-      doc.setFontSize(12);
-      doc.text([
-      `จำนวนนักศึกษาทั้งหมด: ${table.summary.total} คน`,
-      `ผ่านกิจกรรม: ${table.summary.completed} คน`,
-      `ไม่ผ่าน: ${table.summary.failed} คน`,
-      `กำลังดำเนินการ: ${table.summary.inProgress} คน`,
-      `รอยืนยัน: ${table.summary.pending} คน`,
-    ].join(' | '), 20, yPosition + 25);
-
-    // Summary
+    // สรุปภาพรวม
     const statusCounts = {
+      total: reportData.length,
       pending: reportData.filter(r => r.Status === 'RESERVED').length,
       inProgress: reportData.filter(r => r.Status === 'active').length,
       passed: reportData.filter(r => r.Status === 'completed').length,
       failed: reportData.filter(r => r.Status === 'failed').length
     };
 
-    doc.setFillColor(240, 240, 240);
-    doc.rect(14, 45, 180, 35, "F");
-    doc.text("สรุปภาพรวม", 105, 55, { align: "center" });
-    doc.text(`จำนวนรายการทั้งหมด: ${reportData.length} รายการ`, 20, 63);
-    doc.text(`รอยืนยัน: ${statusCounts.pending} รายการ`, 120, 63);
-    doc.text(`อยู่ระหว่างดำเนินการ: ${statusCounts.inProgress} รายการ`, 20, 71);
-    doc.text(`ผ่านกิจกรรม: ${statusCounts.passed} รายการ`, 120, 71);
+    // กล่องสรุปภาพรวม
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.1);
+    doc.roundedRect(14, yPosition, 180, 35, 3, 3, 'FD');
 
-    // Create table
-    (doc as any).autoTable({
-      startY: yPosition + 40,
-      head: [["ชื่อกิจกรรม", "ชื่อ-นามสกุล", "สถานะ", "ระดับชั้น", "ห้องเรียน", "วันที่"]],
-      body: table.data,
-      theme: "grid",
-      headStyles: {
-        fillColor: [71, 107, 107],
-        textColor: 255,
-        fontSize: 12,
-        halign: "center",
-        font: 'THSarabunNew'
-      },
-      styles: {
-        fontSize: 10,
-        cellPadding: 5,
-        font: 'THSarabunNew'
-      },
-      columnStyles: {
-        0: { cellWidth: 40 },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 20 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 30 }
-      }
+    doc.setTextColor(71, 107, 107);
+    doc.setFontSize(16);
+    doc.text("สรุปภาพรวมกิจกรรม", 105, yPosition + 12, { align: "center" });
+
+    // ข้อมูลสรุป
+    doc.setTextColor(108, 117, 125);
+    doc.setFontSize(11);
+
+    const summaryData = [
+      `ทั้งหมด ${statusCounts.total} รายการ`,
+      `รอยืนยัน ${statusCounts.pending} รายการ`,
+      `กำลังดำเนินการ ${statusCounts.inProgress} รายการ`,
+      `ผ่านกิจกรรม ${statusCounts.passed} รายการ`,
+      `ไม่ผ่านกิจกรรม ${statusCounts.failed} รายการ`
+    ];
+
+    // จัดวางข้อมูลสรุปให้สวยงาม
+    const summaryX = [30, 65, 110, 155, 200];
+    summaryData.forEach((text, index) => {
+      const xPos = summaryX[index] - (index === summaryData.length - 1 ? 20 : 0);
+      doc.text(text, xPos, yPosition + 25, { align: "center" });
     });
 
-    yPosition = (doc as any).lastAutoTable.finalY + 20;
-  }
+    yPosition += 45;
 
-    // Add footer
+    // สร้างตารางข้อมูลแต่ละแผนก
+    const tables = generateSeparatedTableData(reportData);
+
+    for (const table of tables) {
+      if (yPosition > doc.internal.pageSize.height - 100) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      // หัวข้อแผนก
+      doc.setFillColor(246, 248, 250);
+      doc.roundedRect(14, yPosition, 180, 30, 2, 2, 'F');
+
+      doc.setTextColor(71, 107, 107);
+      doc.setFontSize(15);
+      doc.text(`แผนก${table.departmentName}`, 20, yPosition + 12);
+
+      // สรุปข้อมูลแผนก
+      doc.setTextColor(108, 117, 125);
+      doc.setFontSize(11);
+      const deptSummary = [
+        `นักศึกษา ${table.summary.total} คน`,
+        `ผ่าน ${table.summary.completed} คน`,
+        `ไม่ผ่าน ${table.summary.failed} คน`,
+        `กำลังดำเนินการ ${table.summary.inProgress} คน`,
+        `รอยืนยัน ${table.summary.pending} คน`
+      ].join('  •  ');
+      doc.text(deptSummary, 20, yPosition + 22);
+
+      // ตารางข้อมูล
+      (doc as any).autoTable({
+        startY: yPosition + 35,
+        head: [["ชื่อกิจกรรม", "ชื่อ-นามสกุล", "สถานะ", "ระดับชั้น", "ห้อง", "วันที่"]],
+        body: table.data,
+        theme: "grid",
+        headStyles: {
+          fillColor: [71, 107, 107],
+          textColor: 255,
+          fontSize: 12,
+          halign: "center",
+          font: 'THSarabunNew',
+          cellPadding: 8
+        },
+        styles: {
+          fontSize: 11,
+          cellPadding: 6,
+          font: 'THSarabunNew',
+          lineColor: [226, 232, 240],
+          lineWidth: 0.1
+        },
+        columnStyles: {
+          0: { cellWidth: 40 },
+          1: { cellWidth: 40 },
+          2: {
+            cellWidth: 30,
+            fillColor: function(row) {
+              const status = row.content[2];
+              if (status === 'รอยืนยัน') return [255, 250, 240];
+              if (status === 'อยู่ระหว่างดำเนินการ') return [240, 248, 255];
+              if (status === 'ผ่านกิจกรรม') return [240, 255, 245];
+              if (status === 'ไม่ผ่านกิจกรรม') return [255, 245, 245];
+              return null;
+            },
+            halign: 'center'
+          },
+          3: { cellWidth: 20, halign: 'center' },
+          4: { cellWidth: 20, halign: 'center' },
+          5: { cellWidth: 30, halign: 'center' }
+        },
+        alternateRowStyles: {
+          fillColor: [249, 250, 251]
+        }
+      });
+
+      yPosition = (doc as any).lastAutoTable.finalY + 25;
+    }
+
+    // Footer
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      doc.setDrawColor(71, 107, 107);
+
+      // เส้นคั่น Footer
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.1);
       doc.line(14, doc.internal.pageSize.height - 20, 196, doc.internal.pageSize.height - 20);
-      doc.setFontSize(8);
+
+      // ข้อความ Footer
+      doc.setTextColor(148, 163, 184);
+      doc.setFontSize(9);
       doc.text(
         `พิมพ์เมื่อ ${dayjs().locale("th").format("DD/MM/YYYY HH:mm")}`,
         105,
@@ -536,7 +589,7 @@ async function generateDetailedPDF() {
       );
     }
 
-    // Save PDF
+    // บันทึก PDF
     doc.save(`activity-report-${reportType.value}-${dayjs().format("YYYYMMDD-HHmm")}.pdf`);
 
     await Swal.fire({

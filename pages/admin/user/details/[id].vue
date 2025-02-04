@@ -252,7 +252,7 @@ onMounted(() => {
         </div>
 
         <!-- Activities Section -->
-        # รายการกิจกรรม Section
+        <!-- # รายการกิจกรรม Section -->
 <div class="card bg-base-100 shadow">
   <div class="card-body">
     <h2 class="card-title mb-6">กิจกรรมที่เข้าร่วม</h2>
