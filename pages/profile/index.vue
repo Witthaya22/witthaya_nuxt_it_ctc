@@ -1,9 +1,49 @@
-<!-- pages/profile.vue -->
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import axios from 'axios'
 
 const { auth } = useAuth()
+
+interface StatusDisplayConfig {
+  text: string;
+  bgColor: string;
+  textColor: string;
+  icon: string;
+}
+const getStatusConfig = (status: Activity['status']) => {
+  switch(status) {
+    case 'booking':
+      return {
+        text: 'รอยืนยัน',
+        bgColor: 'bg-amber-100',
+        textColor: 'text-amber-800',
+        icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+      };
+    case 'completed':
+      return {
+        text: 'เข้าร่วมสำเร็จ',
+        bgColor: 'bg-green-100',
+        textColor: 'text-green-800',
+        icon: 'M5 13l4 4L19 7'
+      };
+    case 'failed':
+      return {
+        text: 'เข้าร่วมไม่สำเร็จ',
+        bgColor: 'bg-red-100',
+        textColor: 'text-red-800',
+        icon: 'M6 18L18 6M6 6l12 12'
+      };
+    default:
+      return {
+        text: 'ไม่ทราบสถานะ',
+        bgColor: 'bg-gray-100',
+        textColor: 'text-gray-800',
+        icon: ''
+      };
+  }
+};
+
+
 
 interface User {
   UserID: string;
@@ -14,8 +54,6 @@ interface User {
   Role: string;
   CreatedAt: string;
   UpdatedAt: string;
-  classAt: string;    // เพิ่มฟิลด์ใหม่
-  classRoom: string;  // เพิ่มฟิลด์ใหม่
 }
 
 interface Activity {
@@ -76,30 +114,11 @@ const profileImage = computed(() => {
 
 const departmentName = computed(() => {
   const deptMap: { [key: string]: string } = {
-    'IT': 'เทคโนโลยีสารสนเทศ',
-    'CS': 'วิทยาการคอมพิวเตอร์',
-    'EE': 'วิศวกรรมไฟฟ้า',
-    'ME': 'วิศวกรรมเครื่องกล',
-    'CV': 'วิศวกรรมโยธา',
-    'AR': 'สถาปัตยกรรม',
-    'MT': 'การตลาด',
-    'AC': 'การบัญชี',
-    'WD': 'งานเชื่อมโลหะ',
-    'ET': 'อิเล็กทรอนิกส์',
+    'IT': 'แผนกเทคโนโลยีสารสนเทศ',
+    'MT': 'แผนกช่างยนต์',
+    'ET': 'แผนกไฟฟ้ากำลัง',
   }
   return deptMap[user.value?.DepartmentID || ''] || user.value?.DepartmentID
-})
-
-const getRoleName = computed(() => {
-  const roleMap: { [key: string]: string } = {
-    'USER': 'นักศึกษา',
-    'ADMIN': 'ผู้ดูแลระบบ',
-    'EXECUTIVE': 'ผู้บริหาร',
-    'SUPERADMIN': 'ผู้ช่วยผู้ดูแลระบบ',
-    'TEACHER': 'อาจารย์',
-    'BIGTEACHER': 'หัวหน้าแผนก'
-  }
-  return roleMap[user.value?.Role || 'USER'] || 'นักศึกษา'
 })
 
 const getStatusClass = (status: Activity['status']): string => {
@@ -171,200 +190,265 @@ const isAllActivitiesCompleted = computed(() =>
         </div>
 
         <!-- Profile Content -->
-        <!-- Profile Content -->
-<div class="pt-20 px-8 pb-8">
-  <div class="flex justify-between items-start">
-    <div>
-      <h1 class="text-3xl font-bold text-gray-900">{{ fullName }}</h1>
-      <p class="text-gray-500 text-lg">{{ user.UserID }}</p>
-      <div class="mt-2 flex gap-2">
-        <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
-          {{ getRoleName }}
-        </div>
-        <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-info/10 text-info">
-          {{ user.classAt }} / {{ user.classRoom }}
-        </div>
-      </div>
-    </div>
+        <div class="pt-20 px-8 pb-8">
+          <div class="flex justify-between items-start">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900">{{ fullName }}</h1>
+              <p class="text-gray-500 text-lg">{{ user.UserID }}</p>
+              <div class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
+                {{ user.Role === 'USER' ? 'นักศึกษา' : 'ผู้ดูแลระบบ' }}
+              </div>
+            </div>
 
-    <!-- Activity Score Card -->
-    <div class="bg-white shadow-lg rounded-xl p-6 space-y-4">
-      <div class="text-center">
-        <div class="text-3xl font-bold text-primary">
-          {{ completedActivities }}/{{ totalRequiredActivities }}
-        </div>
-        <div class="text-sm text-gray-500">กิจกรรมที่เข้าร่วม</div>
-        <div :class="['mt-2 badge badge-lg', isAllActivitiesCompleted ? 'badge-success' : 'badge-warning']">
-          {{ isAllActivitiesCompleted ? 'ผ่านกิจกรรม' : 'ยังไม่ผ่านกิจกรรม' }}
-        </div>
-      </div>
-      <!-- Progress Circle -->
-      <div class="relative w-24 h-24 mx-auto">
-        <svg class="w-full h-full" viewBox="0 0 36 36">
-          <path
-            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            fill="none"
-            stroke="#eee"
-            stroke-width="2"
-          />
-          <path
-            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            fill="none"
-            :stroke="isAllActivitiesCompleted ? '#4ade80' : '#facc15'"
-            stroke-width="2"
-            :stroke-dasharray="`${(completedActivities / totalRequiredActivities) * 100}, 100`"
-          />
-        </svg>
-        <div class="absolute inset-0 flex items-center justify-center text-2xl font-bold">
-          {{ Math.round((completedActivities / totalRequiredActivities) * 100) }}%
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Profile Details -->
-  <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="space-y-4">
-      <!-- Department -->
-      <div class="flex items-center gap-3 text-gray-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-        </svg>
-        <span class="font-medium">แผนก:</span>
-        <span>{{ departmentName }}</span>
-      </div>
-
-      <!-- Class Info -->
-      <div class="flex items-center gap-3 text-gray-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path d="M12 14l9-5-9-5-9 5 9 5z"/>
-          <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/>
-        </svg>
-        <span class="font-medium">ชั้นเรียน:</span>
-        <span>{{ user.classAt }} ห้อง {{ user.classRoom }}</span>
-      </div>
-
-      <!-- Join Date -->
-      <div class="flex items-center gap-3 text-gray-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-        </svg>
-        <span class="font-medium">เข้าร่วมเมื่อ:</span>
-        <span>{{ formatDate(user.CreatedAt) }}</span>
-      </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-2 gap-4">
-      <div class="bg-base-200 rounded-xl p-4">
-        <div class="text-sm text-base-content/70">กิจกรรมทั้งหมด</div>
-        <div class="mt-1 flex items-center gap-2">
-          <div class="text-3xl font-bold text-base-content">
-            {{ bookedActivities.length }}
+            <!-- Activity Score Card -->
+            <div class="bg-white shadow-lg rounded-xl p-4">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-primary">
+                  {{ completedActivities }}/{{ totalRequiredActivities }}
+                </div>
+                <div class="text-sm text-gray-500">กิจกรรมที่เข้าร่วม</div>
+                <div :class="['mt-2 text-sm', isAllActivitiesCompleted ? 'text-green-500' : 'text-amber-500']">
+                  {{ isAllActivitiesCompleted ? 'ผ่านกิจกรรม' : 'ยังไม่ผ่านกิจกรรม' }}
+                </div>
+              </div>
+            </div>
           </div>
-          <span class="text-xs text-base-content/60">รายการ</span>
-        </div>
-      </div>
 
-      <div class="bg-base-200 rounded-xl p-4">
-        <div class="text-sm text-base-content/70">เข้าร่วมสำเร็จ</div>
-        <div class="mt-1 flex items-center gap-2">
-          <div class="text-3xl font-bold text-success">
-            {{ completedActivities }}
+          <!-- Profile Details -->
+          <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div class="flex items-center gap-3 text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span>{{ departmentName }}</span>
+              </div>
+              <div class="flex items-center gap-3 text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>เข้าร่วมเมื่อ {{ formatDate(user.CreatedAt) }}</span>
+              </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-gray-50 rounded-xl p-4">
+                <div class="text-gray-500">กิจกรรมทั้งหมด</div>
+                <div class="text-3xl font-bold text-gray-900 mt-1">
+                  {{ bookedActivities.length }}
+                </div>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-4">
+                <div class="text-gray-500">เข้าร่วมสำเร็จ</div>
+                <div class="text-3xl font-bold text-green-600 mt-1">
+                  {{ completedActivities }}
+                </div>
+              </div>
+            </div>
           </div>
-          <span class="text-xs text-base-content/60">รายการ</span>
+
+          <!-- Action Buttons -->
+          <div class="mt-8 flex gap-4">
+            <NuxtLink to="/profile/editProfile" class="btn btn-primary gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              แก้ไขโปรไฟล์
+            </NuxtLink>
+            <NuxtLink to="/profile/editActivity" class="btn btn-secondary gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              กิจกรรมที่จองไว้
+            </NuxtLink>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Activities Table with Search and Filter -->
-  <div class="mt-8">
-    <div class="flex justify-between items-center mb-4">
-      <input
-        type="text"
-        placeholder="ค้นหากิจกรรม..."
-        class="input input-bordered w-full max-w-xs"
-        v-model="searchQuery"
-      />
-      <select class="select select-bordered" v-model="statusFilter">
-        <option value="">สถานะทั้งหมด</option>
-        <option value="booking">รอยืนยัน</option>
-        <option value="completed">เข้าร่วมสำเร็จ</option>
-        <option value="failed">เข้าร่วมไม่สำเร็จ</option>
-      </select>
-    </div>
-
-    <div class="overflow-x-auto">
-      <table class="table table-zebra w-full">
-        <thead>
-          <tr>
-            <th>ชื่อกิจกรรม</th>
-            <th>วันที่</th>
-            <th>สถานที่</th>
-            <th>สถานะ</th>
-            <th class="text-center">คะแนน</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="activity in filteredActivities" :key="activity.id">
-            <td class="font-medium">{{ activity.name }}</td>
-            <td>{{ formatDate(activity.date) }}</td>
-            <td>{{ activity.location }}</td>
-            <td>
-              <span :class="[
-                'badge badge-sm',
-                activity.status === 'completed' ? 'badge-success' :
-                activity.status === 'failed' ? 'badge-error' :
-                'badge-warning'
-              ]">
-                {{ getStatusText(activity.status) }}
-              </span>
-            </td>
-            <td class="text-center">
-              <span class="font-medium">
-                {{ activity.score !== null ? activity.score : '-' }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
       </div>
 
       <!-- Activities Table -->
-      <div class="bg-white rounded-2xl shadow-lg p-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">กิจกรรมที่เข้าร่วม</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="border-b border-gray-200">
-                <th class="text-left py-4 px-4 font-semibold text-gray-600">ชื่อกิจกรรม</th>
-                <th class="text-left py-4 px-4 font-semibold text-gray-600">วันที่</th>
-                <th class="text-left py-4 px-4 font-semibold text-gray-600">สถานะ</th>
-                <th class="text-left py-4 px-4 font-semibold text-gray-600">คะแนน</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="activity in bookedActivities"
-                  :key="activity.id"
-                  class="border-b border-gray-100 hover:bg-gray-50">
-                <td class="py-4 px-4">{{ activity.name }}</td>
-                <td class="py-4 px-4">{{ formatDate(activity.date) }}</td>
-                <td class="py-4 px-4">
-                  <span :class="['inline-flex items-center px-3 py-1 rounded-full text-sm', getStatusClass(activity.status)]">
-                    {{ getStatusText(activity.status) }}
-                  </span>
-                </td>
-                <td class="py-4 px-4">{{ activity.score || '-' }}</td>
-              </tr>
-            </tbody>
-          </table>
+      <!-- Activities Table -->
+<div class="bg-white rounded-2xl shadow-lg p-6">
+  <!-- Header with Stats -->
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900">กิจกรรมที่เข้าร่วม</h2>
+      <p class="text-gray-500 mt-1">รายการกิจกรรมทั้งหมดที่คุณได้เข้าร่วม</p>
+    </div>
+
+    <!-- Activity Progress -->
+    <div class="stats bg-base-100 shadow">
+      <div class="stat">
+        <div class="stat-figure text-primary">
+          <div class="relative">
+            <!-- Progress Circle -->
+            <svg class="w-14 h-14" viewBox="0 0 36 36">
+              <path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                stroke="#eee"
+                stroke-width="3"
+              />
+              <path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                :stroke="isAllActivitiesCompleted ? '#4ade80' : '#facc15'"
+                stroke-width="3"
+                :stroke-dasharray="`${(completedActivities / totalRequiredActivities) * 100}, 100`"
+              />
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center text-sm font-medium">
+              {{ Math.round((completedActivities / totalRequiredActivities) * 100) }}%
+            </div>
+          </div>
+        </div>
+        <div class="stat-title">ความคืบหน้า</div>
+        <div class="stat-value text-primary">{{ completedActivities }}/{{ totalRequiredActivities }}</div>
+        <div class="stat-desc">
+          <div :class="[
+            'badge badge-sm',
+            isAllActivitiesCompleted ? 'badge-success' : 'badge-warning'
+          ]">
+            {{ isAllActivitiesCompleted ? 'ผ่านแล้ว' : 'ยังไม่ผ่าน' }}
+          </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Activities Table -->
+  <div class="overflow-x-auto">
+    <table class="table w-full">
+      <thead>
+        <tr>
+          <th class="bg-base-200/50">ชื่อกิจกรรม</th>
+          <th class="bg-base-200/50">วันที่</th>
+          <th class="bg-base-200/50">สถานที่</th>
+          <th class="bg-base-200/50">สถานะ</th>
+          <th class="bg-base-200/50 text-center">คะแนน</th>
+          <th class="bg-base-200/50 text-center w-20">ตัวเลือก</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="activity in bookedActivities" :key="activity.id" class="hover">
+          <td>
+            <div class="font-medium">{{ activity.name }}</div>
+            <div class="text-sm text-gray-500">รหัสกิจกรรม: {{ activity.id }}</div>
+          </td>
+          <td>
+            <div>{{ formatDate(activity.date) }}</div>
+          </td>
+          <td>
+            <div class="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              {{ activity.location }}
+            </div>
+          </td>
+          <td>
+            <div class="flex items-center gap-2">
+              <span :class="[
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium',
+                getStatusConfig(activity.status).bgColor,
+                getStatusConfig(activity.status).textColor
+              ]">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                >
+                  <path :d="getStatusConfig(activity.status).icon" />
+                </svg>
+                {{ getStatusConfig(activity.status).text }}
+              </span>
+            </div>
+          </td>
+          <td class="text-center">
+            <div :class="[
+              'badge badge-lg',
+              activity.score ? 'badge-success' : 'badge-ghost'
+            ]">
+              {{ activity.score !== null ? activity.score : '-' }}
+            </div>
+          </td>
+          <td class="text-center">
+            <div class="dropdown dropdown-end">
+              <label tabindex="0" class="btn btn-ghost btn-sm btn-square">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </label>
+              <ul tabindex="0" class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52">
+                <li>
+                  <a :href="`/activity/${activity.id}`" class="text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    ดูรายละเอียด
+                  </a>
+                </li>
+                <!-- <li>
+                  <a class="text-green-600" @click="openQRCode(activity.id)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    แสดง QR Code
+                  </a>
+                </li> -->
+              </ul>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Status Legend -->
+  <div class="mt-6 p-4 bg-base-200/50 rounded-lg">
+    <h3 class="font-bold mb-3">สถานะกิจกรรม:</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          รอยืนยัน
+        </span>
+        <span class="text-sm text-gray-600">- รอการตรวจสอบการเข้าร่วม</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          เข้าร่วมสำเร็จ
+        </span>
+        <span class="text-sm text-gray-600">- ผ่านการเข้าร่วมกิจกรรม</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          เข้าร่วมไม่สำเร็จ
+        </span>
+        <span class="text-sm text-gray-600">- ไม่ผ่านการเข้าร่วมกิจกรรม</span>
+      </div>
+    </div>
+  </div>
+</div>
     </div>
   </div>
 </template>

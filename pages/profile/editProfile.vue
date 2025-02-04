@@ -15,6 +15,11 @@ interface UserProfile {
   DepartmentID: string;
   Bio: string;
   UserImage: string | null;
+  classAt: string;    // เพิ่มฟิลด์ระดับชั้น
+  classRoom: string;  // เพิ่มฟิลด์ห้องเรียน
+  currentPassword: string; // เพิ่มฟิลด์รหัสผ่านปัจจุบัน
+  newPassword: string;    // เพิ่มฟิลด์รหัสผ่านใหม่
+  confirmPassword: string; // เพิ่มฟิลด์ยืนยันรหัสผ่าน
 }
 
 const loading = ref(false);
@@ -27,6 +32,11 @@ const profile = reactive<UserProfile>({
   DepartmentID: "",
   Bio: "",
   UserImage: null,
+  classAt: "",       // เพิ่มฟิลด์ระดับชั้น
+  classRoom: "",     // เพิ่มฟิลด์ห้องเรียน
+  currentPassword: "", // เพิ่มฟิลด์รหัสผ่านปัจจุบัน
+  newPassword: "",    // เพิ่มฟิลด์รหัสผ่านใหม่
+  confirmPassword: "", // เพิ่มฟิลด์ยืนยันรหัสผ่าน
 });
 
 // Fetch user profile
@@ -83,25 +93,42 @@ function handleImageUpload(event: Event) {
 // Update profile
 async function updateProfile() {
   try {
-    loading.value = true
+    loading.value = true;
 
     if (!profile.UserFirstName || !profile.UserLastName) {
-      throw new Error('กรุณากรอกชื่อและนามสกุล')
+      throw new Error('กรุณากรอกชื่อและนามสกุล');
     }
 
-    // สร้าง FormData
-    const formData = new FormData()
-    formData.append('UserFirstName', profile.UserFirstName)
-    formData.append('UserLastName', profile.UserLastName)
-    formData.append('Bio', profile.Bio)
+    // ตรวจสอบรหัสผ่าน
+    if (profile.newPassword) {
+      if (!profile.currentPassword) {
+        throw new Error('กรุณากรอกรหัสผ่านปัจจุบัน');
+      }
+      if (profile.newPassword !== profile.confirmPassword) {
+        throw new Error('รหัสผ่านใหม่ไม่ตรงกัน');
+      }
+      if (profile.newPassword.length < 6) {
+        throw new Error('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+      }
+    }
 
-    // เพิ่มไฟล์รูปภาพ (ถ้ามี)
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    const formData = new FormData();
+    formData.append('UserFirstName', profile.UserFirstName);
+    formData.append('UserLastName', profile.UserLastName);
+    formData.append('Bio', profile.Bio || '');
+    formData.append('classAt', profile.classAt);
+    formData.append('classRoom', profile.classRoom);
+
+    if (profile.currentPassword && profile.newPassword) {
+      formData.append('currentPassword', profile.currentPassword);
+      formData.append('newPassword', profile.newPassword);
+    }
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     if (fileInput?.files?.[0]) {
-      formData.append('UserImage', fileInput.files[0])
+      formData.append('UserImage', fileInput.files[0]);
     }
 
-    // เปลี่ยน endpoint และ method
     const response = await axios.put(
       `/api/user/${auth.value?.UserID}`,
       formData,
@@ -110,24 +137,29 @@ async function updateProfile() {
           'Content-Type': 'multipart/form-data'
         }
       }
-    )
+    );
 
     Swal.fire({
       icon: 'success',
-      title: 'อัพเดทข้อมูลสำเร็จ',
+      title: 'อัปเดทข้อมูลสำเร็จ',
+      text: profile.newPassword ? 'กรุณาเข้าสู่ระบบใหม่อีกครั้ง' : undefined,
       showConfirmButton: false,
       timer: 1500
-    })
+    });
 
-    router.push('/profile')
+    // if (profile.newPassword) {
+    //   await router.push('/logout');
+    // } else {
+    //   await router.push('/profile');
+    // }
   } catch (error: any) {
     Swal.fire({
       icon: 'error',
       title: 'เกิดข้อผิดพลาด',
       text: error.response?.data?.message || error.message
-    })
+    });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -224,7 +256,7 @@ onMounted(() => {
 
             <!-- User Information -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="form-control">
+              <!-- <div class="form-control">
                 <label class="label">
                   <span class="label-text text-base font-medium"
                     >รหัสนักศึกษา</span
@@ -236,7 +268,7 @@ onMounted(() => {
                   class="input input-bordered bg-gray-50"
                   disabled
                 />
-              </div>
+              </div> -->
 
               <div class="form-control">
                 <label class="label">
@@ -281,9 +313,36 @@ onMounted(() => {
                   placeholder="นามสกุล"
                 />
               </div>
-            </div>
 
-            <div class="form-control">
+              <div class="form-control">
+    <label class="label">
+      <span class="label-text text-base font-medium">ระดับชั้น</span>
+      <span class="label-text-alt text-error">*</span>
+    </label>
+    <select v-model="profile.classAt" class="select select-bordered" required>
+      <option value="">เลือกระดับชั้น</option>
+      <option value="ปวช.2">ปวช.2</option>
+      <option value="ปวส.1">ปวส.1</option>
+      <option value="ปวส.2">ปวส.2</option>
+    </select>
+  </div>
+
+  <div class="form-control">
+    <label class="label">
+      <span class="label-text text-base font-medium">ห้องเรียน</span>
+      <span class="label-text-alt text-error">*</span>
+    </label>
+    <input
+      v-model="profile.classRoom"
+      type="text"
+      class="input input-bordered"
+      required
+      placeholder="ระบุห้องเรียน"
+    />
+  </div>
+
+            </div>
+            <!-- <div class="form-control">
               <label class="label">
                 <span class="label-text text-base font-medium"
                   >เกี่ยวกับฉัน</span
@@ -294,7 +353,100 @@ onMounted(() => {
                 class="textarea textarea-bordered h-32"
                 placeholder="เขียนข้อความแนะนำตัวของคุณ"
               ></textarea>
-            </div>
+            </div> -->
+            <!-- เพิ่มส่วนเปลี่ยนรหัสผ่าน -->
+<div class="divider">เปลี่ยนรหัสผ่าน (ไม่จำเป็น)</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <!-- รหัสผ่านปัจจุบัน -->
+  <div class="form-control">
+    <label class="label">
+      <span class="label-text text-base font-medium">รหัสผ่านปัจจุบัน</span>
+    </label>
+    <div class="relative">
+      <input
+        v-model="profile.currentPassword"
+        :type="showCurrentPassword ? 'text' : 'password'"
+        class="input input-bordered pr-10 w-full"
+        placeholder="กรอกรหัสผ่านปัจจุบัน"
+      />
+      <button
+        type="button"
+        class="absolute inset-y-0 right-0 pr-3 flex items-center"
+        @click="showCurrentPassword = !showCurrentPassword"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 text-gray-400"
+          :class="{ 'hidden': !showCurrentPassword }"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 text-gray-400"
+          :class="{ 'hidden': showCurrentPassword }"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- รหัสผ่านใหม่ -->
+  <div class="form-control">
+    <label class="label">
+      <span class="label-text text-base font-medium">รหัสผ่านใหม่</span>
+    </label>
+    <div class="relative">
+      <input
+        v-model="profile.newPassword"
+        :type="showNewPassword ? 'text' : 'password'"
+        class="input input-bordered pr-10 w-full"
+        placeholder="กรอกรหัสผ่านใหม่"
+        :minlength="6"
+      />
+      <button
+        type="button"
+        class="absolute inset-y-0 right-0 pr-3 flex items-center"
+        @click="showNewPassword = !showNewPassword"
+      >
+        <!-- ไอคอนเหมือนด้านบน -->
+      </button>
+    </div>
+    <label class="label">
+      <span class="label-text-alt">รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร</span>
+    </label>
+  </div>
+
+  <!-- ยืนยันรหัสผ่านใหม่ -->
+  <div class="form-control md:col-span-2">
+    <label class="label">
+      <span class="label-text text-base font-medium">ยืนยันรหัสผ่านใหม่</span>
+    </label>
+    <div class="relative">
+      <input
+        v-model="profile.confirmPassword"
+        :type="showConfirmPassword ? 'text' : 'password'"
+        class="input input-bordered pr-10 w-full"
+        placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
+      />
+      <button
+        type="button"
+        class="absolute inset-y-0 right-0 pr-3 flex items-center"
+        @click="showConfirmPassword = !showConfirmPassword"
+      >
+        <!-- ไอคอนเหมือนด้านบน -->
+      </button>
+    </div>
+  </div>
+</div>
 
             <!-- Action Buttons -->
             <div class="flex justify-end gap-4 pt-4">

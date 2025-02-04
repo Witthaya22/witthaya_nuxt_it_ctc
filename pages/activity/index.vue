@@ -45,7 +45,7 @@ const handleRequestMoreParticipants = (activity: Activity) => {
 };
 
 const showRequestButton = computed(() => {
-  return auth.value?.Role !== "user";
+  return auth.value?.Role !== "USER";
 });
 
 const hasReachedActivityLimit = computed(() => {

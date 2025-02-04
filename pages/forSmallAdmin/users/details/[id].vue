@@ -23,9 +23,22 @@ interface BookedActivity {
   activityResults?: {
     id: number;
     status: string;
+    imageActivity?: string; // เพิ่ม field นี้
   };
 }
+const selectedProof = ref<{
+  image: string;
+  name: string;
+} | null>(null);
 
+
+function openProofModal(image: string, name: string) {
+  selectedProof.value = { image, name };
+}
+
+function closeProofModal() {
+  selectedProof.value = null;
+}
 interface User {
   UserID: string;
   UserFirstName: string;
@@ -42,10 +55,21 @@ const user = ref<User | null>(null);
 const bookedActivities = ref<BookedActivity[]>([]);
 const loading = ref(true);
 
-function getImageUrl(image: string) {
+function getImageUrl(image: string | null | undefined) {
   if (!image) return 'https://placehold.co/100x100?text=No+Image';
   if (image.startsWith('data:')) return image;
-  return `http://localhost:4000${image}`;
+
+  // แก้ไขให้รองรับทั้ง path จากกิจกรรมและหลักฐาน
+  const baseUrl = 'http://localhost:4000';
+  const normalizedPath = image.startsWith('/') ? image : `/${image}`;
+
+  console.log('Processing image path:', {
+    original: image,
+    normalized: normalizedPath,
+    full: `${baseUrl}${normalizedPath}`
+  });
+
+  return `${baseUrl}${normalizedPath}`;
 }
 
 async function fetchUser() {
@@ -274,45 +298,63 @@ onMounted(() => {
 
     <div class="overflow-x-auto">
       <table class="table">
-        <thead class="bg-base-200">
-          <tr>
-            <th>กิจกรรม</th>
-            <th>วันที่</th>
-            <th class="text-center">สถานะการเข้าร่วม</th>
-            <th class="text-center">การจัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="activity in bookedActivities"
-              :key="activity.id"
-              class="hover">
-            <td>
-              <div class="flex items-center gap-4">
-                <div class="avatar">
-                  <div class="w-16 h-16 rounded-lg">
-                    <img
-                      :src="getImageUrl(activity.images[0])"
-                      :alt="activity.name"
-                      class="object-cover"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div class="font-bold">{{ activity.name }}</div>
-                  <div class="text-sm opacity-70">{{ activity.location }}</div>
-                </div>
-              </div>
-            </td>
-            <td>{{ activity.date }}</td>
-            <td class="text-center">
-              <div :class="['badge badge-lg', getStatusClass(activity.status)]">
-                {{ getStatusText(activity.status) }}
-              </div>
-            </td>
-            <td>
-              <div class="flex justify-center gap-2">
-                <!-- Show Confirm button for RESERVED status -->
-                <template v-if="activity.status === 'RESERVED'">
+  <thead class="bg-base-200">
+    <tr>
+      <th>กิจกรรม</th>
+      <th>วันที่</th>
+      <th class="text-center">หลักฐาน</th>
+      <th class="text-center">สถานะการเข้าร่วม</th>
+      <th class="text-center">การจัดการ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="activity in bookedActivities"
+        :key="activity.id"
+        class="hover">
+      <td>
+        <div class="flex items-center gap-4">
+          <div class="avatar">
+            <div class="w-16 h-16 rounded-lg">
+              <img
+                :src="getImageUrl(activity.images[0])"
+                :alt="activity.name"
+                class="object-cover"
+              />
+            </div>
+          </div>
+          <div>
+            <div class="font-bold">{{ activity.name }}</div>
+            <div class="text-sm opacity-70">{{ activity.location }}</div>
+          </div>
+        </div>
+      </td>
+      <td>{{ activity.date }}</td>
+      <td class="text-center">
+        <!-- Proof Image Column -->
+        <div v-if="activity.activityResults?.imageActivity" class="flex justify-center">
+          <div class="relative group cursor-pointer"
+               @click="openProofModal(getImageUrl(activity.activityResults.imageActivity), activity.name)">
+            <img :src="getImageUrl(activity.activityResults.imageActivity)"
+                 :alt="`หลักฐานของ ${activity.name}`"
+                 class="w-16 h-16 object-cover rounded-lg shadow-sm transition-transform group-hover:scale-105" />
+            <div class="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Icon name="mdi:magnify" class="w-5 h-5 text-white" />
+            </div>
+          </div>
+        </div>
+        <div v-else class="text-base-content/50 text-sm">
+          ยังไม่มีหลักฐาน
+        </div>
+      </td>
+      <td class="text-center">
+        <div :class="['badge badge-lg', getStatusClass(activity.status)]">
+          {{ getStatusText(activity.status) }}
+        </div>
+      </td>
+      <td>
+        <div class="flex justify-center gap-2">
+          <!-- Show Confirm button for RESERVED status -->
+          <template v-if="activity.status === 'RESERVED'">
                   <button
                     @click="handleConfirmation(activity.id)"
                     class="btn btn-info btn-sm gap-1">
@@ -351,11 +393,31 @@ onMounted(() => {
                   <Icon name="mdi:note" class="w-4 h-4" />
                   หมายเหตุ
                 </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Proof Image Modal -->
+<dialog :open="!!selectedProof" class="modal modal-bottom sm:modal-middle">
+  <div class="modal-box max-w-4xl">
+    <h3 class="font-bold text-lg mb-4">
+      หลักฐานการเข้าร่วมกิจกรรม - {{ selectedProof?.name }}
+    </h3>
+    <div v-if="selectedProof" class="relative aspect-video rounded-xl overflow-hidden">
+      <img :src="selectedProof.image"
+           :alt="`หลักฐานของ ${selectedProof.name}`"
+           class="w-full h-full object-contain" />
+    </div>
+    <div class="modal-action">
+      <button class="btn" @click="closeProofModal">ปิด</button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop" @click="closeProofModal">
+    <button>ปิด</button>
+  </form>
+</dialog>
 
       <!-- Empty State -->
       <div v-if="bookedActivities.length === 0"
@@ -375,5 +437,12 @@ onMounted(() => {
 <style scoped>
 .avatar img {
   @apply object-cover;
+}
+
+.modal {
+  @apply backdrop-blur-sm;
+}
+.modal-box {
+  @apply p-6;
 }
 </style>

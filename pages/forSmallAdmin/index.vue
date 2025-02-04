@@ -818,10 +818,10 @@ watch(selectedSemester, () => {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="72" stroke-dashoffset="72" d="M12 3h7v18h-14v-18h7Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="72;0"/></path><path stroke-dasharray="12" stroke-dashoffset="12" stroke-width="1" d="M14.5 3.5v3h-5v-3"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="12;0"/></path><path stroke-dasharray="4" stroke-dashoffset="4" d="M9 10h3"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" values="4;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M9 13h5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.1s" dur="0.2s" values="6;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M9 16h6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.3s" dur="0.2s" values="8;0"/></path></g></svg>
   สรุปผลกิจกรรม
 </nuxt-link>
-      <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
+      <!-- <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="64" stroke-dashoffset="64" d="M13 3l6 6v12h-14v-18h8"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" stroke-width="1" d="M12.5 3v5.5h6.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="14;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M10 13l-2 2l2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" values="8;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M14 13l2 2l-2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.1s" dur="0.2s" values="8;0"/></path></g></svg>
         สแกน QR Code
-      </button>
+      </button> -->
     </div>
   </div>
 
@@ -1121,10 +1121,10 @@ watch(selectedSemester, () => {
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-dasharray="16" stroke-dashoffset="16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 12h14"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="16;0"/></path><path d="M12 5v14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.4s" values="16;0"/></path></g></svg>
   เพิ่มผู้ใช้งาน
 </nuxt-link>
-      <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
+      <!-- <button @click="toggleQRScanner" class="btn btn-accent gap-2 text-white">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="64" stroke-dashoffset="64" d="M13 3l6 6v12h-14v-18h8"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" stroke-width="1" d="M12.5 3v5.5h6.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="14;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M10 13l-2 2l2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.9s" dur="0.2s" values="8;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M14 13l2 2l-2 2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.1s" dur="0.2s" values="8;0"/></path></g></svg>
         สแกน QR Code
-      </button>
+      </button> -->
     </div>
   </div>
 
@@ -1333,7 +1333,7 @@ watch(selectedSemester, () => {
     <!-- QR Code Scanner Modal -->
     <dialog :class="{ 'modal': true, 'modal-open': showQRScanner }">
     <div class="modal-box relative bg-white max-w-lg p-6">
-      <h3 class="text-2xl font-bold text-center mb-8">สแกน QR Code เช็คอิน</h3>
+      <!-- <h3 class="text-2xl font-bold text-center mb-8">สแกน QR Code เช็คอิน</h3> -->
       <button class="btn btn-circle btn-error w-1/6 h-10 absolute top-2 right-2 mt-6" @click="closeQRScanner">ปิด</button>
       <form method="dialog" class="modal-backdrop" @click="closeQRScanner">
         <button>ปิด</button>
@@ -1387,7 +1387,7 @@ watch(selectedSemester, () => {
         <ul class="list-disc list-inside space-y-2 text-sm">
           <li>ส่องกล้องไปที่ QR Code ของผู้เข้าร่วมกิจกรรม</li>
           <li>ระบบจะทำการตรวจสอบและบันทึกการเข้าร่วมโดยอัตโนมัติ</li>
-          <li>รอให้แสดงผลการเช็คอินก่อนสแกน QR Code ถัดไป</li>
+          <!-- <li>รอให้แสดงผลการเช็คอินก่อนสแกน QR Code ถัดไป</li> -->
         </ul>
       </div>
     </div>

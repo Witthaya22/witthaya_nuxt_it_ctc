@@ -60,7 +60,7 @@ onMounted(() => {
           :slides-per-view="1"
           :loop="true"
           :autoplay="{
-            delay: 2100,
+            delay: 1500,
             disableOnInteraction: false,
           }"
           :effect="'cube'"
