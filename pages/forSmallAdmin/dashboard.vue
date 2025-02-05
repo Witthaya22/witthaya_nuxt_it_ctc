@@ -1,7 +1,5 @@
 
 <script setup lang="ts">
-useHead({ title: "แดชบอร์ดผู้ดูแลระบบ" });
-definePageMeta({ layout: "admin" });
 
 import { ref, onMounted } from 'vue';
 import type { Component } from 'vue';
@@ -386,7 +384,7 @@ watch(() => useRoute().fullPath, loadData);
   <div class="p-6 space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold">แดชบอร์ดผู้ดูแลระบบ</h1>
+      <h1 class="text-2xl font-bold">สถิติภาพรวม</h1>
       <div class="flex gap-4">
         <div class="tabs tabs-boxed">
           <button

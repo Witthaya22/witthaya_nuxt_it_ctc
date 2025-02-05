@@ -66,7 +66,7 @@ const previewImages = ref<string[]>([]);
 const fileInput = ref<HTMLInputElement | null>(null);
 let refreshCacge: (() => Promise<void>) | null = null;
 
-if (!isCreate) {
+  if (!isCreate) {
   const { data, refresh } = await useAsyncData<{ activity: Activity }>(
     `admin-activity-${route.params.id}`,
     async () => {
@@ -77,18 +77,27 @@ if (!isCreate) {
   refreshCacge = refresh;
   const activity = data.value.activity;
 
+  // ฟังก์ชันแปลงวันที่เป็นรูปแบบ YYYY-MM-DD
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Map data
   id.value = activity.ID;
   input.title = activity.Title;
   input.description = activity.Description;
   input.images = activity.Images;
   input.score = activity.Score;
-  input.startDate = activity.StartDate;
-  input.endDate = activity.EndDate;
+  input.startDate = formatDate(activity.StartDate); // แปลงรูปแบบวันที่
+  input.endDate = formatDate(activity.EndDate); // แปลงรูปแบบวันที่
   input.type = activity.Type;
   input.location = activity.Location;
   input.maxParticipants = activity.MaxParticipants;
-  selectedSemesterId.value = activity.SemesterID;  // เพิ่มบรรทัดนี้
+  selectedSemesterId.value = activity.SemesterID;
 
   // Load existing images for preview
   input.images.forEach(imageUrl => {
@@ -304,7 +313,7 @@ onMounted(() => {
               </label>
               <input v-model="input.location" class="input input-bordered" type="text" required />
             </div>
-            <div class="form-control">
+            <!-- <div class="form-control">
               <label class="label">
                 <span class="label-text font-bold">ประเภทกิจกรรม</span>
               </label>
@@ -314,7 +323,7 @@ onMounted(() => {
                 <option value="ACADEMIC">วิชาการ</option>
                 <option value="CULTURE">วัฒนธรรม</option>
               </select>
-            </div>
+            </div> -->
           </div>
 
           <!-- รูปภาพกิจกรรม -->

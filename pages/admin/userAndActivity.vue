@@ -1009,7 +1009,7 @@ watch(selectedSemester, () => {
         <th>ชื่อกิจกรรม</th>
         <th>วันที่จัด</th>
         <th>สถานที่</th>
-        <th>ประเภท</th>
+        <!-- <th>ประเภท</th> -->
         <th class="text-center">คะแนน</th>
         <th class="text-center">สถานะ</th>
         <th class="text-end">จัดการ</th>
@@ -1027,7 +1027,7 @@ watch(selectedSemester, () => {
           <div>สิ้นสุด: {{ formatDate(activity.EndDate) }}</div>
         </td>
         <td>{{ activity.Location }}</td>
-        <td>
+        <!-- <td>
           <div class="badge" :class="{
             'badge-primary': activity.Type === 'GENERAL',
             'badge-secondary': activity.Type === 'SPORT',
@@ -1036,7 +1036,7 @@ watch(selectedSemester, () => {
           }">
             {{ activity.Type }}
           </div>
-        </td>
+        </td> -->
         <td class="text-center">
           <div class="badge badge-lg badge-primary">{{ activity.Score }}</div>
         </td>
@@ -1062,7 +1062,6 @@ watch(selectedSemester, () => {
         :to="`/forSmallAdmin/activity/${activity.ID}`"
         class="btn btn-sm btn-warning gap-2"
       >
-        <Icon name="mdi:pencil" class="w-4 h-4" />
         แก้ไข
       </nuxt-link>
       <button
@@ -1070,7 +1069,6 @@ watch(selectedSemester, () => {
         @click="deleteActivity(activity.ID)"
         class="btn btn-sm btn-error gap-2"
       >
-        <Icon name="mdi:delete" class="w-4 h-4" />
         ลบ
       </button>
       <!-- ปุ่มดูผู้เข้าร่วมแสดงเสมอ -->
@@ -1078,7 +1076,6 @@ watch(selectedSemester, () => {
         :to="`/admin/activity/participants/${activity.ID}`"
         class="btn btn-sm btn-info gap-2"
       >
-        <Icon name="mdi:account-group" class="w-4 h-4" />
         ผู้เข้าร่วม
       </nuxt-link>
     </div>
@@ -1342,7 +1339,6 @@ watch(selectedSemester, () => {
         :to="`/forSmallAdmin/users/${user.UserID}`"
         class="btn btn-sm btn-warning gap-2"
       >
-        <Icon name="mdi:pencil" class="w-4 h-4" />
         แก้ไข
       </nuxt-link>
       <nuxt-link
@@ -1350,7 +1346,6 @@ watch(selectedSemester, () => {
         :to="`/admin/user/details/${user.UserID}`"
         class="btn btn-sm btn-info gap-2"
       >
-        <Icon name="mdi:calendar-check" class="w-4 h-4" />
         ดูกิจกรรม
       </nuxt-link>
       <button
@@ -1358,7 +1353,6 @@ watch(selectedSemester, () => {
       @click="deleteUser(user.UserID)"
       class="btn btn-sm btn-error gap-2"
     >
-      <Icon name="mdi:delete" class="w-4 h-4" />
       ลบ
     </button>
         </div>

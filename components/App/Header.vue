@@ -9,6 +9,13 @@ const checkAdmin = () => {
     return true;
   }
 };
+const checkEXECUTIVE = () => {
+  if (auth.value?.Role === "EXECUTIVE") {
+    return true;
+  }
+};
+
+
 const checksupadmin = () => {
   if (auth.value?.Role === "SUPERADMIN" || auth.value?.Role === "ADMIN" || auth.value?.Role === "EXECUTIVE" || auth.value?.Role === "TEACHER" || auth.value?.Role === "BIGTEACHER") {
     return true;
@@ -76,6 +83,14 @@ watch(() => useRoute().fullPath, () => {
             class="text-lg font-bold text-green-600 btn mx-1 btn-ghost focus:border-b-4 focus:border-b-green-500 focus:text-green-500"
           >
             ไปที่หน้าแอดมิน
+          </NuxtLink>
+        </li>
+        <li v-if="checkEXECUTIVE()">
+          <NuxtLink
+            to="/forSmallAdmin/dashboard"
+            class="text-lg font-bold text-green-600 btn mx-1 btn-ghost focus:border-b-4 focus:border-b-green-500 focus:text-green-500"
+          >
+          สถิติรวม
           </NuxtLink>
         </li>
         <li v-if="checksupadmin()">

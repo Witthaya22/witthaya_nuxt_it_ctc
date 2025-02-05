@@ -1072,7 +1072,7 @@ watch(selectedSemester, () => {
       </button> -->
       <!-- ปุ่มดูผู้เข้าร่วมแสดงเสมอ -->
       <nuxt-link
-        :to="`/admin/activity/participants/${activity.ID}`"
+        :to="`/forSmallAdmin/activity/participants/${activity.ID}`"
         class="btn btn-sm btn-info gap-2"
       >
         <Icon name="mdi:account-group" class="w-4 h-4" />
@@ -1344,7 +1344,7 @@ watch(selectedSemester, () => {
       </nuxt-link>
       <nuxt-link
        v-if="canManageUser(user)"
-        :to="`/admin/user/details/${user.UserID}`"
+        :to="`/forSmallAdmin/users/details/${user.UserID}`"
         class="btn btn-sm btn-info gap-2"
       >
         <Icon name="mdi:calendar-check" class="w-4 h-4" />

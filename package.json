@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev2": "cross-env HOST=0.0.0.0 PORT=3000 nuxt dev",
+    "dev3": "nuxt dev --host 0.0.0.0",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -36,6 +37,7 @@
     "tailwind-merge": "^2.5.4",
     "typewriter-effect": "^2.21.0",
     "vue": "^3.4.27",
+    "vue-chartjs": "^5.3.2",
     "vue-qrcode-reader": "^5.5.7",
     "vue-router": "^4.3.2",
     "vue-typer": "^1.2.0"
@@ -44,6 +46,7 @@
     "@iconify-json/ic": "^1.2.2",
     "@iconify-json/mdi": "^1.2.3",
     "@types/ms": "^0.7.34",
+    "@vite-pwa/nuxt": "^0.10.6",
     "autoprefixer": "^10.4.19",
     "cross-env": "^7.0.3",
     "daisyui": "^4.11.1",

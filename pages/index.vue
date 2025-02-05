@@ -16,6 +16,9 @@ import "swiper/swiper-bundle.css";
 const images = [
   "/index/1.jpg",
   // '/index/2.jpg',
+  "/index/11.jpg",
+  "/index/12.jpg",
+  "/index/13.jpg",
   "/index/3.jpg",
   "/index/4.jpg",
   "/index/5.jpg",

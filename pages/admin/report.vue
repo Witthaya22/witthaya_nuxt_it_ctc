@@ -279,21 +279,10 @@ const getFilteredDataForReport = () => {
         result.DepartmentID === selectedReportDepartment.value
       );
 
-    case 'completed_pass':
-      return filteredData.filter(result => {
-        const completedCount = activityResults.value.filter(
-          r => r.UserID === result.UserID && r.Status === 'completed'
-        ).length;
-        return completedCount >= 3;
-      });
-
-    case 'completed_not_pass':
-      return filteredData.filter(result => {
-        const completedCount = activityResults.value.filter(
-          r => r.UserID === result.UserID && r.Status === 'completed'
-        ).length;
-        return completedCount < 3;
-      });
+    case 'score_pass':
+    case 'score_not_pass':
+    case 'all':
+      return filteredData; // ส่งข้อมูลทั้งหมดไปให้ generateScoreReport จัดการต่อ
 
     default:
       return filteredData;
@@ -355,6 +344,156 @@ const nextPage = () => {
     currentPage.value++;
   }
 };
+
+// เพิ่มฟังก์ชันใหม่สำหรับสร้าง PDF คะแนน
+async function generateScorePDF() {
+  try {
+    if (!results.value.length) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'ไม่พบข้อมูล',
+        text: 'กรุณารอข้อมูลโหลดให้เสร็จก่อนสร้างรายงาน'
+      });
+      return;
+    }
+
+    loading.value = true;
+    const doc = new jsPDF();
+
+    // Font setup
+    doc.addFileToVFS('THSarabunNew-normal.ttf', fonts.thSarabun);
+    doc.addFont('THSarabunNew-normal.ttf', 'THSarabunNew', 'normal');
+    doc.setFont('THSarabunNew');
+
+    const reportData = getFilteredDataForReport();
+    const scoreReport = generateScoreReport(reportData);
+
+    // หัวรายงาน
+    doc.setFontSize(18);
+    doc.setTextColor(51, 98, 140);
+    doc.text(
+      reportType.value === 'score_pass'
+        ? 'รายชื่อนักศึกษาที่ผ่านเกณฑ์กิจกรรม (6 คะแนน)'
+        : 'รายชื่อนักศึกษาที่ไม่ผ่านเกณฑ์กิจกรรม (น้อยกว่า 6 คะแนน)',
+      105, 20, { align: "center" }
+    );
+
+    doc.setFontSize(12);
+    doc.setTextColor(128, 128, 128);
+    doc.text(`วันที่ออกรายงาน: ${dayjs().locale("th").format("DD MMMM YYYY")}`, 105, 30, { align: "center" });
+
+    // ตารางข้อมูล
+    (doc as any).autoTable({
+  startY: 45,
+  head: [["ชื่อ-นามสกุล", "แผนก", "ชั้นปี", "ห้อง", "คะแนนรวม"]],
+  body: scoreReport.data,
+  theme: 'grid',
+  styles: {
+    font: 'THSarabunNew',
+    fontSize: 14,
+    cellPadding: { top: 5, right: 5, bottom: 5, left: 5 },
+    lineColor: [226, 232, 240],
+    textColor: [73, 80, 87]
+  },
+  columnStyles: {
+    0: { cellWidth: 55 },  // เพิ่มความกว้างชื่อ-นามสกุล
+    1: { cellWidth: 55 },  // เพิ่มความกว้างแผนก
+    2: { cellWidth: 25, halign: 'center' },  // เพิ่มความกว้างชั้นปี
+    3: { cellWidth: 25, halign: 'center' },  // เพิ่มความกว้างห้อง
+    4: { cellWidth: 30, halign: 'center' }   // เพิ่มความกว้างคะแนนรวม
+  },
+  headStyles: {
+    fillColor: [51, 98, 140],
+    textColor: [255, 255, 255],
+    fontSize: 14,
+    halign: 'center',
+    cellPadding: { top: 8, right: 5, bottom: 8, left: 5 }
+  },
+  margin: { left: 5, right: 5 },  // ลด margin ซ้าย-ขวา
+  tableWidth: 'auto'  // ให้ตารางขยายเต็มความกว้างที่มี
+});
+
+    // สรุป
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(14);
+    doc.setTextColor(73, 80, 87);
+    doc.text(
+      `สรุป: มีนักศึกษา${reportType.value === 'score_pass' ? 'ที่ผ่าน' : 'ที่ไม่ผ่าน'}เกณฑ์ จำนวน ${scoreReport.data.length} คน`,
+      105, finalY, { align: 'center' }
+    );
+
+    // บันทึก PDF
+    doc.save(`activity-score-report-${reportType.value}-${dayjs().format("YYYYMMDD-HHmm")}.pdf`);
+
+    await Swal.fire({
+      icon: "success",
+      title: "สร้างรายงานสำเร็จ",
+      timer: 2000
+    });
+
+  } catch (error) {
+    console.error("Error:", error);
+    await Swal.fire({
+      icon: "error",
+      title: "เกิดข้อผิดพลาด",
+      text: "ไม่สามารถสร้างรายงานได้"
+    });
+  } finally {
+    loading.value = false;
+  }
+}
+
+function generateScoreReport(reportData: ActivityResult[]) {
+  let filteredData = isTeacher.value
+    ? reportData.filter(r => r.DepartmentID === userDepartment.value)
+    : reportData;
+
+  const userScores = new Map();
+
+  // คำนวณคะแนนจากกิจกรรมที่ผ่าน (Status = completed)
+  filteredData.forEach(result => {
+    if (result.Status === 'completed') {
+      const activity = activities.value.find(a => a.ID === result.ActivityID);
+      const user = users.value.find(u => u.UserID === result.UserID);
+
+      if (activity && user) {
+        if (!userScores.has(result.UserID)) {
+          userScores.set(result.UserID, {
+            name: `${user.UserFirstName} ${user.UserLastName}`,
+            department: getDepartmentFullName(user.DepartmentID),
+            classAt: user.classAt || '',
+            classRoom: user.classRoom || '',
+            score: 0
+          });
+        }
+
+        const userData = userScores.get(result.UserID);
+        userData.score += activity.Score;
+      }
+    }
+  });
+
+  // แปลงข้อมูลและกรองตามเงื่อนไข
+  const scoreData = Array.from(userScores.values())
+    .filter(student => {
+      if (reportType.value === 'score_pass') {
+        return student.score >= 6;
+      }
+      return student.score < 6;  // score_not_pass
+    })
+    .map(student => [
+      student.name,
+      student.department,
+      student.classAt,
+      student.classRoom,
+      `${student.score} คะแนน`
+    ]);
+
+  return {
+    data: scoreData,
+    summary: { total: scoreData.length }
+  };
+}
 
 const prevPage = () => {
   if (currentPage.value > 1) {
@@ -422,75 +561,119 @@ async function generateDetailedPDF() {
     loading.value = true;
     const doc = new jsPDF();
 
-    // ตั้งค่าฟอนต์
+    // Font setup
     doc.addFileToVFS('THSarabunNew-normal.ttf', fonts.thSarabun);
     doc.addFont('THSarabunNew-normal.ttf', 'THSarabunNew', 'normal');
     doc.setFont('THSarabunNew');
 
-    // สร้างส่วนหัวรายงาน (Header)
-    doc.setFillColor(246, 248, 250);
-    doc.rect(0, 0, doc.internal.pageSize.width, 45, 'F');
+    let yPosition = 20;
 
-    // เส้นตกแต่งด้านบน
-    doc.setDrawColor(71, 107, 107);
-    doc.setLineWidth(0.5);
-    doc.line(0, 0, doc.internal.pageSize.width, 0);
-    doc.line(0, 45, doc.internal.pageSize.width, 45);
 
-    // หัวข้อรายงาน
-    doc.setTextColor(71, 107, 107);
-    doc.setFontSize(26);
-    doc.text("รายงานการเข้าร่วมกิจกรรม", 105, 20, { align: "center" });
-
-    // วันที่รายงาน
-    doc.setTextColor(108, 117, 125);
-    doc.setFontSize(12);
-    doc.text(`วันที่ออกรายงาน: ${dayjs().locale("th").format("DD MMMM YYYY")}`, 105, 35, { align: "center" });
-
-    let yPosition = 60;
-
-    // สรุปภาพรวม
-    const statusCounts = {
-      total: reportData.length,
-      pending: reportData.filter(r => r.Status === 'RESERVED').length,
-      inProgress: reportData.filter(r => r.Status === 'active').length,
-      passed: reportData.filter(r => r.Status === 'completed').length,
-      failed: reportData.filter(r => r.Status === 'failed').length
-    };
-
-    // กล่องสรุปภาพรวม
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(226, 232, 240);
-    doc.setLineWidth(0.1);
-    doc.roundedRect(14, yPosition, 180, 35, 3, 3, 'FD');
-
-    doc.setTextColor(71, 107, 107);
-    doc.setFontSize(16);
-    doc.text("สรุปภาพรวมกิจกรรม", 105, yPosition + 12, { align: "center" });
-
-    // ข้อมูลสรุป
-    doc.setTextColor(108, 117, 125);
-    doc.setFontSize(11);
-
-    const summaryData = [
-      `ทั้งหมด ${statusCounts.total} รายการ`,
-      `รอยืนยัน ${statusCounts.pending} รายการ`,
-      `กำลังดำเนินการ ${statusCounts.inProgress} รายการ`,
-      `ผ่านกิจกรรม ${statusCounts.passed} รายการ`,
-      `ไม่ผ่านกิจกรรม ${statusCounts.failed} รายการ`
-    ];
-
-    // จัดวางข้อมูลสรุปให้สวยงาม
-    const summaryX = [30, 65, 110, 155, 200];
-    summaryData.forEach((text, index) => {
-      const xPos = summaryX[index] - (index === summaryData.length - 1 ? 20 : 0);
-      doc.text(text, xPos, yPosition + 25, { align: "center" });
-    });
-
-    yPosition += 45;
-
-    // สร้างตารางข้อมูลแต่ละแผนก
+    // Generate tables for each department
     const tables = generateSeparatedTableData(reportData);
+
+    // ในส่วนของการสร้างตาราง PDF
+    if (['score_pass', 'score_not_pass'].includes(reportType.value)) {
+  const scoreReport = generateScoreReport(reportData);
+
+  // ส่วนหัวของรายงาน
+  doc.setFontSize(24);
+  doc.setTextColor(51, 98, 140);
+  doc.text(reportType.value === 'score_pass'
+    ? 'รายชื่อนักศึกษาที่ผ่านเกณฑ์กิจกรรม (6 คะแนน)'
+    : 'รายชื่อนักศึกษาที่ไม่ผ่านเกณฑ์กิจกรรม (น้อยกว่า 6 คะแนน)',
+    105, 25, { align: "center" });
+
+  // วันที่ออกรายงาน
+  doc.setFontSize(12);
+  doc.setTextColor(128, 128, 128);
+  doc.text(`วันที่ออกรายงาน: ${dayjs().locale("th").format("DD MMMM YYYY")}`, 105, 35, { align: "center" });
+
+  // สร้างตารางข้อมูล
+  // แก้ไขส่วนการสร้างตารางใน generateDetailedPDF
+(doc as any).autoTable({
+  startY: 45,
+  head: [["ชื่อ-นามสกุล", "แผนก", "ชั้นปี", "ห้อง", "คะแนนรวม", "สถานะ"]],  // เพิ่ม "สถานะ"
+  body: scoreReport.data.map(row => [
+    row[0], // ชื่อ-นามสกุล
+    row[1], // แผนก
+    row[2], // ชั้นปี
+    row[3], // ห้อง
+    row[4], // คะแนนรวม
+    row[5]  // สถานะ (เพิ่มกลับมา)
+  ]),
+  theme: 'grid',
+  styles: {
+    font: 'THSarabunNew',
+    fontSize: 14,
+    cellPadding: { top: 5, right: 5, bottom: 5, left: 5 },
+    lineColor: [226, 232, 240],
+    textColor: [73, 80, 87]
+  },
+  columnStyles: {
+    0: { cellWidth: 45 },  // ชื่อ-นามสกุล
+    1: { cellWidth: 45 },  // แผนก
+    2: { cellWidth: 20, halign: 'center' },  // ชั้นปี
+    3: { cellWidth: 20, halign: 'center' },  // ห้อง
+    4: { cellWidth: 25, halign: 'center' },  // คะแนนรวม
+    5: {  // สถานะ
+      cellWidth: 35,
+      halign: 'center',
+      fillColor: function(row) {
+        return row.raw[5].includes('ผ่าน') ? [76, 175, 80] : [239, 68, 68];
+      },
+      textColor: [255, 255, 255]
+    }
+  },
+  headStyles: {
+    fillColor: [51, 98, 140],
+    textColor: [255, 255, 255],
+    fontSize: 14,
+    halign: 'center',
+    cellPadding: { top: 8, right: 5, bottom: 8, left: 5 }
+  },
+  margin: { left: 10, right: 10 },
+  tableWidth: 190
+});
+
+  // แสดงสรุป
+  const finalY = (doc as any).lastAutoTable.finalY + 15;
+  doc.setFontSize(14);
+  doc.setTextColor(73, 80, 87);
+
+  // กรอบสรุป
+  doc.setFillColor(246, 248, 250);
+  doc.roundedRect(10, finalY, 190, 25, 3, 3, 'F');
+
+  // สรุปจำนวน
+  doc.text(
+    `สรุปจำนวน${reportType.value === 'score_pass' ? 'นักศึกษาที่ผ่านกิจกรรม' : 'นักศึกษาที่ไม่ผ่านกิจกรรม'}: ${scoreReport.data.length} คน`,
+    105,
+    finalY + 15,
+    { align: "center" }
+  );
+
+  // เพิ่มหมายเหตุ
+  doc.setFontSize(12);
+  doc.setTextColor(128, 128, 128);
+  doc.text('หมายเหตุ: เกณฑ์ผ่านกิจกรรมคือได้คะแนนรวมไม่น้อยกว่า 6 คะแนน', 15, finalY + 35);
+
+  // เพิ่มเลขหน้า
+  const pages = (doc.internal as any).getNumberOfPages();
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(10);
+    doc.setTextColor(128, 128, 128);
+    doc.text(
+      `หน้า ${i} จาก ${pages}`,
+      doc.internal.pageSize.width - 20,
+      doc.internal.pageSize.height - 10,
+      { align: "right" }
+    );
+  }
+
+
+}
 
     for (const table of tables) {
       if (yPosition > doc.internal.pageSize.height - 100) {
@@ -498,102 +681,95 @@ async function generateDetailedPDF() {
         yPosition = 20;
       }
 
-      // หัวข้อแผนก
-      doc.setFillColor(246, 248, 250);
-      doc.roundedRect(14, yPosition, 180, 30, 2, 2, 'F');
+      // Department header with full width
+      doc.setFillColor(248, 249, 250);
+      doc.rect(10, yPosition, 190, 30, 'F');
 
-      doc.setTextColor(71, 107, 107);
-      doc.setFontSize(15);
-      doc.text(`แผนก${table.departmentName}`, 20, yPosition + 12);
+      doc.setTextColor(51, 98, 140);
+      doc.setFontSize(16);
+      doc.text(`แผนก${table.departmentName}`, 15, yPosition + 15);
 
-      // สรุปข้อมูลแผนก
-      doc.setTextColor(108, 117, 125);
-      doc.setFontSize(11);
-      const deptSummary = [
-        `นักศึกษา ${table.summary.total} คน`,
-        `ผ่าน ${table.summary.completed} คน`,
-        `ไม่ผ่าน ${table.summary.failed} คน`,
-        `กำลังดำเนินการ ${table.summary.inProgress} คน`,
-        `รอยืนยัน ${table.summary.pending} คน`
-      ].join('  •  ');
-      doc.text(deptSummary, 20, yPosition + 22);
+      // Department summary with bullet points
+      doc.setTextColor(73, 80, 87);
+      doc.setFontSize(12);
+      const summaryText = `นักศึกษา ${table.summary.total} คน • ผ่าน ${table.summary.completed} คน • ไม่ผ่าน ${table.summary.failed} คน • กำลังดำเนินการ ${table.summary.inProgress} คน • รอยืนยัน ${table.summary.pending} คน`;
+      doc.text(summaryText, 15, yPosition + 24);
 
-      // ตารางข้อมูล
+      // Excel-like table with full width
       (doc as any).autoTable({
         startY: yPosition + 35,
-        head: [["ชื่อกิจกรรม", "ชื่อ-นามสกุล", "สถานะ", "ระดับชั้น", "ห้อง", "วันที่"]],
+        head: [["ชื่อกิจกรรม", "ชื่อ-นามสกุล", "สถานะ", "ชั้นปี", "ห้อง", "วันที่"]],
         body: table.data,
         theme: "grid",
+        styles: {
+          font: 'THSarabunNew',
+          fontSize: 12,
+          cellPadding: 4,
+          lineColor: [218, 225, 231],
+          textColor: [33, 37, 41]
+        },
         headStyles: {
-          fillColor: [71, 107, 107],
+          fillColor: [51, 98, 140],
           textColor: 255,
           fontSize: 12,
-          halign: "center",
-          font: 'THSarabunNew',
-          cellPadding: 8
-        },
-        styles: {
-          fontSize: 11,
-          cellPadding: 6,
-          font: 'THSarabunNew',
-          lineColor: [226, 232, 240],
-          lineWidth: 0.1
+          halign: 'left',
+          cellPadding: { top: 4, right: 4, bottom: 4, left: 4 },
+          minCellHeight: 14,
+          overflow: 'linebreak'
         },
         columnStyles: {
-          0: { cellWidth: 40 },
-          1: { cellWidth: 40 },
+          0: {
+            cellWidth: 45,
+            halign: 'left'
+          },
+          1: {
+            cellWidth: 40,
+            halign: 'left'
+          },
           2: {
-            cellWidth: 30,
-            fillColor: function(row) {
-              const status = row.content[2];
-              if (status === 'รอยืนยัน') return [255, 250, 240];
-              if (status === 'อยู่ระหว่างดำเนินการ') return [240, 248, 255];
-              if (status === 'ผ่านกิจกรรม') return [240, 255, 245];
-              if (status === 'ไม่ผ่านกิจกรรม') return [255, 245, 245];
-              return null;
-            },
+            cellWidth: 35,
+            halign: 'left',
+            fillColor: [51, 98, 140],
+            textColor: [255, 255, 255]
+          },
+          3: {
+            cellWidth: 20,
             halign: 'center'
           },
-          3: { cellWidth: 20, halign: 'center' },
-          4: { cellWidth: 20, halign: 'center' },
-          5: { cellWidth: 30, halign: 'center' }
+          4: {
+            cellWidth: 20,
+            halign: 'center'
+          },
+          5: {
+            cellWidth: 30,
+            halign: 'left'
+          }
         },
-        alternateRowStyles: {
-          fillColor: [249, 250, 251]
+        margin: { left: 10, right: 10 },
+        tableWidth: 190,
+        willDrawCell: function(data) {
+          // ทำให้สีพื้นหลังของคอลัมน์สถานะเป็นสีเดียวกับหัวตาราง
+          if (data.column.index === 2 && data.row.section === 'body') {
+            data.cell.styles.fillColor = [51, 98, 140];
+            data.cell.styles.textColor = [255, 255, 255];
+          }
+        },
+        didDrawPage: function(data) {
+          // Add page number
+          doc.setFontSize(10);
+          doc.setTextColor(150);
+          doc.text(
+            `หน้า ${data.pageNumber} จาก ${data.pageCount}`,
+            data.settings.margin.left,
+            doc.internal.pageSize.height - 10
+          );
         }
       });
 
       yPosition = (doc as any).lastAutoTable.finalY + 25;
     }
 
-    // Footer
-    const pageCount = (doc as any).internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-
-      // เส้นคั่น Footer
-      doc.setDrawColor(226, 232, 240);
-      doc.setLineWidth(0.1);
-      doc.line(14, doc.internal.pageSize.height - 20, 196, doc.internal.pageSize.height - 20);
-
-      // ข้อความ Footer
-      doc.setTextColor(148, 163, 184);
-      doc.setFontSize(9);
-      doc.text(
-        `พิมพ์เมื่อ ${dayjs().locale("th").format("DD/MM/YYYY HH:mm")}`,
-        105,
-        doc.internal.pageSize.height - 10,
-        { align: "center" }
-      );
-      doc.text(
-        `หน้า ${i} จาก ${pageCount}`,
-        196,
-        doc.internal.pageSize.height - 10,
-        { align: "right" }
-      );
-    }
-
-    // บันทึก PDF
+    // Save PDF
     doc.save(`activity-report-${reportType.value}-${dayjs().format("YYYYMMDD-HHmm")}.pdf`);
 
     await Swal.fire({
@@ -633,11 +809,13 @@ onMounted(loadData);
                 <span class="label-text">ประเภทรายงาน</span>
               </label>
               <select v-model="reportType" class="select select-bordered w-full">
-                <option value="all">ทั้งหมด</option>
-                <option value="department">ตามแผนก</option>
-                <option value="by_activity">ตามกิจกรรม</option>
-                <option value="activity_department">ตามกิจกรรมและแผนก</option>
-              </select>
+  <option value="all">ทั้งหมด</option>
+  <option v-if="!isTeacher" value="department">ตามแผนก</option>
+  <option v-if="!isTeacher" value="by_activity">ตามกิจกรรม</option>
+  <option v-if="!isTeacher" value="activity_department">ตามกิจกรรมและแผนก</option>
+  <option value="score_pass">รายชื่อผู้ผ่านเกณฑ์ (6 คะแนน)</option>
+  <option value="score_not_pass">รายชื่อผู้ไม่ผ่านเกณฑ์ (น้อยกว่า 6 คะแนน)</option>
+</select>
             </div>
 
            <!-- Department Selection -->
@@ -667,19 +845,19 @@ onMounted(loadData);
             </div>
           </div>
 
-          <!-- Export Button -->
-          <button
-            @click="generateDetailedPDF"
-            :disabled="loading ||
-                      (reportType === 'department' && !selectedReportDepartment) ||
-                      (reportType === 'by_activity' && !selectedActivityId) ||
-                      (reportType === 'activity_department' && (!selectedReportDepartment || !selectedActivityId))"
-            class="btn btn-primary w-full md:w-auto md:ml-auto mt-4"
-          >
-            <span v-if="loading" class="loading loading-spinner"></span>
-            <Icon name="ic:baseline-file-download" class="w-5 h-5 mr-2" />
-            {{ loading ? "กำลังสร้างรายงาน..." : "ส่งออกรายงาน PDF" }}
-          </button>
+         <!-- Export Button -->
+<button
+  @click="['score_pass', 'score_not_pass'].includes(reportType) ? generateScorePDF() : generateDetailedPDF()"
+  :disabled="loading || ((!['all', 'score_pass', 'score_not_pass'].includes(reportType)) &&
+    ((reportType === 'department' && !selectedReportDepartment) ||
+    (reportType === 'by_activity' && !selectedActivityId) ||
+    (reportType === 'activity_department' && (!selectedReportDepartment || !selectedActivityId))))"
+  class="btn btn-primary w-full md:w-auto md:ml-auto mt-4"
+>
+  <span v-if="loading" class="loading loading-spinner"></span>
+  <Icon name="ic:baseline-file-download" class="w-5 h-5 mr-2" />
+  {{ loading ? "กำลังสร้างรายงาน..." : "ส่งออกรายงาน PDF" }}
+</button>
         </div>
       </div>
     </div>
