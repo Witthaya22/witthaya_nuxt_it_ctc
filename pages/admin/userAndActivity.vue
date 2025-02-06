@@ -1336,7 +1336,7 @@ watch(selectedSemester, () => {
         <div class="flex gap-2">
           <nuxt-link
        v-if="canManageUser(user)"
-        :to="`/forSmallAdmin/users/${user.UserID}`"
+        :to="`/admin/user/${user.UserID}`"
         class="btn btn-sm btn-warning gap-2"
       >
         แก้ไข

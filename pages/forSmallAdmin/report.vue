@@ -251,11 +251,13 @@ const departments = computed(() => {
 const getFilteredDataForReport = () => {
   let filteredData = [...results.value];
 
-  // กรองตามแผนกสำหรับครู
+  // Filter by teacher's department and classroom if user is a teacher
   if (isTeacher.value) {
-    filteredData = filteredData.filter(result =>
-      result.DepartmentID === userDepartment.value
-    );
+    filteredData = filteredData.filter(result => {
+      const user = users.value.find(u => u.UserID === result.UserID);
+      return result.DepartmentID === userDepartment.value &&
+             user?.classRoom === teacherClassroom.value;
+    });
   }
 
   switch (reportType.value) {
@@ -278,7 +280,7 @@ const getFilteredDataForReport = () => {
     case 'score_pass':
     case 'score_not_pass':
     case 'all':
-      return filteredData; // ส่งข้อมูลทั้งหมดไปให้ generateScoreReport จัดการต่อ
+      return filteredData;
 
     default:
       return filteredData;
@@ -288,12 +290,16 @@ const getFilteredDataForReport = () => {
 const filteredResults = computed(() => {
   let filtered = results.value;
 
-  // ถ้าเป็น TEACHER ให้เห็นแค่แผนกตัวเอง
+  // Filter by teacher's department and classroom if user is a teacher
   if (isTeacher.value) {
-    filtered = filtered.filter(result => result.DepartmentID === userDepartment.value);
+    filtered = filtered.filter(result => {
+      const user = users.value.find(u => u.UserID === result.UserID);
+      return result.DepartmentID === userDepartment.value &&
+             user?.classRoom === teacherClassroom.value;
+    });
   }
 
-  // Filter based on search, department, and status
+  // Continue with existing filters...
   filtered = filtered.filter(result => {
     const activity = activities.value.find(a => a.ID === result.ActivityID);
     const user = users.value.find(u => u.UserID === result.UserID);
@@ -302,15 +308,14 @@ const filteredResults = computed(() => {
     const matchesSearch = searchQuery.value === "" || searchString.includes(searchQuery.value.toLowerCase());
     const matchesDepartment = selectedDepartment.value === "" || result.DepartmentID === selectedDepartment.value;
 
-    // Handle status filtering
     let matchesStatus = true;
     if (selectedStatus.value === 'completed_pass') {
-      const userCompletedCount = results.value.filter(
+      const userCompletedCount = filtered.filter(
         r => r.UserID === result.UserID && r.Status === 'completed'
       ).length;
       matchesStatus = userCompletedCount >= 3;
     } else if (selectedStatus.value === 'completed_not_pass') {
-      const userCompletedCount = results.value.filter(
+      const userCompletedCount = filtered.filter(
         r => r.UserID === result.UserID && r.Status === 'completed'
       ).length;
       matchesStatus = userCompletedCount < 3;
@@ -323,7 +328,6 @@ const filteredResults = computed(() => {
 
   return filtered;
 });
-
 const paginatedResults = computed(() => {
   const startIndex = (currentPage.value - 1) * itemsPerPage.value;
   const endIndex = startIndex + itemsPerPage.value;
@@ -439,14 +443,27 @@ async function generateScorePDF() {
   }
 }
 
+const teacherClassroom = computed(() => {
+  if (isTeacher.value && auth.value) {
+    return auth.value.classRoom;
+  }
+  return null;
+});
+
 function generateScoreReport(reportData: ActivityResult[]) {
-  let filteredData = isTeacher.value
-    ? reportData.filter(r => r.DepartmentID === userDepartment.value)
-    : reportData;
+  let filteredData = reportData;
+
+  if (isTeacher.value) {
+    filteredData = filteredData.filter(r => {
+      const user = users.value.find(u => u.UserID === r.UserID);
+      return r.DepartmentID === userDepartment.value &&
+             user?.classRoom === teacherClassroom.value;
+    });
+  }
 
   const userScores = new Map();
 
-  // คำนวณคะแนนจากกิจกรรมที่ผ่าน (Status = completed)
+  // Calculate scores from completed activities
   filteredData.forEach(result => {
     if (result.Status === 'completed') {
       const activity = activities.value.find(a => a.ID === result.ActivityID);
@@ -469,13 +486,13 @@ function generateScoreReport(reportData: ActivityResult[]) {
     }
   });
 
-  // แปลงข้อมูลและกรองตามเงื่อนไข
+  // Transform and filter data based on conditions
   const scoreData = Array.from(userScores.values())
     .filter(student => {
       if (reportType.value === 'score_pass') {
         return student.score >= 6;
       }
-      return student.score < 6;  // score_not_pass
+      return student.score < 6;
     })
     .map(student => [
       student.name,

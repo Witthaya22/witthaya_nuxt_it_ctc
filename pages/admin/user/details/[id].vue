@@ -160,9 +160,6 @@ async function handleApproval(activityId: number, approve: boolean) {
       title: `${approve ? 'ผ่าน' : 'ไม่ผ่าน'}กิจกรรม`,
       text: `ยืนยันการ${approve ? 'ผ่าน' : 'ไม่ผ่าน'}กิจกรรม`,
       icon: 'warning',
-      input: 'textarea',
-      inputLabel: 'หมายเหตุ (ถ้ามี)',
-      inputPlaceholder: 'กรอกหมายเหตุ...',
       showCancelButton: true,
       confirmButtonText: 'ยืนยัน',
       confirmButtonColor: approve ? '#4CAF50' : '#f44336',
@@ -172,7 +169,7 @@ async function handleApproval(activityId: number, approve: boolean) {
     if (result.isConfirmed && activity.details?.id) {
       const response = await axios.put(`/api/activity-details/${activity.details.id}/review`, {
         isApproved: approve,
-        reviewNote: result.value || '',
+        reviewNote: '',
         reviewedBy: user.value?.UserID,
       });
 

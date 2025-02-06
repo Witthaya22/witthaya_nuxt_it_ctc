@@ -14,6 +14,7 @@ import {
 import "swiper/swiper-bundle.css";
 
 const images = [
+// "/index/profile-1738817245149-81923360.jpg",
   "/index/1.jpg",
   // '/index/2.jpg',
   "/index/11.jpg",
@@ -25,8 +26,9 @@ const images = [
   "/index/6.jpg",
   "/index/7.jpg",
   "/index/8.jpg",
-  "/index/9.jpg",
+  // "/index/9.jpg",
   "/index/10.jpg",
+
 ];
 
 import { ref, onMounted } from "vue";

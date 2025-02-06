@@ -57,7 +57,7 @@ const getStatusIcon = (status: Activity['status']): string => {
 
 const getImageUrl = (image: string) => {
   if (image.startsWith('data:')) return image;
-  return `:4000${image}`;
+  return `http://localhost:4000${image}`;
 };
 
 const completedActivities = computed(() =>

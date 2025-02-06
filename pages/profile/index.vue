@@ -22,11 +22,18 @@ const isAllActivitiesCompleted = computed(() =>
 )
 const getStatusConfig = (status: Activity['status']) => {
   switch(status) {
-    case 'booking':
+    case 'RESERVED':  // เปลี่ยนจาก booking เป็น RESERVED
       return {
         text: 'รอยืนยัน',
         bgColor: 'bg-amber-100',
         textColor: 'text-amber-800',
+        icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+      };
+    case 'active':  // เพิ่ม case active
+      return {
+        text: 'รอการอนุมัติ',
+        bgColor: 'bg-blue-100',
+        textColor: 'text-blue-800',
         icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
       };
     case 'completed':
@@ -71,7 +78,7 @@ interface Activity {
   name: string;
   date: string;
   location: string;
-  status: 'booking' | 'completed' | 'failed';
+  status: 'RESERVED' | 'completed' | 'failed' | 'active';  // เปลี่ยนจาก booking เป็น RESERVED และเพิ่ม active
   score: number | null;
 }
 
@@ -131,23 +138,23 @@ const departmentName = computed(() => {
   return deptMap[user.value?.DepartmentID || ''] || user.value?.DepartmentID
 })
 
-const getStatusClass = (status: Activity['status']): string => {
-  switch(status) {
-    case 'booking': return 'bg-amber-100 text-amber-800';
-    case 'completed': return 'bg-green-100 text-green-800';
-    case 'failed': return 'bg-red-100 text-red-800';
-    default: return 'bg-gray-100 text-gray-800';
-  }
-}
+// const getStatusClass = (status: Activity['status']): string => {
+//   switch(status) {
+//     case 'booking': return 'bg-amber-100 text-amber-800';
+//     case 'completed': return 'bg-green-100 text-green-800';
+//     case 'failed': return 'bg-red-100 text-red-800';
+//     default: return 'bg-gray-100 text-gray-800';
+//   }
+// }
 
-const getStatusText = (status: Activity['status']): string => {
-  switch(status) {
-    case 'booking': return 'กำลังจอง';
-    case 'completed': return 'เข้าร่วมสำเร็จ';
-    case 'failed': return 'เข้าร่วมไม่สำเร็จ';
-    default: return 'ไม่ทราบสถานะ';
-  }
-}
+// const getStatusText = (status: Activity['status']): string => {
+//   switch(status) {
+//     case 'booking': return 'กำลังจอง';
+//     case 'completed': return 'เข้าร่วมสำเร็จ';
+//     case 'failed': return 'เข้าร่วมไม่สำเร็จ';
+//     default: return 'ไม่ทราบสถานะ';
+//   }
+// }
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('th-TH', {
@@ -226,7 +233,7 @@ const totalRequiredActivities = 4
 
           <!-- Profile Details -->
           <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-4">
+            <!-- <div class="space-y-4">
               <div class="flex items-center gap-3 text-gray-600">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -241,7 +248,7 @@ const totalRequiredActivities = 4
                 </svg>
                 <span>เข้าร่วมเมื่อ {{ formatDate(user.CreatedAt) }}</span>
               </div>
-            </div>
+            </div> -->
 
             <!-- Statistics -->
             <div class="grid grid-cols-2 gap-4">
@@ -426,38 +433,48 @@ const totalRequiredActivities = 4
   </div>
 
   <!-- Status Legend -->
-  <div class="mt-6 p-4 bg-base-200/50 rounded-lg">
-    <h3 class="font-bold mb-3">สถานะกิจกรรม:</h3>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="flex items-center gap-2">
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          รอยืนยัน
-        </span>
-        <span class="text-sm text-gray-600">- รอการตรวจสอบการเข้าร่วม</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          เข้าร่วมสำเร็จ
-        </span>
-        <span class="text-sm text-gray-600">- ผ่านการเข้าร่วมกิจกรรม</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-          เข้าร่วมไม่สำเร็จ
-        </span>
-        <span class="text-sm text-gray-600">- ไม่ผ่านการเข้าร่วมกิจกรรม</span>
-      </div>
+ <!-- Status Legend -->
+<div class="mt-6 p-4 bg-base-200/50 rounded-lg">
+  <h3 class="font-bold mb-3">สถานะกิจกรรม:</h3>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        รอยืนยัน
+      </span>
+      <span class="text-sm text-gray-600">- รอการยืนยันการเข้าร่วม</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        รอการอนุมัติ
+      </span>
+      <span class="text-sm text-gray-600">- รอการอนุมัติกิจกรรม</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        เข้าร่วมสำเร็จ
+      </span>
+      <span class="text-sm text-gray-600">- ผ่านการเข้าร่วมกิจกรรม</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        เข้าร่วมไม่สำเร็จ
+      </span>
+      <span class="text-sm text-gray-600">- ไม่ผ่านการเข้าร่วมกิจกรรม</span>
     </div>
   </div>
+</div>
 </div>
     </div>
   </div>

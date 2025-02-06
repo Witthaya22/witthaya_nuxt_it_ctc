@@ -193,9 +193,6 @@ async function handleApproval(participant: Participant, approve: boolean) {
         participant.name
       }`,
       icon: "warning",
-      input: "textarea",
-      inputLabel: "หมายเหตุ (ถ้ามี)",
-      inputPlaceholder: "กรอกหมายเหตุ...",
       showCancelButton: true,
       confirmButtonText: "ยืนยัน",
       confirmButtonColor: approve ? "#4CAF50" : "#f44336",
@@ -207,7 +204,7 @@ async function handleApproval(participant: Participant, approve: boolean) {
         `/api/activity-details/${details.ID}/review`,
         {
           isApproved: approve,
-          reviewNote: result.value || "",
+          reviewNote: "",
           reviewedBy: "ADMIN",
         }
       );

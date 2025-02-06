@@ -198,9 +198,6 @@ async function handleApproval(participant: Participant, approve: boolean) {
         participant.name
       }`,
       icon: "warning",
-      input: "textarea",
-      inputLabel: "หมายเหตุ (ถ้ามี)",
-      inputPlaceholder: "กรอกหมายเหตุ...",
       showCancelButton: true,
       confirmButtonText: "ยืนยัน",
       confirmButtonColor: approve ? "#4CAF50" : "#f44336",
@@ -212,7 +209,7 @@ async function handleApproval(participant: Participant, approve: boolean) {
         `/api/activity-details/${details.ID}/review`,
         {
           isApproved: approve,
-          reviewNote: result.value || "",
+          reviewNote: "",
           reviewedBy: "ADMIN",
         }
       );
@@ -315,7 +312,7 @@ onMounted(() => {
       <!-- Header with Back Button -->
       <div class="bg-white rounded-lg shadow p-4">
         <div class="flex items-center gap-3">
-          <nuxt-link to="/admin/activity" class="btn btn-circle btn-ghost">
+          <nuxt-link to="/admin/userAndActivity" class="btn btn-circle btn-ghost">
             <Icon name="mdi:arrow-left" class="w-5 h-5" />
           </nuxt-link>
           <div>

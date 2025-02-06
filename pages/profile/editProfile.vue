@@ -4,6 +4,17 @@ import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Swal from "sweetalert2";
 
+const showCurrentPassword = ref(false);
+const showNewPassword = ref(false);
+const showConfirmPassword = ref(false);
+
+// const loading = ref(false);
+// const previewImage = ref<string | null>(null);
+
+// const showCurrentPassword = ref(false);
+// const showNewPassword = ref(false);
+// const showConfirmPassword = ref(false);
+
 const router = useRouter();
 const axios = useAxios();
 const { auth } = useAuth();
@@ -40,22 +51,28 @@ const profile = reactive<UserProfile>({
 });
 
 // Fetch user profile
+// Fetch user profile
 async function fetchUserProfile() {
   try {
     loading.value = true;
     const response = await axios.get(`/api/user/${auth.value?.UserID}`);
     const userData = response.data.user;
 
+    // เซ็ตค่าข้อมูลทั้งหมดรวมถึง classAt และ classRoom
     profile.UserFirstName = userData.UserFirstName;
     profile.UserLastName = userData.UserLastName;
     profile.UserID = userData.UserID;
     profile.DepartmentID = userData.DepartmentID;
     profile.Bio = userData.Bio || "";
     profile.UserImage = userData.UserImage;
+    profile.classAt = userData.classAt || "";     // เพิ่มบรรทัดนี้
+    profile.classRoom = userData.classRoom || ""; // เพิ่มบรรทัดนี้
 
     if (userData.UserImage) {
       previewImage.value = `/api${userData.UserImage}`;
     }
+
+    console.log('Fetched user data:', userData); // เพิ่ม log เพื่อตรวจสอบข้อมูล
   } catch (error) {
     console.error("Error fetching user profile:", error);
     Swal.fire({
@@ -315,31 +332,33 @@ onMounted(() => {
               </div>
 
               <div class="form-control">
-    <label class="label">
-      <span class="label-text text-base font-medium">ระดับชั้น</span>
-      <span class="label-text-alt text-error">*</span>
-    </label>
-    <select v-model="profile.classAt" class="select select-bordered" required>
-      <option value="">เลือกระดับชั้น</option>
-      <option value="ปวช.2">ปวช.2</option>
-      <option value="ปวส.1">ปวส.1</option>
-      <option value="ปวส.2">ปวส.2</option>
-    </select>
-  </div>
+  <label class="label">
+    <span class="label-text text-base font-medium">ระดับชั้น</span>
+    <span class="label-text-alt text-error">*</span>
+  </label>
+  <select v-model="profile.classAt" class="select select-bordered" required>
+    <option value="">เลือกระดับชั้น</option>
+    <option value="ปวช.1">ปวช.1</option>
+    <option value="ปวช.2">ปวช.2</option>
+    <option value="ปวช.3">ปวช.3</option>
+    <option value="ปวส.1">ปวส.1</option>
+    <option value="ปวส.2">ปวส.2</option>
+  </select>
+</div>
 
-  <div class="form-control">
-    <label class="label">
-      <span class="label-text text-base font-medium">ห้องเรียน</span>
-      <span class="label-text-alt text-error">*</span>
-    </label>
-    <input
-      v-model="profile.classRoom"
-      type="text"
-      class="input input-bordered"
-      required
-      placeholder="ระบุห้องเรียน"
-    />
-  </div>
+<div class="form-control">
+  <label class="label">
+    <span class="label-text text-base font-medium">ห้องเรียน</span>
+    <span class="label-text-alt text-error">*</span>
+  </label>
+  <input
+    v-model="profile.classRoom"
+    type="text"
+    class="input input-bordered"
+    required
+    placeholder="ระบุห้องเรียน เช่น IT1, IT2"
+  />
+</div>
 
             </div>
             <!-- <div class="form-control">

@@ -74,6 +74,7 @@ const semesters = ref<Semester[]>([]);
 const selectedSemester = ref<number | null>(null);
 
 const isTeacher = computed(() => auth.value?.Role === 'TEACHER');
+const isBigTeacher = computed(() => auth.value?.Role === 'BIGTEACHER');
 const userDepartment = computed(() => auth.value?.DepartmentID);
 
 // interface User {
@@ -411,6 +412,19 @@ const isMobile = ref(false);
 function checkDevice() {
   isMobile.value = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
+
+const departmentMapping: DepartmentMapping = {
+  'IT': 'เทคโนโลยีสารสนเทศ',
+  'CS': 'วิทยาการคอมพิวเตอร์',
+  'EE': 'วิศวกรรมไฟฟ้า',
+  'ME': 'วิศวกรรมเครื่องกล',
+  'CV': 'วิศวกรรมโยธา',
+  'AR': 'สถาปัตยกรรม',
+  'MT': 'การตลาด',
+  'AC': 'การบัญชี',
+  'WD': 'งานเชื่อมโลหะ',
+  'ET': 'อิเล็กทรอนิกส์',
+};
 
 async function deleteActivity(activityId: number) {
   try {
@@ -899,7 +913,7 @@ watch(selectedSemester, () => {
         <div class="flex justify-between items-center gap-4 flex-wrap">
   <!-- Semester Selection -->
   <div class="form-control flex-1">
-    <select
+    <!-- <select
       v-model="selectedSemester"
       class="select select-bordered w-full max-w-xs"
     >
@@ -912,7 +926,7 @@ watch(selectedSemester, () => {
         ภาคเรียนที่ {{ semester.Term }}/{{ semester.Year }}
         {{ semester.Status === 'ACTIVE' ? '(ปัจจุบัน)' : '' }}
       </option>
-    </select>
+    </select> -->
     <!-- เพิ่มส่วนค้นหาและกรอง -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 mt-3">
   <!-- ช่องค้นหา -->
@@ -998,7 +1012,7 @@ watch(selectedSemester, () => {
 </div>
 
 <!-- Activities Table with Extended Information -->
-<div class="bg-base-100 rounded-box shadow-lg overflow-x-auto">
+<div v-show="!isTeacher && !isBigTeacher" class="bg-base-100 rounded-box shadow-lg overflow-x-auto">
   <table class="table table-zebra w-full">
     <thead>
       <tr>
@@ -1006,7 +1020,7 @@ watch(selectedSemester, () => {
         <th>ชื่อกิจกรรม</th>
         <th>วันที่จัด</th>
         <th>สถานที่</th>
-        <th>ประเภท</th>
+        <!-- <th>ประเภท</th> -->
         <th class="text-center">คะแนน</th>
         <th class="text-center">สถานะ</th>
         <th class="text-end">จัดการ</th>
@@ -1024,7 +1038,7 @@ watch(selectedSemester, () => {
           <div>สิ้นสุด: {{ formatDate(activity.EndDate) }}</div>
         </td>
         <td>{{ activity.Location }}</td>
-        <td>
+        <!-- <td>
           <div class="badge" :class="{
             'badge-primary': activity.Type === 'GENERAL',
             'badge-secondary': activity.Type === 'SPORT',
@@ -1033,7 +1047,7 @@ watch(selectedSemester, () => {
           }">
             {{ activity.Type }}
           </div>
-        </td>
+        </td> -->
         <td class="text-center">
           <div class="badge badge-lg badge-primary">{{ activity.Score }}</div>
         </td>
@@ -1136,7 +1150,7 @@ watch(selectedSemester, () => {
         </div> -->
 
         <!-- Pagination -->
-        <div class="flex justify-end gap-2">
+        <!-- <div class="flex justify-end gap-2">
           <button v-if="page > 1" @click="page--" class="btn btn-ghost btn-sm">
             ย้อนกลับ
           </button>
@@ -1144,7 +1158,7 @@ watch(selectedSemester, () => {
             <button class="join-item btn btn-sm">{{ page }}</button>
           </div>
           <button @click="page++" class="btn btn-ghost btn-sm">ถัดไป</button>
-        </div>
+        </div> -->
       </div>
 
       <!-- Users Management -->
@@ -1189,15 +1203,15 @@ watch(selectedSemester, () => {
       <span class="label-text">แผนก</span>
     </label>
     <select
-      v-model="selectedDepartment"
-      class="select select-bordered"
-      :disabled="auth?.Role === 'TEACHER' || auth?.Role === 'BIGTEACHER'"
-    >
-      <option value="">ทั้งหมด</option>
-      <option v-for="dept in availableDepartments" :key="dept" :value="dept">
-        {{ dept }}
-      </option>
-    </select>
+  v-model="selectedDepartment"
+  class="select select-bordered"
+  :disabled="auth?.Role === 'TEACHER' || auth?.Role === 'BIGTEACHER'"
+>
+  <option value="">ทั้งหมด</option>
+  <option v-for="dept in availableDepartments" :key="dept" :value="dept">
+    {{ departmentMapping[dept] || dept }}
+  </option>
+</select>
   </div>
 
    <!-- เพิ่มตัวกรองชั้นเรียน -->
@@ -1262,20 +1276,18 @@ watch(selectedSemester, () => {
 </div>
 
   <!-- สถิติแยกตามแผนก -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-    <div
-      v-for="(dept, name) in departmentStats"
-      :key="name"
-      class="stat bg-base-100 shadow-lg rounded-xl"
-    >
-      <div class="stat-title">แผนก {{ name }}</div>
-      <div class="stat-value">{{ dept.total }}</div>
-      <div class="stat-desc">
-        ผ่านกิจกรรม {{ dept.completed }} คน
-        ({{ Math.round(dept.completed/dept.total * 100) || 0 }}%)
-      </div>
-    </div>
+  <!-- <div
+  v-for="(dept, name) in departmentStats"
+  :key="name"
+  class="stat bg-base-100 shadow-lg rounded-xl"
+>
+  <div class="stat-title">แผนก {{ departmentMapping[name] || name }}</div>
+  <div class="stat-value">{{ dept.total }}</div>
+  <div class="stat-desc">
+    ผ่านกิจกรรม {{ dept.completed }} คน
+    ({{ Math.round(dept.completed/dept.total * 100) || 0 }}%)
   </div>
+</div> -->
 
   <!-- ตารางผู้ใช้ -->
   <div class="bg-base-100 rounded-xl shadow-lg overflow-hidden">
@@ -1305,8 +1317,8 @@ watch(selectedSemester, () => {
         </div>
       </td>
       <td>
-        <div class="badge badge-ghost">{{ user.DepartmentID }}</div>
-      </td>
+  <div class="badge badge-ghost">{{ departmentMapping[user.DepartmentID] || user.DepartmentID }}</div>
+</td>
       <!-- เพิ่มคอลัมน์ระดับชั้นและห้องเรียน -->
       <td>
         <div class="badge badge-primary">{{ user.classAt }}</div>
