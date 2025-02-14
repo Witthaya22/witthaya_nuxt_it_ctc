@@ -1001,21 +1001,22 @@ watch(selectedSemester, () => {
 </div>
 
 <!-- Activities Table with Extended Information -->
-<div class="bg-base-100 rounded-box shadow-lg overflow-x-auto">
-  <table class="table table-zebra w-full">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>ชื่อกิจกรรม</th>
-        <th>วันที่จัด</th>
-        <th>สถานที่</th>
-        <!-- <th>ประเภท</th> -->
-        <th class="text-center">คะแนน</th>
-        <th class="text-center">สถานะ</th>
-        <th class="text-end">จัดการ</th>
-      </tr>
-    </thead>
-    <tbody>
+<div >
+  <!-- Desktop View -->
+  <div class="hidden md:block bg-base-100 rounded-box shadow-lg overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>ชื่อกิจกรรม</th>
+          <th>วันที่จัด</th>
+          <th>สถานที่</th>
+          <th class="text-center">คะแนน</th>
+          <th class="text-center">สถานะ</th>
+          <th class="text-end">จัดการ</th>
+        </tr>
+      </thead>
+        <tbody>
       <tr v-for="activity in filteredActivities" :key="activity.ID">
         <td>{{ activity.ID }}</td>
         <td>
@@ -1041,7 +1042,7 @@ watch(selectedSemester, () => {
           <div class="badge badge-lg badge-primary">{{ activity.Score }}</div>
         </td>
         <td class="text-center">
-          <div class="badge badge-lg" :class="{
+          <div class="badge badge-lg text-white" :class="{
             'badge-success': new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date(),
             'badge-warning': new Date(activity.StartDate) > new Date(),
             'badge-error': new Date(activity.EndDate) < new Date()
@@ -1057,11 +1058,12 @@ watch(selectedSemester, () => {
         </td>
         <td>
     <div class="flex justify-end gap-2">
-      <nuxt-link
+      <!-- <nuxt-link
         v-if="canManageActivity(activity)"
         :to="`/forSmallAdmin/activity/${activity.ID}`"
         class="btn btn-sm btn-warning gap-2"
       >
+        <Icon name="mdi:pencil" class="w-4 h-4" />
         แก้ไข
       </nuxt-link>
       <button
@@ -1069,11 +1071,12 @@ watch(selectedSemester, () => {
         @click="deleteActivity(activity.ID)"
         class="btn btn-sm btn-error gap-2"
       >
+        <Icon name="mdi:delete" class="w-4 h-4" />
         ลบ
-      </button>
+      </button> -->
       <!-- ปุ่มดูผู้เข้าร่วมแสดงเสมอ -->
       <nuxt-link
-        :to="`/admin/activity/participants/${activity.ID}`"
+        :to="`/forSmallAdmin/activity/participants/${activity.ID}`"
         class="btn btn-sm btn-info gap-2"
       >
         ผู้เข้าร่วม
@@ -1081,9 +1084,60 @@ watch(selectedSemester, () => {
     </div>
   </td>
       </tr>
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile View -->
+  <div class="md:hidden space-y-4">
+    <div v-for="activity in filteredActivities"
+         :key="activity.ID"
+         class="card bg-base-100 shadow-md">
+      <div class="card-body p-4">
+        <!-- หัวข้อและสถานะ -->
+        <div class="flex items-start justify-between gap-2">
+          <h3 class="font-bold">{{ activity.Title }}</h3>
+          <div class="badge"
+               :class="{
+                 'badge-success': new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date(),
+                 'badge-warning': new Date(activity.StartDate) > new Date(),
+                 'badge-error': new Date(activity.EndDate) < new Date()
+               }">
+            {{
+              new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date()
+                ? 'ดำเนินการ'
+                : new Date(activity.StartDate) > new Date()
+                  ? 'ยังไม่เริ่ม'
+                  : 'สิ้นสุดแล้ว'
+            }}
+          </div>
+        </div>
+
+        <!-- รายละเอียด -->
+        <p class="text-sm text-gray-600">{{ activity.description }}</p>
+
+        <!-- ข้อมูลวันที่และสถานที่ -->
+        <div class="text-sm mt-2">
+          <p><span class="font-semibold">วันที่เริ่ม:</span> {{ formatDate(activity.StartDate) }}</p>
+          <p><span class="font-semibold">วันที่สิ้นสุด:</span> {{ formatDate(activity.EndDate) }}</p>
+          <p class="mt-1"><span class="font-semibold">สถานที่:</span> {{ activity.Location }}</p>
+        </div>
+
+        <!-- คะแนนและปุ่มจัดการ -->
+        <div class="flex items-center justify-between mt-3">
+          <div class="badge badge-primary">{{ activity.Score }} คะแนน</div>
+          <nuxt-link
+            :to="`/forSmallAdmin/activity/participants/${activity.ID}`"
+            class="btn btn-sm btn-info"
+          >
+            ผู้เข้าร่วม
+          </nuxt-link>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
 
         <!-- Activities Table -->
         <!-- <div class="bg-base-100 rounded-box shadow-lg overflow-hidden">
@@ -1278,8 +1332,11 @@ watch(selectedSemester, () => {
   </div>
 
   <!-- ตารางผู้ใช้ -->
-  <div class="bg-base-100 rounded-xl shadow-lg overflow-hidden">
-    <table class="table table-zebra w-full">
+<!-- แยกการแสดงผลเป็น Desktop และ Mobile -->
+<div>
+ <!-- Desktop View -->
+ <div class="hidden md:block bg-base-100 rounded-xl shadow-lg overflow-hidden">
+   <table class="table table-zebra w-full">
   <thead>
     <tr>
       <th>รหัส</th>
@@ -1360,7 +1417,75 @@ watch(selectedSemester, () => {
     </tr>
   </tbody>
 </table>
-  </div>
+ </div>
+
+ <!-- Mobile View -->
+ <div class="md:hidden space-y-4">
+   <div v-for="user in filteredUsers"
+        :key="user.UserID"
+        class="card bg-base-100 shadow-lg">
+     <div class="card-body p-4">
+       <!-- ข้อมูลหลัก -->
+       <div class="flex items-start justify-between gap-2">
+         <div>
+           <div class="font-bold">{{ user.UserFirstName }} {{ user.UserLastName }}</div>
+           <div class="text-sm text-gray-500">{{ user.UserID }}</div>
+           <div class="text-sm text-gray-500">{{ user.Department?.Name }}</div>
+         </div>
+         <div class="badge" :class="{
+           'badge-primary': user.Role === 'ADMIN',
+           'badge-secondary': user.Role === 'USER',
+           'badge-accent': user.Role === 'SUPERADMIN',
+           'badge-info': user.Role === 'EXECUTIVE',
+           'badge-warning': user.Role === 'TEACHER',
+           'badge-error': user.Role === 'BIGTEACHER'
+         }">
+           {{ user.Role }}
+         </div>
+       </div>
+
+       <!-- ข้อมูลชั้นเรียน -->
+       <div class="flex flex-wrap gap-2 mt-3">
+         <div class="badge badge-primary">{{ user.classAt }}</div>
+         <div class="badge badge-secondary">{{ user.classRoom }}</div>
+         <div class="badge badge-ghost">{{ user.DepartmentID }}</div>
+       </div>
+
+       <!-- สถานะกิจกรรม -->
+       <div class="mt-3">
+         <div class="badge badge-lg w-full" :class="getActivityStatusBadgeClass(user)">
+           {{ getActivityStatusText(user) }}
+         </div>
+       </div>
+
+       <!-- ปุ่มจัดการ -->
+       <div class="flex flex-wrap gap-2 mt-4">
+         <nuxt-link
+           v-if="canManageUser(user)"
+           :to="`/admin/user/${user.UserID}`"
+           class="btn btn-sm btn-warning flex-1"
+         >
+           แก้ไข
+         </nuxt-link>
+         <nuxt-link
+           v-if="canManageUser(user)"
+           :to="`/admin/user/details/${user.UserID}`"
+           class="btn btn-sm btn-info flex-1"
+         >
+           ดูกิจกรรม
+         </nuxt-link>
+         <button
+           v-if="canManageUser(user)"
+           @click="deleteUser(user.UserID)"
+           class="btn btn-sm btn-error flex-1"
+         >
+           ลบ
+         </button>
+       </div>
+     </div>
+   </div>
+ </div>
+</div>
 
   <!-- ส่วนแสดงผลเมื่อไม่พบข้อมูล -->
   <div v-if="filteredUsers.length === 0" class="text-center py-8">
@@ -1479,6 +1604,22 @@ watch(selectedSemester, () => {
     max-height: 100vh;
     border-radius: 0;
   }
+}
+
+@media (max-width: 768px) {
+ .card {
+   @apply rounded-lg;
+ }
+ .card-body {
+   @apply p-4;
+ }
+ .badge {
+   @apply text-xs;
+ }
+ .btn-sm {
+   @apply text-xs px-3;
+   height: 2rem;
+ }
 }
 
 </style>

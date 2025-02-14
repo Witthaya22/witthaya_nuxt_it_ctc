@@ -381,130 +381,184 @@ onMounted(() => {
 // Watch route changes
 watch(() => useRoute().fullPath, loadData);
 </script>
-
 <template>
-  <div class="p-6 space-y-6">
+  <div class="p-2 md:p-6 space-y-4 md:space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold">แดชบอร์ดผู้ดูแลระบบ</h1>
-      <div class="flex gap-4">
+    <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+      <h1 class="text-xl md:text-2xl font-bold">แดชบอร์ดผู้ดูแลระบบ</h1>
+      <div class="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
         <div class="tabs tabs-boxed">
           <button
             v-for="tab in ['overview', 'users', 'activities']"
             :key="tab"
             @click="activeTab = tab"
-            :class="['tab', activeTab === tab && 'tab-active']"
+            :class="['tab tab-sm md:tab-md flex-1 md:flex-none', activeTab === tab && 'tab-active']"
           >
             {{ tab === 'overview' ? 'ภาพรวม' : tab === 'users' ? 'ผู้ใช้งาน' : 'กิจกรรม' }}
           </button>
         </div>
         <button
           @click="loadData"
-          class="btn btn-ghost btn-sm gap-2"
+          class="btn btn-ghost btn-sm md:btn-md gap-1"
           :disabled="loading"
         >
-          <Icon
-            name="mdi:refresh"
-            class="w-5 h-5"
-            :class="{ 'animate-spin': loading }"
-          />
-          {{ loading ? 'กำลังโหลด...' : 'รีเฟรช' }}
+          <svg class="w-4 h-4 md:w-5 md:h-5" :class="{ 'animate-spin': loading }"
+            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+              d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4m-4 4a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
+          </svg>
+          <span class="text-sm md:text-base">{{ loading ? 'กำลังโหลด...' : 'รีเฟรช' }}</span>
         </button>
       </div>
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6">
       <div v-for="(stat, index) in [
         {
-          icon: 'mdi:account-group',
+          icon: 'account-group',
           title: 'ผู้ใช้ทั้งหมด',
           value: stats.totalUsers,
           color: 'primary',
           trend: `${stats.userGrowth > 0 ? '↗' : '↘'}︎ ${Math.abs(stats.userGrowth)}% จากเดือนที่แล้ว`
         },
         {
-          icon: 'mdi:calendar-check',
+          icon: 'calendar-check',
           title: 'กิจกรรมทั้งหมด',
           value: stats.totalActivities,
           color: 'secondary',
           desc: `กิจกรรมใหม่ ${stats.newActivities} รายการ`
         },
         {
-          icon: 'mdi:check-circle',
+          icon: 'check-circle',
           title: 'ผ่านกิจกรรม',
           value: stats.completedActivities,
           color: 'success',
           desc: `${Math.round((stats.completedActivities / (stats.completedActivities + stats.pendingActivities)) * 100) || 0}% ของกิจกรรมทั้งหมด`
         },
         {
-          icon: 'mdi:clock',
+          icon: 'clock',
           title: 'รอดำเนินการ',
           value: stats.pendingActivities,
           color: 'warning',
           desc: `${Math.round((stats.pendingActivities / (stats.completedActivities + stats.pendingActivities)) * 100) || 0}% ของกิจกรรมทั้งหมด`
         }
-      ]" :key="index" class="stat bg-white rounded-xl shadow-lg border border-base-200">
-       <div :class="['stat-figure', 'text-' + stat.color]">
-          <Icon :name="stat.icon" class="w-8 h-8"/>
+      ]" :key="index"
+      class="stat bg-white rounded-lg shadow-md border border-base-200 p-2 md:p-4">
+        <div :class="['stat-figure', 'text-' + stat.color]">
+          <svg class="w-6 h-6 md:w-8 md:h-8" viewBox="0 0 24 24">
+            <!-- Add SVG paths based on icon name -->
+          </svg>
         </div>
-        <div class="stat-title">{{ stat.title }}</div>
-      <div :class="`stat-value text-${stat.color}`">{{ stat.value }}</div>
-        <div class="stat-desc">{{ stat.trend || stat.desc }}</div>
+        <div class="stat-title text-xs md:text-sm">{{ stat.title }}</div>
+        <div :class="['stat-value text-' + stat.color, 'text-lg md:text-2xl']">{{ stat.value }}</div>
+        <div class="stat-desc text-xs">{{ stat.trend || stat.desc }}</div>
       </div>
     </div>
 
     <!-- Charts -->
-    <div v-if="!loading">
-      <div v-if="activeTab === 'overview'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div v-if="!loading" class="space-y-4">
+      <!-- Overview Tab -->
+      <div v-if="activeTab === 'overview'" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div class="card bg-white shadow-lg">
-          <div class="card-body">
-            <h2 class="card-title">สถานะกิจกรรม</h2>
-            <div class="h-80">
+          <div class="card-body p-4">
+            <h2 class="card-title text-lg">สถานะกิจกรรม</h2>
+            <div class="h-64 md:h-80">
               <Doughnut
                 :data="chartData.activityStatus"
-                :options="chartOptions"
+                :options="{
+                  ...chartOptions,
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                      labels: {
+                        boxWidth: 12,
+                        fontSize: 10
+                      }
+                    }
+                  }
+                }"
               />
             </div>
           </div>
         </div>
 
         <div class="card bg-white shadow-lg">
-          <div class="card-body">
-            <h2 class="card-title">ผู้ใช้งานใหม่รายเดือน</h2>
-            <div class="h-80">
+          <div class="card-body p-4">
+            <h2 class="card-title text-lg">ผู้ใช้งานใหม่รายเดือน</h2>
+            <div class="h-64 md:h-80">
               <Line
                 :data="chartData.userTrend"
-                :options="chartOptions"
+                :options="{
+                  ...chartOptions,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        fontSize: 10
+                      }
+                    },
+                    x: {
+                      ticks: {
+                        fontSize: 10
+                      }
+                    }
+                  }
+                }"
               />
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Activities Tab -->
       <div v-if="activeTab === 'activities'" class="card bg-white shadow-lg">
-        <div class="card-body">
-          <h2 class="card-title">แนวโน้มกิจกรรมรายเดือน</h2>
-          <div class="h-96">
+        <div class="card-body p-4">
+          <h2 class="card-title text-lg">แนวโน้มกิจกรรมรายเดือน</h2>
+          <div class="h-80 md:h-96">
             <Bar
               :data="chartData.activityTrend"
-              :options="chartOptions"
+              :options="{
+                ...chartOptions,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      fontSize: 10
+                    }
+                  },
+                  x: {
+                    ticks: {
+                      fontSize: 10
+                    }
+                  }
+                }
+              }"
             />
           </div>
         </div>
       </div>
 
+      <!-- Users Tab -->
       <div v-if="activeTab === 'users'" class="card bg-white shadow-lg">
-        <div class="card-body">
-          <h2 class="card-title">การเติบโตของผู้ใช้งาน</h2>
-          <div class="h-96">
+        <div class="card-body p-4">
+          <h2 class="card-title text-lg">การเติบโตของผู้ใช้งาน</h2>
+          <div class="h-80 md:h-96">
             <Line
               :data="chartData.userTrend"
               :options="{
                 ...chartOptions,
                 scales: {
                   y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                      fontSize: 10
+                    }
+                  },
+                  x: {
+                    ticks: {
+                      fontSize: 10
+                    }
                   }
                 }
               }"
@@ -514,8 +568,50 @@ watch(() => useRoute().fullPath, loadData);
       </div>
     </div>
 
-    <div v-else class="flex justify-center items-center h-96">
+    <!-- Loading State -->
+    <div v-else class="flex justify-center items-center h-64 md:h-96">
       <span class="loading loading-spinner loading-lg"></span>
     </div>
   </div>
 </template>
+
+<style scoped>
+.card {
+  @apply overflow-hidden;
+}
+
+.stat-figure svg {
+  @apply opacity-80;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .card-body {
+    @apply p-3;
+  }
+
+  .stat {
+    @apply text-center;
+  }
+
+  .stat-figure {
+    @apply justify-center;
+  }
+
+  .stat-title {
+    @apply text-xs;
+  }
+
+  .stat-value {
+    @apply text-lg;
+  }
+
+  .stat-desc {
+    @apply text-xs;
+  }
+
+  .tab {
+    @apply text-sm py-1 px-2;
+  }
+}
+</style>

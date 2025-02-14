@@ -6,6 +6,13 @@ import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
 import Swal from 'sweetalert2'
 
+const videoRef = ref<HTMLVideoElement | null>(null)
+const stream = ref<MediaStream | null>(null)
+const capturedImage = ref<string | null>(null)
+const hasMultipleCameras = ref(false)
+const currentFacingMode = ref<'user' | 'environment'>('environment')
+const captureTime = ref<string>('')
+
 const router = useRouter()
 const axios = useAxios()
 const { auth } = useAuth()
@@ -18,6 +25,91 @@ interface User {
   UserImage: string | null
 }
 
+function showCameraModal() {
+  startCamera()
+}
+
+function retakePhoto() {
+  capturedImage.value = null
+}
+
+// เพิ่มฟังก์ชันสำหรับยืนยันใช้ภาพ
+function acceptPhoto() {
+  if (capturedImage.value) {
+    imagePreview.value = capturedImage.value
+    // แปลง base64 เป็น File object
+    fetch(capturedImage.value)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], `captured_${Date.now()}.jpg`, { type: 'image/jpeg' })
+        uploadedImage.value = file
+      })
+    closeCamera()
+  }
+}
+
+
+function capturePhoto() {
+  if (!videoRef.value) return
+
+  const canvas = document.createElement('canvas')
+  canvas.width = videoRef.value.videoWidth
+  canvas.height = videoRef.value.videoHeight
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  // วาดภาพจากวิดีโอ
+  ctx.drawImage(videoRef.value, 0, 0)
+
+  // บันทึกเวลาที่ถ่าย
+  const now = new Date()
+  const timeString = now.toLocaleString('th-TH', {
+    dateStyle: 'medium',
+    timeStyle: 'medium'
+  })
+  captureTime.value = timeString
+
+  // กำหนดสไตล์สำหรับเวลา
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)' // พื้นหลังสีดำโปร่งใส
+  ctx.fillRect(canvas.width - 300, canvas.height - 40, 290, 30) // กล่องพื้นหลัง
+
+  ctx.font = '20px Arial'
+  ctx.fillStyle = 'white'
+  ctx.fillText(timeString, canvas.width - 290, canvas.height - 20)
+
+  // แปลง canvas เป็น base64
+  capturedImage.value = canvas.toDataURL('image/jpeg')
+}
+// function capturePhoto() {
+//   if (!videoRef.value) return
+
+//   const canvas = document.createElement('canvas')
+//   canvas.width = videoRef.value.videoWidth
+//   canvas.height = videoRef.value.videoHeight
+//   const ctx = canvas.getContext('2d')
+//   if (!ctx) return
+
+//   ctx.drawImage(videoRef.value, 0, 0)
+//   capturedImage.value = canvas.toDataURL('image/jpeg')
+
+//   // บันทึกเวลาที่ถ่าย
+//   const now = new Date()
+//   captureTime.value = now.toLocaleString('th-TH', {
+//     dateStyle: 'medium',
+//     timeStyle: 'medium'
+//   })
+// }
+
+function closeCamera() {
+  if (stream.value) {
+    stream.value.getTracks().forEach(track => track.stop())
+    stream.value = null
+  }
+  capturedImage.value = null
+  const modal = document.getElementById('camera_modal') as HTMLDialogElement
+  modal.close()
+}
+
 function startEdit() {
   isEditing.value = true
   // Reset upload states
@@ -25,6 +117,96 @@ function startEdit() {
   // Keep current image preview
   if (activity.value?.details?.proofImage) {
     imagePreview.value = getImageUrl(activity.value.details.proofImage)
+  }
+}
+
+async function startCamera() {
+  try {
+    // ตรวจสอบว่ามีกล้องหลายตัวหรือไม่
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    const cameras = devices.filter(device => device.kind === 'videoinput')
+    hasMultipleCameras.value = cameras.length > 1
+
+    // ขอใช้งานกล้อง
+    stream.value = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: currentFacingMode.value }
+      }
+    })
+
+    // แสดง modal
+    const modal = document.getElementById('camera_modal') as HTMLDialogElement
+    modal.showModal()
+
+    // เชื่อมต่อ stream กับ video element
+    if (videoRef.value) {
+      videoRef.value.srcObject = stream.value
+    }
+  } catch (error) {
+    console.error('Error accessing camera:', error)
+    alert('ไม่สามารถเข้าถึงกล้องได้ กรุณาตรวจสอบการอนุญาตใช้งานกล้อง')
+  }
+}
+
+async function switchCamera() {
+  currentFacingMode.value = currentFacingMode.value === 'user' ? 'environment' : 'user'
+  if (stream.value) {
+    const tracks = stream.value.getTracks()
+    tracks.forEach(track => track.stop())
+  }
+  await startCamera()
+}
+
+function captureImage() {
+  if (!videoRef.value) return
+
+  const canvas = document.createElement('canvas')
+  canvas.width = videoRef.value.videoWidth
+  canvas.height = videoRef.value.videoHeight
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  // วาดภาพจากวิดีโอลงบน canvas
+  ctx.drawImage(videoRef.value, 0, 0)
+
+  // แปลง canvas เป็น base64
+  capturedImage.value = canvas.toDataURL('image/jpeg')
+
+  // บันทึกเวลาที่ถ่าย
+  const now = new Date()
+  captureTime.value = now.toLocaleString('th-TH', {
+    dateStyle: 'medium',
+    timeStyle: 'medium'
+  })
+}
+
+// ถ่ายใหม่
+function retakeImage() {
+  capturedImage.value = null
+}
+
+// ยืนยันใช้ภาพ
+function acceptImage() {
+  if (capturedImage.value) {
+    imagePreview.value = capturedImage.value
+
+    // แปลง base64 เป็น File object
+    fetch(capturedImage.value)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], `captured_${Date.now()}.jpg`, { type: 'image/jpeg' })
+        uploadedImage.value = file
+      })
+
+    // ปิด modal
+    const modal = document.getElementById('camera_modal') as HTMLDialogElement
+    modal.close()
+
+    // หยุด stream
+    if (stream.value) {
+      const tracks = stream.value.getTracks()
+      tracks.forEach(track => track.stop())
+    }
   }
 }
 
@@ -226,10 +408,15 @@ function goBack() {
 onMounted(() => {
   loadData()
 })
+
+onUnmounted(() => {
+  if (stream.value) {
+    stream.value.getTracks().forEach(track => track.stop())
+  }
+})
 </script>
 
 <!-- Previous script section remains the same -->
-
 <template>
   <div class="min-h-screen animate-fade-in">
     <!-- Back Button -->
@@ -258,169 +445,243 @@ onMounted(() => {
         <!-- Main Activity Card -->
         <div class="card bg-base-100 shadow-xl overflow-hidden">
           <!-- Hero Image Section -->
-          <figure class="relative h-80">
+          <figure class="relative h-48 md:h-80">
             <img :src="getImageUrl(activity.images?.[0])"
                  :alt="activity.name"
                  class="w-full h-full object-cover"
                  @error="handleImageError" />
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-            <div class="absolute bottom-6 left-6 right-6">
-              <h1 class="text-3xl font-bold text-white mb-3">{{ activity.name }}</h1>
+            <div class="absolute bottom-4 md:bottom-6 left-4 md:left-6 right-4 md:right-6">
+              <h1 class="text-xl md:text-3xl font-bold text-white mb-2 md:mb-3">{{ activity.name }}</h1>
               <div :class="['badge badge-lg', getStatusClass(activity.status)]">
                 {{ getStatusText(activity.status) }}
               </div>
             </div>
           </figure>
 
-          <div class="card-body">
+          <div class="card-body p-4 md:p-6">
             <!-- User Info -->
-            <div class="flex items-center gap-4 mb-6">
+            <div class="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
               <div class="avatar">
-                <div class="w-16 h-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden">
+                <div class="w-12 h-12 md:w-16 md:h-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden">
                   <img :src="profileImage" alt="Profile" class="w-full h-full object-cover" />
                 </div>
               </div>
               <div>
-                <h2 class="text-xl font-bold">{{ user?.UserFirstName }} {{ user?.UserLastName }}</h2>
-                <p class="text-base-content/60">{{ user?.UserID }}</p>
+                <h2 class="text-lg md:text-xl font-bold">{{ user?.UserFirstName }} {{ user?.UserLastName }}</h2>
+                <p class="text-sm md:text-base text-base-content/60">{{ user?.UserID }}</p>
               </div>
             </div>
 
             <!-- Activity Info Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
               <div class="stats bg-base-200 shadow">
-                <div class="stat">
+                <div class="stat p-3 md:p-4">
                   <div class="stat-figure text-primary">
-                    <Icon name="ic:baseline-calendar-today" class="w-8 h-8" />
+                    <Icon name="ic:baseline-calendar-today" class="w-6 h-6 md:w-8 md:h-8" />
                   </div>
-                  <div class="stat-title">วันที่</div>
-                  <div class="stat-value text-lg">{{ activity.date }}</div>
+                  <div class="stat-title text-xs md:text-sm">วันที่</div>
+                  <div class="stat-value text-base md:text-lg">{{ activity.date }}</div>
                 </div>
               </div>
 
               <div class="stats bg-base-200 shadow">
-                <div class="stat">
+                <div class="stat p-3 md:p-4">
                   <div class="stat-figure text-primary">
-                    <Icon name="ic:baseline-location-on" class="w-8 h-8" />
+                    <Icon name="ic:baseline-location-on" class="w-6 h-6 md:w-8 md:h-8" />
                   </div>
-                  <div class="stat-title">สถานที่</div>
-                  <div class="stat-value text-lg">{{ activity.location }}</div>
+                  <div class="stat-title text-xs md:text-sm">สถานที่</div>
+                  <div class="stat-value text-base md:text-lg">{{ activity.location }}</div>
                 </div>
               </div>
 
               <div class="stats bg-base-200 shadow">
-                <div class="stat">
+                <div class="stat p-3 md:p-4">
                   <div class="stat-figure text-warning">
-                    <Icon name="ic:baseline-star" class="w-8 h-8" />
+                    <Icon name="ic:baseline-star" class="w-6 h-6 md:w-8 md:h-8" />
                   </div>
-                  <div class="stat-title">คะแนน</div>
-                  <div class="stat-value text-warning">{{ activity.score }}</div>
+                  <div class="stat-title text-xs md:text-sm">คะแนน</div>
+                  <div class="stat-value text-warning text-base md:text-lg">{{ activity.score }}</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-       <!-- Proof Upload Card -->
-<div class="card bg-base-100 shadow-xl">
-  <div class="card-body">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="card-title flex items-center gap-2">
-        <Icon name="ic:baseline-upload-file" class="w-6 h-6 text-primary" />
-        หลักฐานการเข้าร่วมกิจกรรม
-      </h2>
+        <!-- Proof Upload Card -->
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body p-4 md:p-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0 mb-4 md:mb-6">
+              <h2 class="card-title text-lg md:text-xl flex items-center gap-2">
+                <Icon name="ic:baseline-upload-file" class="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                หลักฐานการเข้าร่วมกิจกรรม
+              </h2>
 
-      <!-- Edit Button -->
-      <button v-if="activity.details?.proofImage && !isEditing"
-              @click="startEdit"
-              class="btn btn-outline btn-info btn-sm gap-2">
-        <Icon name="ic:baseline-edit" class="w-4 h-4" />
-        แก้ไขรูปภาพ
-      </button>
-    </div>
+              <!-- Edit Button -->
+              <button v-if="activity.details?.proofImage && !isEditing"
+                      @click="startEdit"
+                      class="btn btn-outline btn-info btn-sm gap-2 w-full md:w-auto">
+                <Icon name="ic:baseline-edit" class="w-4 h-4" />
+                แก้ไขรูปภาพ
+              </button>
+            </div>
 
-    <!-- Image Preview -->
-    <div v-if="imagePreview" class="mb-6">
-      <div class="relative w-full aspect-video rounded-xl overflow-hidden group">
-        <img :src="imagePreview"
-             alt="หลักฐานการเข้าร่วม"
-             class="w-full h-full object-cover" />
+            <!-- Image Preview -->
+            <div v-if="imagePreview" class="mb-4 md:mb-6">
+              <div class="relative w-full aspect-video rounded-xl overflow-hidden group">
+                <img :src="imagePreview"
+                     alt="หลักฐานการเข้าร่วม"
+                     class="w-full h-full object-cover" />
 
-        <!-- Overlay Change Image Button when Editing -->
-        <div v-if="isEditing"
-             class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <label for="proofUpload" class="btn btn-primary">
-            <Icon name="ic:baseline-photo-camera" class="w-5 h-5 mr-2" />
-            เปลี่ยนรูปภาพ
-          </label>
+                <!-- แสดงเวลาที่ถ่าย -->
+                <!-- <div v-if="captureTime"
+                     class="absolute bottom-2 right-2 bg-black/70 text-white px-3 py-1 rounded-full text-xs md:text-sm">
+                  {{ captureTime }}
+                </div> -->
+
+                <!-- Overlay Change Image Button when Editing -->
+                <div v-if="isEditing"
+                     class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button @click="showCameraModal" class="btn btn-primary btn-sm md:btn-md">
+                    <Icon name="ic:baseline-photo-camera" class="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                    เปลี่ยนรูปภาพ
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload Area -->
+            <div v-if="!activity.details?.proofImage || isEditing"
+                 class="border-2 border-dashed border-base-300 rounded-xl p-4 md:p-8">
+              <div class="flex flex-col items-center gap-4">
+                <!-- Upload Options -->
+                <div class="flex flex-wrap justify-center gap-3">
+                  <button @click="showCameraModal" class="btn btn-primary btn-sm md:btn-md gap-2">
+                    <Icon name="ic:baseline-photo-camera" class="w-4 h-4 md:w-5 md:h-5" />
+                    <span class="text-sm md:text-base">ถ่ายภาพ</span>
+                  </button>
+
+                  <label class="btn btn-outline btn-sm md:btn-md gap-2">
+                    <Icon name="ic:baseline-upload" class="w-4 h-4 md:w-5 md:h-5" />
+                    <span class="text-sm md:text-base">เลือกรูปภาพ</span>
+                    <input type="file"
+                           accept="image/*"
+                           @change="handleImageUpload"
+                           class="hidden" />
+                  </label>
+                </div>
+
+                <p class="text-xs md:text-sm text-gray-500 text-center">
+                  รองรับไฟล์ PNG, JPG หรือ JPEG (สูงสุด 5MB)
+                </p>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div v-if="uploadedImage && (isEditing || !activity.details?.proofImage)"
+                 class="card-actions justify-end mt-4 md:mt-6 space-x-2">
+              <!-- Cancel Button -->
+              <button v-if="isEditing"
+                      @click="cancelEdit"
+                      class="btn btn-outline btn-error btn-sm md:btn-md gap-2">
+                <Icon name="ic:baseline-close" class="w-4 h-4 md:w-5 md:h-5" />
+                <span class="text-sm md:text-base">ยกเลิก</span>
+              </button>
+
+              <!-- Submit Button -->
+              <button @click="submitProof"
+                      :disabled="loading"
+                      class="btn btn-primary btn-sm md:btn-md gap-2">
+                <Icon v-if="!loading" name="ic:baseline-check" class="w-4 h-4 md:w-5 md:h-5" />
+                <span v-if="loading" class="loading loading-spinner loading-sm md:loading-md"></span>
+                <span class="text-sm md:text-base">
+                  {{ loading ? 'กำลังบันทึก...' : (isEditing ? 'บันทึกการแก้ไข' : 'ยืนยันการอัพโหลด') }}
+                </span>
+              </button>
+            </div>
+
+            <!-- Status Message -->
+            <div v-if="activity.details?.proofImage && !isEditing"
+                 class="alert mt-4"
+                 :class="[activity.status === 'completed' ? 'alert-success' :
+                         activity.status === 'failed' ? 'alert-error' : 'alert-info']">
+              <Icon :name="activity.status === 'completed' ? 'ic:baseline-check-circle' :
+                           activity.status === 'failed' ? 'ic:baseline-error' : 'ic:baseline-info'"
+                    class="w-5 h-5 md:w-6 md:h-6" />
+              <span class="text-sm md:text-base">{{ getStatusText(activity.status) }}</span>
+            </div>
+
+            <!-- Review Note -->
+            <div v-if="activity.details?.reviewNote && !isEditing" class="mt-4">
+              <p class="font-semibold text-sm md:text-base">หมายเหตุจากผู้ตรวจสอบ:</p>
+              <p class="mt-1 text-xs md:text-sm text-base-content/70">{{ activity.details.reviewNote }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Upload Area -->
-    <div v-if="!activity.details?.proofImage || isEditing"
-         class="border-2 border-dashed border-base-300 rounded-xl p-8 text-center">
-      <input type="file"
-             accept="image/*"
-             @change="handleImageUpload"
-             class="hidden"
-             id="proofUpload" />
-      <label for="proofUpload"
-             class="flex flex-col items-center gap-4 cursor-pointer">
-        <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-        </svg>
-        <p class="mb-2 text-sm text-gray-500">
-          <span class="font-semibold">คลิกเพื่อเลือกรูปภาพ</span>
-        </p>
-        <p class="text-xs text-gray-500">PNG, JPG หรือ JPEG (สูงสุด 5MB)</p>
-      </label>
-    </div>
+    <!-- Camera Modal -->
+    <dialog id="camera_modal" class="modal">
+      <div class="modal-box relative w-11/12 max-w-3xl p-0 bg-black">
+        <!-- Close Button -->
+        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 text-white z-10"
+                @click="closeCamera">
+          ✕
+        </button>
 
-    <!-- Action Buttons -->
-    <div v-if="uploadedImage && (isEditing || !activity.details?.proofImage)"
-         class="card-actions justify-end mt-6">
-      <!-- Cancel Button (Only show when editing) -->
-      <button v-if="isEditing"
-              @click="cancelEdit"
-              class="btn btn-outline btn-error gap-2">
-        <Icon name="ic:baseline-close" class="w-5 h-5" />
-        ยกเลิก
-      </button>
+        <div class="p-4">
+          <h3 class="font-bold text-lg text-white mb-4">ถ่ายภาพหลักฐาน</h3>
 
-      <!-- Submit Button -->
-      <button @click="submitProof"
-              :disabled="loading"
-              class="btn btn-primary gap-2">
-        <Icon v-if="!loading" name="ic:baseline-check" class="w-5 h-5" />
-        <span v-if="loading" class="loading loading-spinner"></span>
-        {{ loading ? 'กำลังบันทึก...' : (isEditing ? 'บันทึกการแก้ไข' : 'ยืนยันการอัพโหลด') }}
-      </button>
-    </div>
+          <!-- Camera View -->
+          <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
+            <video ref="videoRef"
+                   class="w-full h-full object-cover"
+                   autoplay
+                   playsinline></video>
 
-    <!-- Status Message -->
-    <div v-if="activity.details?.proofImage && !isEditing"
-         class="alert mt-4"
-         :class="[activity.status === 'completed' ? 'alert-success' :
-                 activity.status === 'failed' ? 'alert-error' : 'alert-info']">
-      <Icon :name="activity.status === 'completed' ? 'ic:baseline-check-circle' :
-                   activity.status === 'failed' ? 'ic:baseline-error' : 'ic:baseline-info'"
-            class="w-6 h-6" />
-      <span>{{ getStatusText(activity.status) }}</span>
-    </div>
+            <!-- Camera Controls -->
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4">
+              <!-- Switch Camera Button (for mobile) -->
+              <button v-if="hasMultipleCameras"
+                      @click="switchCamera"
+                      class="btn btn-circle btn-sm">
+                <Icon name="ic:baseline-flip-camera-ios" class="w-5 h-5" />
+              </button>
 
-    <!-- Review Note -->
-    <div v-if="activity.details?.reviewNote && !isEditing" class="mt-4 text-sm">
-      <p class="font-semibold">หมายเหตุจากผู้ตรวจสอบ:</p>
-      <p class="mt-1 text-base-content/70">{{ activity.details.reviewNote }}</p>
-    </div>
-  </div>
-</div>
+              <!-- Capture Button -->
+              <button @click="capturePhoto"
+                      class="btn btn-circle btn-lg bg-white hover:bg-gray-200">
+                <div class="w-12 h-12 rounded-full border-4 border-primary"></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Preview Captured Image -->
+          <div v-if="capturedImage" class="mt-4">
+            <img :src="capturedImage"
+                 class="w-full rounded-lg"
+                 alt="ภาพที่ถ่าย" />
+
+            <div class="flex justify-end gap-2 mt-4">
+              <button @click="retakePhoto"
+                      class="btn btn-sm">
+                ถ่ายใหม่
+              </button>
+              <button @click="acceptPhoto"
+                      class="btn btn-sm btn-primary">
+                ใช้ภาพนี้
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+      <form method="dialog" class="modal-backdrop">
+        <button>ปิด</button>
+      </form>
+    </dialog>
   </div>
 </template>
-
 <style scoped>
 .stats {
   @apply rounded-xl border border-base-300;
@@ -443,5 +704,18 @@ onMounted(() => {
 
 .card {
   @apply backdrop-blur-sm;
+}
+
+.modal-box {
+  @apply p-4;
+}
+
+@media (max-width: 768px) {
+  .modal-box {
+    @apply p-2;
+    margin: 1rem;
+    width: calc(100% - 2rem);
+    max-height: calc(100vh - 2rem);
+  }
 }
 </style>

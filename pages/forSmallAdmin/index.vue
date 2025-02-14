@@ -1012,21 +1012,22 @@ watch(selectedSemester, () => {
 </div>
 
 <!-- Activities Table with Extended Information -->
-<div v-show="!isTeacher && !isBigTeacher" class="bg-base-100 rounded-box shadow-lg overflow-x-auto">
-  <table class="table table-zebra w-full">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>ชื่อกิจกรรม</th>
-        <th>วันที่จัด</th>
-        <th>สถานที่</th>
-        <!-- <th>ประเภท</th> -->
-        <th class="text-center">คะแนน</th>
-        <th class="text-center">สถานะ</th>
-        <th class="text-end">จัดการ</th>
-      </tr>
-    </thead>
-    <tbody>
+<div v-show="!isTeacher && !isBigTeacher">
+  <!-- Desktop View -->
+  <div class="hidden md:block bg-base-100 rounded-box shadow-lg overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>ชื่อกิจกรรม</th>
+          <th>วันที่จัด</th>
+          <th>สถานที่</th>
+          <th class="text-center">คะแนน</th>
+          <th class="text-center">สถานะ</th>
+          <th class="text-end">จัดการ</th>
+        </tr>
+      </thead>
+        <tbody>
       <tr v-for="activity in filteredActivities" :key="activity.ID">
         <td>{{ activity.ID }}</td>
         <td>
@@ -1052,7 +1053,7 @@ watch(selectedSemester, () => {
           <div class="badge badge-lg badge-primary">{{ activity.Score }}</div>
         </td>
         <td class="text-center">
-          <div class="badge badge-lg" :class="{
+          <div class="badge badge-lg text-white" :class="{
             'badge-success': new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date(),
             'badge-warning': new Date(activity.StartDate) > new Date(),
             'badge-error': new Date(activity.EndDate) < new Date()
@@ -1089,14 +1090,63 @@ watch(selectedSemester, () => {
         :to="`/forSmallAdmin/activity/participants/${activity.ID}`"
         class="btn btn-sm btn-info gap-2"
       >
-        <Icon name="mdi:account-group" class="w-4 h-4" />
         ผู้เข้าร่วม
       </nuxt-link>
     </div>
   </td>
       </tr>
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile View -->
+  <div class="md:hidden space-y-4">
+    <div v-for="activity in filteredActivities"
+         :key="activity.ID"
+         class="card bg-base-100 shadow-md">
+      <div class="card-body p-4">
+        <!-- หัวข้อและสถานะ -->
+        <div class="flex items-start justify-between gap-2">
+          <h3 class="font-bold">{{ activity.Title }}</h3>
+          <div class="badge"
+               :class="{
+                 'badge-success': new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date(),
+                 'badge-warning': new Date(activity.StartDate) > new Date(),
+                 'badge-error': new Date(activity.EndDate) < new Date()
+               }">
+            {{
+              new Date(activity.EndDate) >= new Date() && new Date(activity.StartDate) <= new Date()
+                ? 'ดำเนินการ'
+                : new Date(activity.StartDate) > new Date()
+                  ? 'ยังไม่เริ่ม'
+                  : 'สิ้นสุดแล้ว'
+            }}
+          </div>
+        </div>
+
+        <!-- รายละเอียด -->
+        <p class="text-sm text-gray-600">{{ activity.description }}</p>
+
+        <!-- ข้อมูลวันที่และสถานที่ -->
+        <div class="text-sm mt-2">
+          <p><span class="font-semibold">วันที่เริ่ม:</span> {{ formatDate(activity.StartDate) }}</p>
+          <p><span class="font-semibold">วันที่สิ้นสุด:</span> {{ formatDate(activity.EndDate) }}</p>
+          <p class="mt-1"><span class="font-semibold">สถานที่:</span> {{ activity.Location }}</p>
+        </div>
+
+        <!-- คะแนนและปุ่มจัดการ -->
+        <div class="flex items-center justify-between mt-3">
+          <div class="badge badge-primary">{{ activity.Score }} คะแนน</div>
+          <nuxt-link
+            :to="`/forSmallAdmin/activity/participants/${activity.ID}`"
+            class="btn btn-sm btn-info"
+          >
+            ผู้เข้าร่วม
+          </nuxt-link>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
         <!-- Activities Table -->
@@ -1321,14 +1371,14 @@ watch(selectedSemester, () => {
 </td>
       <!-- เพิ่มคอลัมน์ระดับชั้นและห้องเรียน -->
       <td>
-        <div class="badge badge-primary">{{ user.classAt }}</div>
+        <div class="badge badge-ghost">{{ user.classAt }}</div>
       </td>
       <td>
-        <div class="badge badge-secondary">{{ user.classRoom }}</div>
+        <div class="badge badge-ghost">{{ user.classRoom }}</div>
       </td>
       <!-- คอลัมน์ที่เหลือ -->
       <td>
-        <div class="badge" :class="{
+        <div class="badge badge-ghost" :class="{
           'badge-primary': user.Role === 'ADMIN',
           'badge-secondary': user.Role === 'USER',
           'badge-accent': user.Role === 'SUPERADMIN',
@@ -1340,7 +1390,7 @@ watch(selectedSemester, () => {
         </div>
       </td>
       <td>
-        <div class="badge badge-lg" :class="getActivityStatusBadgeClass(user)">
+        <div class="badge badge-lg  w-44" :class="getActivityStatusBadgeClass(user)">
           {{ getActivityStatusText(user) }}
         </div>
       </td>
@@ -1351,7 +1401,6 @@ watch(selectedSemester, () => {
         :to="`/forSmallAdmin/users/${user.UserID}`"
         class="btn btn-sm btn-warning gap-2"
       >
-        <Icon name="mdi:pencil" class="w-4 h-4" />
         แก้ไข
       </nuxt-link>
       <nuxt-link
@@ -1359,7 +1408,6 @@ watch(selectedSemester, () => {
         :to="`/forSmallAdmin/users/details/${user.UserID}`"
         class="btn btn-sm btn-info gap-2"
       >
-        <Icon name="mdi:calendar-check" class="w-4 h-4" />
         ดูกิจกรรม
       </nuxt-link>
       <!-- <button
