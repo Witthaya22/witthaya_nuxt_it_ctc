@@ -58,26 +58,46 @@ function capturePhoto() {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
-  // วาดภาพจากวิดีโอ
+  // Draw video frame to canvas
   ctx.drawImage(videoRef.value, 0, 0)
 
-  // บันทึกเวลาที่ถ่าย
+  // Get current date and time in Thai locale
   const now = new Date()
-  const timeString = now.toLocaleString('th-TH', {
-    dateStyle: 'medium',
-    timeStyle: 'medium'
-  })
+  const timeString = `ถ่ายเมื่อ: ${now.toLocaleString('th-TH', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  })}`
   captureTime.value = timeString
 
-  // กำหนดสไตล์สำหรับเวลา
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)' // พื้นหลังสีดำโปร่งใส
-  ctx.fillRect(canvas.width - 300, canvas.height - 40, 290, 30) // กล่องพื้นหลัง
+  // Set up styles for timestamp overlay
+  const padding = 10
+  const fontSize = 20
+  ctx.font = `${fontSize}px Arial`
+  const textWidth = ctx.measureText(timeString).width
 
-  ctx.font = '20px Arial'
+  // Draw semi-transparent background for better text visibility
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
+  ctx.fillRect(
+    canvas.width - textWidth - padding * 2,
+    canvas.height - fontSize - padding * 2,
+    textWidth + padding * 2,
+    fontSize + padding * 2
+  )
+
+  // Draw timestamp text
   ctx.fillStyle = 'white'
-  ctx.fillText(timeString, canvas.width - 290, canvas.height - 20)
+  ctx.fillText(
+    timeString,
+    canvas.width - textWidth - padding,
+    canvas.height - padding - 5
+  )
 
-  // แปลง canvas เป็น base64
+  // Convert canvas to base64 image
   capturedImage.value = canvas.toDataURL('image/jpeg')
 }
 // function capturePhoto() {
